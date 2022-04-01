@@ -38,14 +38,14 @@ const createProps = () => ({
   onChange: jest.fn(),
 });
 
-test('Should render', () => {
+test('Shoud render', () => {
   const props = createProps();
   render(<FilterBoxItemControl {...props} />);
   expect(screen.getByTestId('FilterBoxItemControl')).toBeInTheDocument();
   expect(screen.getByRole('button')).toBeInTheDocument();
 });
 
-test('Should open modal', () => {
+test('Shoud open modal', () => {
   const props = createProps();
   render(<FilterBoxItemControl {...props} />);
   userEvent.click(screen.getByRole('button'));

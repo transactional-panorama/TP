@@ -36,6 +36,7 @@ import {
   LOG_ACTIONS_MOUNT_DASHBOARD,
   Logger,
 } from '../../logger/LogUtils';
+import OmniContainer from '../../components/OmniContainer';
 import { areObjectsEqual } from '../../reduxUtils';
 
 import '../stylesheets/index.less';
@@ -98,7 +99,7 @@ class Dashboard extends React.PureComponent {
 
   componentDidMount() {
     const appContainer = document.getElementById('app');
-    const bootstrapData = appContainer?.getAttribute('data-bootstrap') || '{}';
+    const bootstrapData = appContainer?.getAttribute('data-bootstrap') || '';
     const { dashboardState, layout } = this.props;
     const eventData = {
       is_soft_navigation: Logger.timeOriginOffset > 0,
@@ -291,6 +292,7 @@ class Dashboard extends React.PureComponent {
     }
     return (
       <>
+        <OmniContainer />
         <DashboardBuilder />
       </>
     );

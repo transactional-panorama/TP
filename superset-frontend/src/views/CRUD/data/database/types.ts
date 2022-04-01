@@ -49,9 +49,6 @@ export type DatabaseObject = {
     query?: Record<string, string>;
     catalog?: Record<string, string>;
     properties?: Record<string, any>;
-    warehouse?: string;
-    role?: string;
-    account?: string;
   };
   configuration_method: CONFIGURATION_METHOD;
   engine?: string;
@@ -72,7 +69,7 @@ export type DatabaseObject = {
   // Security
   encrypted_extra?: string;
   server_cert?: string;
-  allow_file_upload?: boolean;
+  allow_csv_upload?: boolean;
   impersonate_user?: boolean;
   parameters_schema?: Record<string, any>;
 
@@ -87,16 +84,12 @@ export type DatabaseObject = {
       table_cache_timeout?: number; // in Performance
     }; // No field, holds schema and table timeout
     allows_virtual_table_explore?: boolean; // in SQL Lab
-    schemas_allowed_for_file_upload?: string[]; // in Security
+    schemas_allowed_for_csv_upload?: string[]; // in Security
     cancel_query_on_windows_unload?: boolean; // in Performance
 
     version?: string;
     cost_estimate_enabled?: boolean; // in SQL Lab
-    disable_data_preview?: boolean; // in SQL Lab
   };
-
-  // External management
-  is_managed_externally: boolean;
 
   // Temporary storage
   catalog?: Array<CatalogObject>;

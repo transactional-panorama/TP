@@ -20,7 +20,7 @@ import React from 'react';
 import { styled } from '@superset-ui/core';
 import { CheckboxChecked, CheckboxUnchecked } from 'src/components/Checkbox';
 
-export interface CheckboxProps {
+interface CheckboxProps {
   checked: boolean;
   onChange: (val?: boolean) => void;
   style?: React.CSSProperties;

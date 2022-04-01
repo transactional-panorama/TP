@@ -37,10 +37,10 @@ from superset.sqllab.exceptions import (
 from superset.sqllab.limiting_factor import LimitingFactor
 
 if TYPE_CHECKING:
-    from superset.databases.dao import DatabaseDAO
-    from superset.queries.dao import QueryDAO
     from superset.sqllab.sql_json_executer import SqlJsonExecutor
     from superset.sqllab.sqllab_execution_context import SqlJsonExecutionContext
+    from superset.queries.dao import QueryDAO
+    from superset.databases.dao import DatabaseDAO
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +138,7 @@ class ExecuteSqlCommand(BaseCommand):
             raise ex
 
     def _get_the_query_db(self) -> Database:
-        mydb: Any = self._database_dao.find_by_id(self._execution_context.database_id)
+        mydb = self._database_dao.find_by_id(self._execution_context.database_id)
         self._validate_query_db(mydb)
         return mydb
 
@@ -170,10 +170,7 @@ class ExecuteSqlCommand(BaseCommand):
         except Exception as ex:
             raise QueryIsForbiddenToAccessException(self._execution_context, ex) from ex
 
-    def _set_query_limit_if_required(
-        self,
-        rendered_query: str,
-    ) -> None:
+    def _set_query_limit_if_required(self, rendered_query: str,) -> None:
         if self._is_required_to_set_limit():
             self._set_query_limit(rendered_query)
 

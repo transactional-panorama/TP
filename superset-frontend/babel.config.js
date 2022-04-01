@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-const packageConfig = require('./package');
+const packageConfig = require('./package.json');
 
 module.exports = {
   sourceMaps: true,
@@ -38,14 +38,6 @@ module.exports = {
       '@babel/preset-react',
       { development: process.env.BABEL_ENV === 'development' },
     ],
-    '@babel/preset-typescript',
-    [
-      '@emotion/babel-preset-css-prop',
-      {
-        autoLabel: 'dev-only',
-        labelFormat: '[local]',
-      },
-    ],
   ],
   plugins: [
     'lodash',
@@ -55,8 +47,6 @@ module.exports = {
     ['@babel/plugin-proposal-private-methods', { loose: true }],
     ['@babel/plugin-proposal-nullish-coalescing-operator', { loose: true }],
     ['@babel/plugin-transform-runtime', { corejs: 3 }],
-    // only used in packages/superset-ui-core/src/chart/components/reactify.tsx
-    ['babel-plugin-typescript-to-proptypes', { loose: true }],
     'react-hot-loader/babel',
   ],
   env: {
@@ -80,14 +70,7 @@ module.exports = {
     },
     // build instrumented code for testing code coverage with Cypress
     instrumented: {
-      plugins: [
-        [
-          'istanbul',
-          {
-            exclude: ['plugins/**/*', 'packages/**/*'],
-          },
-        ],
-      ],
+      plugins: ['istanbul'],
     },
     production: {
       plugins: [

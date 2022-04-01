@@ -17,21 +17,18 @@
  * under the License.
  */
 import {
-  DataMaskStateWithId,
-  DataMaskType,
   ensureIsArray,
   FeatureFlag,
-  Filters,
   FilterState,
   isFeatureEnabled,
-  NativeFilterType,
 } from '@superset-ui/core';
 import { NO_TIME_RANGE, TIME_FILTER_MAP } from 'src/explore/constants';
-import { getChartIdsInFilterBoxScope } from 'src/dashboard/util/activeDashboardFilters';
-import { CHART_TYPE } from 'src/dashboard/util/componentTypes';
-import { ChartConfiguration } from 'src/dashboard/reducers/types';
-import { Layout } from 'src/dashboard/types';
+import { getChartIdsInFilterScope } from 'src/dashboard/util/activeDashboardFilters';
+import { ChartConfiguration, Filters } from 'src/dashboard/reducers/types';
+import { DataMaskStateWithId, DataMaskType } from 'src/dataMask/types';
 import { areObjectsEqual } from 'src/reduxUtils';
+import { Layout } from '../../types';
+import { getTreeCheckedItems } from '../nativeFilters/FiltersConfigModal/FiltersConfigForm/FilterScope/utils';
 
 export enum IndicatorStatus {
   Unset = 'UNSET',
@@ -123,7 +120,7 @@ const selectIndicatorsForChartFromFilter = (
 
   return Object.keys(filter.columns)
     .filter(column =>
-      getChartIdsInFilterBoxScope({
+      getChartIdsInFilterScope({
         filterScope: filter.scopes[column],
       }).includes(chartId),
     )
@@ -271,13 +268,14 @@ export const selectNativeIndicatorsForChart = (
     nativeFilterIndicators =
       nativeFilters &&
       Object.values(nativeFilters)
-        .filter(
-          nativeFilter =>
-            nativeFilter.type === NativeFilterType.NATIVE_FILTER &&
-            nativeFilter.chartsInScope?.includes(chartId),
+        .filter(nativeFilter =>
+          getTreeCheckedItems(nativeFilter.scope, dashboardLayout).some(
+            layoutItem =>
+              dashboardLayout[layoutItem]?.meta?.chartId === chartId,
+          ),
         )
         .map(nativeFilter => {
-          const column = nativeFilter.targets?.[0]?.column?.name;
+          const column = nativeFilter.targets[0]?.column?.name;
           const filterState = dataMask[nativeFilter.id]?.filterState;
           const label = extractLabel(filterState);
           return {
@@ -292,19 +290,14 @@ export const selectNativeIndicatorsForChart = (
 
   let crossFilterIndicators: any = [];
   if (isFeatureEnabled(FeatureFlag.DASHBOARD_CROSS_FILTERS)) {
-    const dashboardLayoutValues = Object.values(dashboardLayout);
-    const chartLayoutItem = dashboardLayoutValues.find(
-      layoutItem => layoutItem?.meta?.chartId === chartId,
-    );
     crossFilterIndicators = Object.values(chartConfiguration)
-      .filter(
-        chartConfig =>
-          !chartConfig.crossFilters.scope.excluded.includes(chartId) &&
-          chartConfig.crossFilters.scope.rootPath.some(
-            elementId =>
-              chartLayoutItem?.type === CHART_TYPE &&
-              chartLayoutItem?.parents?.includes(elementId),
-          ),
+      .filter(chartConfig =>
+        getTreeCheckedItems(
+          chartConfig?.crossFilters?.scope,
+          dashboardLayout,
+        ).some(
+          layoutItem => dashboardLayout[layoutItem]?.meta?.chartId === chartId,
+        ),
       )
       .map(chartConfig => {
         const filterState = dataMask[chartConfig.id]?.filterState;
@@ -312,7 +305,7 @@ export const selectNativeIndicatorsForChart = (
         const filtersState = filterState?.filters;
         const column = filtersState && Object.keys(filtersState)[0];
 
-        const dashboardLayoutItem = dashboardLayoutValues.find(
+        const dashboardLayoutItem = Object.values(dashboardLayout).find(
           layoutItem => layoutItem?.meta?.chartId === chartConfig.id,
         );
         return {

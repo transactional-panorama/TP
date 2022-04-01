@@ -27,20 +27,16 @@ for these chart types.
 """
 
 from io import StringIO
-from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from superset.common.chart_data import ChartDataResultFormat
 from superset.utils.core import (
+    ChartDataResultFormat,
     DTTM_ALIAS,
     extract_dataframe_dtypes,
-    get_column_names,
-    get_metric_names,
+    get_metric_name,
 )
-
-if TYPE_CHECKING:
-    from superset.connectors.base.models import BaseDatasource
 
 
 def get_column_key(label: Tuple[str, ...], metrics: List[str]) -> Tuple[Any, ...]:
@@ -84,8 +80,6 @@ def pivot_df(  # pylint: disable=too-many-locals, too-many-arguments, too-many-s
 
     # pivot data; we'll compute totals and subtotals later
     if rows or columns:
-        # pivoting with null values will create an empty df
-        df = df.fillna("NULL")
         df = df.pivot_table(
             index=rows,
             columns=columns,
@@ -101,10 +95,7 @@ def pivot_df(  # pylint: disable=too-many-locals, too-many-arguments, too-many-s
     # if no rows were passed the metrics will be in the rows, so we
     # need to move them back to columns
     if columns and not rows:
-        df = df.stack()
-        if not isinstance(df, pd.DataFrame):
-            df = df.to_frame()
-        df = df.T
+        df = df.stack().to_frame().T
         df = df[metrics]
         df.index = pd.Index([*df.index[:-1], metric_name], name="metric")
 
@@ -219,23 +210,18 @@ pivot_v2_aggfunc_map = {
 }
 
 
-def pivot_table_v2(
-    df: pd.DataFrame,
-    form_data: Dict[str, Any],
-    datasource: Optional["BaseDatasource"] = None,
-) -> pd.DataFrame:
+def pivot_table_v2(df: pd.DataFrame, form_data: Dict[str, Any]) -> pd.DataFrame:
     """
     Pivot table v2.
     """
-    verbose_map = datasource.data["verbose_map"] if datasource else None
     if form_data.get("granularity_sqla") == "all" and DTTM_ALIAS in df:
         del df[DTTM_ALIAS]
 
     return pivot_df(
         df,
-        rows=get_column_names(form_data.get("groupbyRows"), verbose_map),
-        columns=get_column_names(form_data.get("groupbyColumns"), verbose_map),
-        metrics=get_metric_names(form_data["metrics"], verbose_map),
+        rows=form_data.get("groupbyRows") or [],
+        columns=form_data.get("groupbyColumns") or [],
+        metrics=[get_metric_name(m) for m in form_data["metrics"]],
         aggfunc=form_data.get("aggregateFunction", "Sum"),
         transpose_pivot=bool(form_data.get("transposePivot")),
         combine_metrics=bool(form_data.get("combineMetric")),
@@ -245,15 +231,10 @@ def pivot_table_v2(
     )
 
 
-def pivot_table(
-    df: pd.DataFrame,
-    form_data: Dict[str, Any],
-    datasource: Optional["BaseDatasource"] = None,
-) -> pd.DataFrame:
+def pivot_table(df: pd.DataFrame, form_data: Dict[str, Any]) -> pd.DataFrame:
     """
     Pivot table (v1).
     """
-    verbose_map = datasource.data["verbose_map"] if datasource else None
     if form_data.get("granularity") == "all" and DTTM_ALIAS in df:
         del df[DTTM_ALIAS]
 
@@ -269,9 +250,9 @@ def pivot_table(
 
     return pivot_df(
         df,
-        rows=get_column_names(form_data.get("groupby"), verbose_map),
-        columns=get_column_names(form_data.get("columns"), verbose_map),
-        metrics=get_metric_names(form_data["metrics"], verbose_map),
+        rows=form_data.get("groupby") or [],
+        columns=form_data.get("columns") or [],
+        metrics=[get_metric_name(m) for m in form_data["metrics"]],
         aggfunc=func_map.get(form_data.get("pandas_aggfunc", "sum"), "Sum"),
         transpose_pivot=bool(form_data.get("transpose_pivot")),
         combine_metrics=bool(form_data.get("combine_metric")),
@@ -281,39 +262,14 @@ def pivot_table(
     )
 
 
-def table(
-    df: pd.DataFrame,
-    form_data: Dict[str, Any],
-    datasource: Optional["BaseDatasource"] = None,  # pylint: disable=unused-argument
-) -> pd.DataFrame:
-    """
-    Table.
-    """
-    # apply `d3NumberFormat` to columns, if present
-    column_config = form_data.get("column_config", {})
-    for column, config in column_config.items():
-        if "d3NumberFormat" in config:
-            format_ = "{:" + config["d3NumberFormat"] + "}"
-            try:
-                df[column] = df[column].apply(format_.format)
-            except Exception:  # pylint: disable=broad-except
-                # if we can't format the column for any reason, send as is
-                pass
-
-    return df
-
-
 post_processors = {
     "pivot_table": pivot_table,
     "pivot_table_v2": pivot_table_v2,
-    "table": table,
 }
 
 
 def apply_post_process(
-    result: Dict[Any, Any],
-    form_data: Optional[Dict[str, Any]] = None,
-    datasource: Optional["BaseDatasource"] = None,
+    result: Dict[Any, Any], form_data: Optional[Dict[str, Any]] = None,
 ) -> Dict[Any, Any]:
     form_data = form_data or {}
 
@@ -331,11 +287,11 @@ def apply_post_process(
         else:
             raise Exception(f"Result format {query['result_format']} not supported")
 
-        processed_df = post_processor(df, form_data, datasource)
+        processed_df = post_processor(df, form_data)
 
         query["colnames"] = list(processed_df.columns)
         query["indexnames"] = list(processed_df.index)
-        query["coltypes"] = extract_dataframe_dtypes(processed_df, datasource)
+        query["coltypes"] = extract_dataframe_dtypes(processed_df)
         query["rowcount"] = len(processed_df.index)
 
         # Flatten hierarchical columns/index since they are represented as

@@ -20,7 +20,6 @@ import React, { createRef } from 'react';
 import shortid from 'shortid';
 import Alert from 'src/components/Alert';
 import Tabs from 'src/components/Tabs';
-import { EmptyStateMedium } from 'src/components/EmptyState';
 import { t, styled } from '@superset-ui/core';
 
 import { isFeatureEnabled, FeatureFlag } from 'src/featureFlags';
@@ -45,14 +44,7 @@ interface SouthPanePropTypes {
   editorQueries: any[];
   latestQueryId?: string;
   dataPreviewQueries: any[];
-  actions: {
-    queryEditorSetSql: Function;
-    cloneQueryToNewTab: Function;
-    fetchQueryResults: Function;
-    clearQueryResults: Function;
-    removeQuery: Function;
-    setActiveSouthPaneTab: Function;
-  };
+  actions: Record<string, Function>;
   activeSouthPaneTab?: string;
   height: number;
   databases: Record<string, any>;
@@ -91,18 +83,6 @@ const StyledPane = styled.div`
     button.fetch {
       margin-top: ${({ theme }) => theme.gridUnit * 2}px;
     }
-  }
-`;
-
-const EXTRA_HEIGHT_RESULTS = 24; // we need extra height in RESULTS tab. because the height from props was calculated based on PREVIEW tab.
-const StyledEmptyStateWrapper = styled.div`
-  height: 100%;
-  .ant-empty-image img {
-    margin-right: 28px;
-  }
-
-  p {
-    margin-right: 28px;
   }
 `;
 
@@ -165,7 +145,7 @@ export default function SouthPane({
             query={latestQuery}
             actions={actions}
             user={user}
-            height={innerTabContentHeight + EXTRA_HEIGHT_RESULTS}
+            height={innerTabContentHeight}
             database={databases[latestQuery.dbId]}
             displayLimit={displayLimit}
             defaultQueryLimit={defaultQueryLimit}
@@ -174,12 +154,7 @@ export default function SouthPane({
       }
     } else {
       results = (
-        <StyledEmptyStateWrapper>
-          <EmptyStateMedium
-            title={t('Run a query to display results')}
-            image="document.svg"
-          />
-        </StyledEmptyStateWrapper>
+        <Alert type="info" message={t('Run a query to display results here')} />
       );
     }
     return results;

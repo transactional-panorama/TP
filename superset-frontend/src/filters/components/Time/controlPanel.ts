@@ -16,11 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import {
-  ControlPanelConfig,
-  sharedControls,
-} from '@superset-ui/chart-controls';
+import { ControlPanelConfig } from '@superset-ui/chart-controls';
 import { t } from '@superset-ui/core';
+import { sharedControls } from '@superset-ui/chart-controls/lib';
 
 const config: ControlPanelConfig = {
   // For control input types, see: superset-frontend/src/explore/components/controls/index.js
@@ -50,12 +48,10 @@ const config: ControlPanelConfig = {
             name: 'enableEmptyFilter',
             config: {
               type: 'CheckboxControl',
-              label: t('Filter value is required'),
+              label: t('Required'),
               default: false,
               renderTrigger: true,
-              description: t(
-                'User must select a value before applying the filter',
-              ),
+              description: t('User must select a value for this filter.'),
             },
           },
         ],

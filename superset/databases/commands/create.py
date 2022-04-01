@@ -92,9 +92,6 @@ class CreateDatabaseCommand(BaseCommand):
             exception = DatabaseInvalidError()
             exception.add_list(exceptions)
             event_logger.log_with_context(
-                action="db_connection_failed.{}.{}".format(
-                    exception.__class__.__name__,
-                    ".".join(exception.get_list_classnames()),
-                )
+                action=f"db_connection_failed.{exception.__class__.__name__}"
             )
             raise exception

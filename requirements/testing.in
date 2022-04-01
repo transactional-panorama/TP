@@ -19,16 +19,13 @@
 docker
 flask-testing
 freezegun
-google-cloud-bigquery
 ipdb
 # pinning ipython as pip-compile-multi was bringing higher version
 # of the ipython that was not found in CI
 ipython
 openapi-spec-validator
 openpyxl
-pandas_gbq
 parameterized
-pybigquery
 pyfakefs
 pyhive[presto]>=0.6.3
 pylint==2.9.6
@@ -36,6 +33,4 @@ pytest
 pytest-cov
 statsd
 pytest-mock
-# DB dependencies
--e file:.[bigquery]
--e file:.[trino]
+packaging==21.0

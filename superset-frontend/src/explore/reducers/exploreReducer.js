@@ -17,18 +17,15 @@
  * under the License.
  */
 /* eslint camelcase: 0 */
-import { ensureIsArray } from '@superset-ui/core';
-import { DYNAMIC_PLUGIN_CONTROLS_READY } from 'src/components/Chart/chartAction';
+import { DYNAMIC_PLUGIN_CONTROLS_READY } from 'src/chart/chartAction';
 import { DEFAULT_TIME_RANGE } from 'src/explore/constants';
 import { getControlsState } from 'src/explore/store';
 import {
   getControlConfig,
   getFormDataFromControls,
   getControlStateFromControlConfig,
-  getControlValuesCompatibleWithDatasource,
 } from 'src/explore/controlUtils';
 import * as actions from 'src/explore/actions/exploreActions';
-import { LocalStorageKeys, setItem } from 'src/utils/localStorageHelpers';
 
 export default function exploreReducer(state = {}, action) {
   const actionHandlers = {
@@ -67,7 +64,6 @@ export default function exploreReducer(state = {}, action) {
       }
 
       const controls = { ...state.controls };
-      const controlsTransferred = [];
       if (
         action.datasource.id !== state.datasource.id ||
         action.datasource.type !== state.datasource.type
@@ -81,24 +77,16 @@ export default function exploreReducer(state = {}, action) {
             // for direct column select controls
             controlState.valueKey === 'column_name' ||
             // for all other controls
-            'savedMetrics' in controlState ||
-            'columns' in controlState ||
-            ('options' in controlState && !Array.isArray(controlState.options))
+            'columns' in controlState
           ) {
+            // if a control use datasource columns, reset its value to `undefined`,
+            // then `getControlsState` will pick up the default.
+            // TODO: filter out only invalid columns and keep others
             controls[controlName] = {
               ...controlState,
+              value: undefined,
             };
-            newFormData[controlName] = getControlValuesCompatibleWithDatasource(
-              action.datasource,
-              controlState,
-              controlState.value,
-            );
-            if (
-              ensureIsArray(newFormData[controlName]).length > 0 &&
-              newFormData[controlName] !== controls[controlName].default
-            ) {
-              controlsTransferred.push(controlName);
-            }
+            newFormData[controlName] = undefined;
           }
         });
       }
@@ -114,7 +102,6 @@ export default function exploreReducer(state = {}, action) {
         ...newState,
         form_data: newFormData,
         controls: getControlsState(newState, newFormData),
-        controlsTransferred,
       };
     },
     [actions.FETCH_DATASOURCES_STARTED]() {
@@ -237,44 +224,7 @@ export default function exploreReducer(state = {}, action) {
         sliceName: action.slice.slice_name ?? state.sliceName,
       };
     },
-    [actions.SET_TIME_FORMATTED_COLUMN]() {
-      const { datasourceId, columnName } = action;
-      const newTimeFormattedColumns = { ...state.timeFormattedColumns };
-      const newTimeFormattedColumnsForDatasource = ensureIsArray(
-        newTimeFormattedColumns[datasourceId],
-      ).slice();
-
-      newTimeFormattedColumnsForDatasource.push(columnName);
-      newTimeFormattedColumns[datasourceId] =
-        newTimeFormattedColumnsForDatasource;
-      setItem(
-        LocalStorageKeys.explore__data_table_time_formatted_columns,
-        newTimeFormattedColumns,
-      );
-      return { ...state, timeFormattedColumns: newTimeFormattedColumns };
-    },
-    [actions.UNSET_TIME_FORMATTED_COLUMN]() {
-      const { datasourceId, columnIndex } = action;
-      const newTimeFormattedColumns = { ...state.timeFormattedColumns };
-      const newTimeFormattedColumnsForDatasource = ensureIsArray(
-        newTimeFormattedColumns[datasourceId],
-      ).slice();
-
-      newTimeFormattedColumnsForDatasource.splice(columnIndex, 1);
-      newTimeFormattedColumns[datasourceId] =
-        newTimeFormattedColumnsForDatasource;
-
-      if (newTimeFormattedColumnsForDatasource.length === 0) {
-        delete newTimeFormattedColumns[datasourceId];
-      }
-      setItem(
-        LocalStorageKeys.explore__data_table_time_formatted_columns,
-        newTimeFormattedColumns,
-      );
-      return { ...state, timeFormattedColumns: newTimeFormattedColumns };
-    },
   };
-
   if (action.type in actionHandlers) {
     return actionHandlers[action.type]();
   }

@@ -73,8 +73,7 @@ test('should be visible when controlled', async () => {
       Click
     </AdhocFilterPopoverTrigger>,
   );
-
-  expect(await screen.findByRole('tooltip')).toBeInTheDocument();
+  expect(screen.getByRole('tooltip')).toBeInTheDocument();
 });
 
 test('should NOT be visible when controlled', () => {

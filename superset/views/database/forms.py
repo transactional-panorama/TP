@@ -29,7 +29,7 @@ from wtforms import (
     StringField,
 )
 from wtforms.ext.sqlalchemy.fields import QuerySelectField
-from wtforms.validators import DataRequired, Length, NumberRange, Optional, Regexp
+from wtforms.validators import DataRequired, Length, NumberRange, Optional
 
 from superset import app, db, security_manager
 from superset.forms import (
@@ -42,62 +42,57 @@ from superset.models.core import Database
 config = app.config
 
 
-class UploadToDatabaseForm(DynamicForm):
+class CsvToDatabaseForm(DynamicForm):
     # pylint: disable=E0211
-    def file_allowed_dbs() -> List[Database]:  # type: ignore
-        file_enabled_dbs = (
-            db.session.query(Database).filter_by(allow_file_upload=True).all()
+    def csv_allowed_dbs() -> List[Database]:  # type: ignore
+        csv_enabled_dbs = (
+            db.session.query(Database).filter_by(allow_csv_upload=True).all()
         )
         return [
-            file_enabled_db
-            for file_enabled_db in file_enabled_dbs
-            if UploadToDatabaseForm.at_least_one_schema_is_allowed(file_enabled_db)
+            csv_enabled_db
+            for csv_enabled_db in csv_enabled_dbs
+            if CsvToDatabaseForm.at_least_one_schema_is_allowed(csv_enabled_db)
         ]
 
     @staticmethod
     def at_least_one_schema_is_allowed(database: Database) -> bool:
         """
         If the user has access to the database or all datasource
-            1. if schemas_allowed_for_file_upload is empty
+            1. if schemas_allowed_for_csv_upload is empty
                 a) if database does not support schema
                     user is able to upload csv without specifying schema name
                 b) if database supports schema
                     user is able to upload csv to any schema
-            2. if schemas_allowed_for_file_upload is not empty
+            2. if schemas_allowed_for_csv_upload is not empty
                 a) if database does not support schema
                     This situation is impossible and upload will fail
                 b) if database supports schema
-                    user is able to upload to schema in schemas_allowed_for_file_upload
+                    user is able to upload to schema in schemas_allowed_for_csv_upload
         elif the user does not access to the database or all datasource
-            1. if schemas_allowed_for_file_upload is empty
+            1. if schemas_allowed_for_csv_upload is empty
                 a) if database does not support schema
                     user is unable to upload csv
                 b) if database supports schema
                     user is unable to upload csv
-            2. if schemas_allowed_for_file_upload is not empty
+            2. if schemas_allowed_for_csv_upload is not empty
                 a) if database does not support schema
                     This situation is impossible and user is unable to upload csv
                 b) if database supports schema
-                    user is able to upload to schema in schemas_allowed_for_file_upload
+                    user is able to upload to schema in schemas_allowed_for_csv_upload
         """
         if security_manager.can_access_database(database):
             return True
-        schemas = database.get_schema_access_for_file_upload()
+        schemas = database.get_schema_access_for_csv_upload()
         if schemas and security_manager.get_schemas_accessible_by_user(
             database, schemas, False
         ):
             return True
         return False
 
-
-class CsvToDatabaseForm(UploadToDatabaseForm):
     name = StringField(
         _("Table Name"),
         description=_("Name of table to be created from csv data."),
-        validators=[
-            DataRequired(),
-            Regexp(r"^[^\.]+$", message=_("Table name cannot contain a schema")),
-        ],
+        validators=[DataRequired()],
         widget=BS3TextFieldWidget(),
     )
     csv_file = FileField(
@@ -121,7 +116,7 @@ class CsvToDatabaseForm(UploadToDatabaseForm):
     )
     con = QuerySelectField(
         _("Database"),
-        query_factory=UploadToDatabaseForm.file_allowed_dbs,
+        query_factory=csv_allowed_dbs,
         get_pk=lambda a: a.id,
         get_label=lambda a: a.database_name,
     )
@@ -244,14 +239,58 @@ class CsvToDatabaseForm(UploadToDatabaseForm):
     )
 
 
-class ExcelToDatabaseForm(UploadToDatabaseForm):
+class ExcelToDatabaseForm(DynamicForm):
+    # pylint: disable=E0211
+    def excel_allowed_dbs() -> List[Database]:  # type: ignore
+        # TODO: change allow_csv_upload to allow_file_upload
+        excel_enabled_dbs = (
+            db.session.query(Database).filter_by(allow_csv_upload=True).all()
+        )
+        return [
+            excel_enabled_db
+            for excel_enabled_db in excel_enabled_dbs
+            if ExcelToDatabaseForm.at_least_one_schema_is_allowed(excel_enabled_db)
+        ]
+
+    @staticmethod
+    def at_least_one_schema_is_allowed(database: Database) -> bool:
+        """
+        If the user has access to the database or all datasource
+            1. if schemas_allowed_for_csv_upload is empty
+                a) if database does not support schema
+                    user is able to upload excel without specifying schema name
+                b) if database supports schema
+                    user is able to upload excel to any schema
+            2. if schemas_allowed_for_csv_upload is not empty
+                a) if database does not support schema
+                    This situation is impossible and upload will fail
+                b) if database supports schema
+                    user is able to upload to schema in schemas_allowed_for_csv_upload
+        elif the user does not access to the database or all datasource
+            1. if schemas_allowed_for_csv_upload is empty
+                a) if database does not support schema
+                    user is unable to upload excel
+                b) if database supports schema
+                    user is unable to upload excel
+            2. if schemas_allowed_for_csv_upload is not empty
+                a) if database does not support schema
+                    This situation is impossible and user is unable to upload excel
+                b) if database supports schema
+                    user is able to upload to schema in schemas_allowed_for_csv_upload
+        """
+        if security_manager.can_access_database(database):
+            return True
+        schemas = database.get_schema_access_for_csv_upload()
+        if schemas and security_manager.schemas_accessible_by_user(
+            database, schemas, False
+        ):
+            return True
+        return False
+
     name = StringField(
         _("Table Name"),
         description=_("Name of table to be created from excel data."),
-        validators=[
-            DataRequired(),
-            Regexp(r"^[^\.]+$", message=_("Table name cannot contain a schema")),
-        ],
+        validators=[DataRequired()],
         widget=BS3TextFieldWidget(),
     )
     excel_file = FileField(
@@ -283,7 +322,7 @@ class ExcelToDatabaseForm(UploadToDatabaseForm):
 
     con = QuerySelectField(
         _("Database"),
-        query_factory=UploadToDatabaseForm.file_allowed_dbs,
+        query_factory=excel_allowed_dbs,
         get_pk=lambda a: a.id,
         get_label=lambda a: a.database_name,
     )
@@ -380,14 +419,60 @@ class ExcelToDatabaseForm(UploadToDatabaseForm):
     )
 
 
-class ColumnarToDatabaseForm(UploadToDatabaseForm):
+class ColumnarToDatabaseForm(DynamicForm):
+    # pylint: disable=E0211
+    def columnar_allowed_dbs() -> List[Database]:  # type: ignore
+        # TODO: change allow_csv_upload to allow_file_upload
+        columnar_enabled_dbs = (
+            db.session.query(Database).filter_by(allow_csv_upload=True).all()
+        )
+        return [
+            columnar_enabled_db
+            for columnar_enabled_db in columnar_enabled_dbs
+            if ColumnarToDatabaseForm.at_least_one_schema_is_allowed(
+                columnar_enabled_db
+            )
+        ]
+
+    @staticmethod
+    def at_least_one_schema_is_allowed(database: Database) -> bool:
+        """
+        If the user has access to the database or all datasource
+            1. if schemas_allowed_for_csv_upload is empty
+                a) if database does not support schema
+                    user is able to upload columnar without specifying schema name
+                b) if database supports schema
+                    user is able to upload columnar to any schema
+            2. if schemas_allowed_for_csv_upload is not empty
+                a) if database does not support schema
+                    This situation is impossible and upload will fail
+                b) if database supports schema
+                    user is able to upload to schema in schemas_allowed_for_csv_upload
+        elif the user does not access to the database or all datasource
+            1. if schemas_allowed_for_csv_upload is empty
+                a) if database does not support schema
+                    user is unable to upload columnar
+                b) if database supports schema
+                    user is unable to upload columnar
+            2. if schemas_allowed_for_csv_upload is not empty
+                a) if database does not support schema
+                    This situation is impossible and user is unable to upload columnar
+                b) if database supports schema
+                    user is able to upload to schema in schemas_allowed_for_csv_upload
+        """
+        if security_manager.can_access_database(database):
+            return True
+        schemas = database.get_schema_access_for_csv_upload()
+        if schemas and security_manager.schemas_accessible_by_user(
+            database, schemas, False
+        ):
+            return True
+        return False
+
     name = StringField(
         _("Table Name"),
         description=_("Name of table to be created from columnar data."),
-        validators=[
-            DataRequired(),
-            Regexp(r"^[^\.]+$", message=_("Table name cannot contain a schema")),
-        ],
+        validators=[DataRequired()],
         widget=BS3TextFieldWidget(),
     )
     columnar_file = MultipleFileField(
@@ -414,7 +499,7 @@ class ColumnarToDatabaseForm(UploadToDatabaseForm):
 
     con = QuerySelectField(
         _("Database"),
-        query_factory=UploadToDatabaseForm.file_allowed_dbs,
+        query_factory=columnar_allowed_dbs,
         get_pk=lambda a: a.id,
         get_label=lambda a: a.database_name,
     )

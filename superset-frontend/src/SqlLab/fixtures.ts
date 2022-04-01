@@ -180,7 +180,7 @@ export const defaultQueryEditor = {
   latestQueryId: null,
   selectedText: null,
   sql: 'SELECT *\nFROM\nWHERE',
-  title: 'Untitled Query 1',
+  title: 'Untitled Query',
   schemaOptions: [
     {
       value: 'main',

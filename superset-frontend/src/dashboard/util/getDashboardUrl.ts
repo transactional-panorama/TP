@@ -16,21 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import rison from 'rison';
 import { JsonObject } from '@superset-ui/core';
 import { URL_PARAMS } from 'src/constants';
-import { getUrlParam } from 'src/utils/urlUtils';
+import replaceUndefinedByNull from './replaceUndefinedByNull';
 import serializeActiveFilterValues from './serializeActiveFilterValues';
+import { DataMaskState } from '../../dataMask/types';
 
 export default function getDashboardUrl({
   pathname,
   filters = {},
   hash = '',
   standalone,
+  dataMask,
 }: {
   pathname: string;
   filters: JsonObject;
   hash: string;
   standalone?: number | null;
+  dataMask?: DataMaskState;
 }) {
   const newSearchParams = new URLSearchParams();
 
@@ -44,11 +48,11 @@ export default function getDashboardUrl({
   if (standalone) {
     newSearchParams.set(URL_PARAMS.standalone.name, standalone.toString());
   }
-  const dataMaskKey = getUrlParam(URL_PARAMS.nativeFiltersKey);
-  if (dataMaskKey) {
+
+  if (dataMask) {
     newSearchParams.set(
-      URL_PARAMS.nativeFiltersKey.name,
-      dataMaskKey as string,
+      URL_PARAMS.nativeFilters.name,
+      rison.encode(replaceUndefinedByNull(dataMask)),
     );
   }
 

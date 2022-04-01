@@ -75,7 +75,7 @@ export const PRIMARY_COLOR = { r: 0, g: 122, b: 135, a: 1 };
 
 // input choices & options
 export const D3_FORMAT_OPTIONS = [
-  ['SMART_NUMBER', 'Adaptive formatting'],
+  ['SMART_NUMBER', 'Adaptative formating'],
   ['~g', 'Original value'],
   [',d', ',d (12345.432 => 12,345)'],
   ['.1s', '.1s (12345.432 => 10k)'],
@@ -92,13 +92,13 @@ export const D3_FORMAT_OPTIONS = [
 
 const ROW_LIMIT_OPTIONS = [10, 50, 100, 250, 500, 1000, 5000, 10000, 50000];
 
-const SERIES_LIMITS = [5, 10, 25, 50, 100, 500];
+const SERIES_LIMITS = [0, 5, 10, 25, 50, 100, 500];
 
 export const D3_FORMAT_DOCS =
   'D3 format syntax: https://github.com/d3/d3-format';
 
 export const D3_TIME_FORMAT_OPTIONS = [
-  ['smart_date', 'Adaptive formatting'],
+  ['smart_date', 'Adaptative formating'],
   ['%d/%m/%Y', '%d/%m/%Y | 14/01/2019'],
   ['%m/%d/%Y', '%m/%d/%Y | 01/14/2019'],
   ['%Y-%m-%d', '%Y-%m-%d | 2019-01-14'],
@@ -123,10 +123,7 @@ const groupByControl = {
   label: t('Group by'),
   default: [],
   includeTime: false,
-  description: t(
-    'One or many columns to group by. High cardinality groupings should include a series limit ' +
-      'to limit the number of fetched and rendered series.',
-  ),
+  description: t('One or many controls to group by'),
   optionRenderer: c => <StyledColumnOption column={c} showType />,
   valueKey: 'column_name',
   filterOption: ({ data: opt }, text) =>
@@ -156,7 +153,7 @@ const metrics = {
     return {
       columns: datasource ? datasource.columns : [],
       savedMetrics: datasource ? datasource.metrics : [],
-      datasource,
+      datasourceType: datasource && datasource.type,
     };
   },
   description: t('One or many metrics to display'),
@@ -348,6 +345,10 @@ export const controls = {
         "using the engine's local timezone. Note one can explicitly set the timezone " +
         'per the ISO 8601 format if specifying either the start and/or end time.',
     ),
+    mapStateToProps: ({ form_data: formData }) => ({
+      // eslint-disable-next-line camelcase
+      endpoints: formData?.time_range_endpoints,
+    }),
   },
 
   row_limit: {
@@ -357,7 +358,6 @@ export const controls = {
     validators: [legacyValidateInteger],
     default: 10000,
     choices: formatSelectOptions(ROW_LIMIT_OPTIONS),
-    description: t('Limits the number of rows that get displayed.'),
   },
 
   limit: {
@@ -366,12 +366,11 @@ export const controls = {
     label: t('Series limit'),
     validators: [legacyValidateInteger],
     choices: formatSelectOptions(SERIES_LIMITS),
-    clearable: true,
     description: t(
-      'Limits the number of series that get displayed. A joined subquery (or an extra phase ' +
-        'where subqueries are not supported) is applied to limit the number of series that get ' +
-        'fetched and rendered. This feature is useful when grouping by high cardinality ' +
-        'column(s) though does increase the query complexity and cost.',
+      'Limits the number of time series that get displayed. A sub query ' +
+        '(or an extra phase where sub queries are not supported) is applied to limit ' +
+        'the number of time series that get fetched and displayed. This feature is useful ' +
+        'when grouping by high cardinality dimension(s).',
     ),
   },
 
@@ -380,14 +379,11 @@ export const controls = {
     label: t('Sort by'),
     default: null,
     clearable: true,
-    description: t(
-      'Metric used to define how the top series are sorted if a series or row limit is present. ' +
-        'If undefined reverts to the first metric (where appropriate).',
-    ),
+    description: t('Metric used to define the top series'),
     mapStateToProps: state => ({
       columns: state.datasource ? state.datasource.columns : [],
       savedMetrics: state.datasource ? state.datasource.metrics : [],
-      datasource: state.datasource,
+      datasourceType: state.datasource && state.datasource.type,
     }),
   },
 

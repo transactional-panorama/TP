@@ -22,7 +22,6 @@ import { Provider } from 'react-redux';
 import thunkMiddleware from 'redux-thunk';
 import { hot } from 'react-hot-loader/root';
 import { ThemeProvider } from '@superset-ui/core';
-import { GlobalStyles } from 'src/GlobalStyles';
 import {
   initFeatureFlags,
   isFeatureEnabled,
@@ -128,7 +127,6 @@ if (sqlLabMenu) {
 const Application = () => (
   <Provider store={store}>
     <ThemeProvider theme={theme}>
-      <GlobalStyles />
       <App />
     </ThemeProvider>
   </Provider>

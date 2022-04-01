@@ -154,8 +154,13 @@
 
     .filter-scope-type {
       padding: 8px 0;
-      display: flex;
-      align-items: center;
+      display: block;
+
+      .type-indicator {
+        position: relative;
+        top: 3px;
+        margin-right: 8px;
+      }
 
       &.chart {
         font-weight: @font-weight-normal;

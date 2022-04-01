@@ -30,7 +30,6 @@ export const RENDER_TAB = 'RENDER_TAB';
 export const RENDER_TAB_CONTENT = 'RENDER_TAB_CONTENT';
 
 const propTypes = {
-  dashboardId: PropTypes.number.isRequired,
   id: PropTypes.string.isRequired,
   parentId: PropTypes.string.isRequired,
   component: componentShape.isRequired,
@@ -238,7 +237,6 @@ export default class Tab extends React.PureComponent {
             {!editMode && (
               <AnchorLink
                 anchorLinkId={component.id}
-                dashboardId={this.props.dashboardId}
                 filters={filters}
                 showShortLinkButton
                 placement={index >= 5 ? 'left' : 'right'}

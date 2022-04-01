@@ -16,18 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { AntdDropdown, Typography } from 'src/components';
-import { Menu } from 'src/components/Menu';
+import { Typography, Dropdown, Menu } from 'src/common/components';
 import React, { FC } from 'react';
-import {
-  DataMaskState,
-  FilterSet,
-  HandlerFunction,
-  styled,
-  useTheme,
-  t,
-} from '@superset-ui/core';
+import { FilterSet } from 'src/dashboard/reducers/types';
+import { DataMaskState } from 'src/dataMask/types';
 import { CheckOutlined, EllipsisOutlined } from '@ant-design/icons';
+import { HandlerFunction, styled, supersetTheme, t } from '@superset-ui/core';
 import Button from 'src/components/Button';
 import { Tooltip } from 'src/components/Tooltip';
 import FiltersHeader from './FiltersHeader';
@@ -76,8 +70,6 @@ const FilterSetUnit: FC<FilterSetUnitProps> = ({
   isApplied,
   onRebuild,
 }) => {
-  const theme = useTheme();
-
   const menu = (
     <Menu>
       <Menu.Item onClick={onEdit}>{t('Edit')}</Menu.Item>
@@ -107,10 +99,12 @@ const FilterSetUnit: FC<FilterSetUnitProps> = ({
         </Typography.Text>
         <IconsBlock>
           {isApplied && (
-            <CheckOutlined style={{ color: theme.colors.success.base }} />
+            <CheckOutlined
+              style={{ color: supersetTheme.colors.success.base }}
+            />
           )}
           {onDelete && (
-            <AntdDropdown
+            <Dropdown
               overlay={menu}
               placement="bottomRight"
               trigger={['click']}
@@ -126,7 +120,7 @@ const FilterSetUnit: FC<FilterSetUnitProps> = ({
               >
                 <EllipsisOutlined />
               </HeaderButton>
-            </AntdDropdown>
+            </Dropdown>
           )}
         </IconsBlock>
       </TitleText>

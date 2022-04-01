@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { FormInstance } from 'src/components';
+import { FormInstance } from 'antd/lib/form';
 
 // eslint-disable-next-line import/prefer-default-export
 export const setCrossFilterFieldValues = (

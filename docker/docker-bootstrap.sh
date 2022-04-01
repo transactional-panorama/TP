@@ -23,6 +23,7 @@ REQUIREMENTS_LOCAL="/app/docker/requirements-local.txt"
 if [ "$CYPRESS_CONFIG" == "true" ]; then
     export SUPERSET_CONFIG=tests.integration_tests.superset_test_config
     export SUPERSET_TESTENV=true
+    export ENABLE_REACT_CRUD_VIEWS=true
     export SUPERSET__SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://superset:superset@db:5432/superset
 fi
 #
@@ -46,5 +47,5 @@ elif [[ "${1}" == "app" ]]; then
   flask run -p 8088 --with-threads --reload --debugger --host=0.0.0.0
 elif [[ "${1}" == "app-gunicorn" ]]; then
   echo "Starting web app..."
-  /usr/bin/run-server.sh
+  /app/docker/docker-entrypoint.sh
 fi

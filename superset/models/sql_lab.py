@@ -211,11 +211,6 @@ class SavedQuery(Model, AuditMixinNullable, ExtraJSONMixin, ImportExportMixin):
     def __repr__(self) -> str:
         return str(self.label)
 
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "id": self.id,
-        }
-
     @property
     def pop_tab_link(self) -> Markup:
         return Markup(
@@ -290,12 +285,6 @@ class TabState(Model, AuditMixinNullable, ExtraJSONMixin):
     template_params = Column(Text)
     hide_left_bar = Column(Boolean, default=False)
 
-    # any saved queries that are associated with the Tab State
-    saved_query_id = Column(
-        Integer, ForeignKey("saved_query.id", ondelete="SET NULL"), nullable=True
-    )
-    saved_query = relationship("SavedQuery", foreign_keys=[saved_query_id])
-
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
@@ -311,7 +300,6 @@ class TabState(Model, AuditMixinNullable, ExtraJSONMixin):
             "autorun": self.autorun,
             "template_params": self.template_params,
             "hide_left_bar": self.hide_left_bar,
-            "saved_query": self.saved_query.to_dict() if self.saved_query else None,
         }
 
 

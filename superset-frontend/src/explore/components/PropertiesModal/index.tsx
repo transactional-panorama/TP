@@ -18,29 +18,27 @@
  */
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import Modal from 'src/components/Modal';
-import { Input, TextArea } from 'src/components/Input';
+import { Form, Row, Col, Input, TextArea } from 'src/common/components';
 import Button from 'src/components/Button';
-import { Select, Row, Col, AntdForm } from 'src/components';
+import { Select } from 'src/components';
 import { SelectValue } from 'antd/lib/select';
 import rison from 'rison';
 import { t, SupersetClient, styled } from '@superset-ui/core';
 import Chart, { Slice } from 'src/types/Chart';
 import { getClientErrorObject } from 'src/utils/getClientErrorObject';
-import withToasts from 'src/components/MessageToasts/withToasts';
 
-export type PropertiesModalProps = {
+type PropertiesModalProps = {
   slice: Slice;
   show: boolean;
   onHide: () => void;
   onSave: (chart: Chart) => void;
   permissionsError?: string;
   existingOwners?: SelectValue;
-  addSuccessToast: (msg: string) => void;
 };
 
-const FormItem = AntdForm.Item;
+const FormItem = Form.Item;
 
-const StyledFormItem = styled(AntdForm.Item)`
+const StyledFormItem = styled(Form.Item)`
   margin-bottom: 0;
 `;
 
@@ -48,15 +46,14 @@ const StyledHelpBlock = styled.span`
   margin-bottom: 0;
 `;
 
-function PropertiesModal({
+export default function PropertiesModal({
   slice,
   onHide,
   onSave,
   show,
-  addSuccessToast,
 }: PropertiesModalProps) {
   const [submitting, setSubmitting] = useState(false);
-  const [form] = AntdForm.useForm();
+  const [form] = Form.useForm();
   // values of form inputs
   const [name, setName] = useState(slice.slice_name || '');
   const [selectedOwners, setSelectedOwners] = useState<SelectValue | null>(
@@ -97,25 +94,24 @@ function PropertiesModal({
   );
 
   const loadOptions = useMemo(
-    () =>
-      (input = '', page: number, pageSize: number) => {
-        const query = rison.encode({
-          filter: input,
-          page,
-          page_size: pageSize,
-        });
-        return SupersetClient.get({
-          endpoint: `/api/v1/chart/related/owners?q=${query}`,
-        }).then(response => ({
-          data: response.json.result.map(
-            (item: { value: number; text: string }) => ({
-              value: item.value,
-              label: item.text,
-            }),
-          ),
-          totalCount: response.json.count,
-        }));
-      },
+    () => (input = '', page: number, pageSize: number) => {
+      const query = rison.encode({
+        filter: input,
+        page,
+        page_size: pageSize,
+      });
+      return SupersetClient.get({
+        endpoint: `/api/v1/chart/related/owners?q=${query}`,
+      }).then(response => ({
+        data: response.json.result.map(
+          (item: { value: number; text: string }) => ({
+            value: item.value,
+            label: item.text,
+          }),
+        ),
+        totalCount: response.json.count,
+      }));
+    },
     [],
   );
 
@@ -141,12 +137,10 @@ function PropertiesModal({
         certifiedBy && certificationDetails ? certificationDetails : null,
     };
     if (selectedOwners) {
-      payload.owners = (
-        selectedOwners as {
-          value: number;
-          label: string;
-        }[]
-      ).map(o => o.value);
+      payload.owners = (selectedOwners as {
+        value: number;
+        label: string;
+      }[]).map(o => o.value);
     }
     try {
       const res = await SupersetClient.put({
@@ -156,12 +150,10 @@ function PropertiesModal({
       });
       // update the redux state
       const updatedChart = {
-        ...payload,
         ...res.json.result,
         id: slice.slice_id,
       };
       onSave(updatedChart);
-      addSuccessToast(t('Chart properties updated'));
       onHide();
     } catch (res) {
       const clientError = await getClientErrorObject(res);
@@ -204,14 +196,7 @@ function PropertiesModal({
             buttonSize="small"
             buttonStyle="primary"
             onClick={form.submit}
-            disabled={submitting || !name || slice.is_managed_externally}
-            tooltip={
-              slice.is_managed_externally
-                ? t(
-                    "This chart is managed externally, and can't be edited in Superset",
-                  )
-                : ''
-            }
+            disabled={submitting || !name}
             cta
           >
             {t('Save')}
@@ -221,7 +206,7 @@ function PropertiesModal({
       responsive
       wrapProps={{ 'data-test': 'properties-edit-modal' }}
     >
-      <AntdForm
+      <Form
         form={form}
         onFinish={onSubmit}
         layout="vertical"
@@ -241,7 +226,6 @@ function PropertiesModal({
             <h3>{t('Basic information')}</h3>
             <FormItem label={t('Name')} required>
               <Input
-                aria-label={t('Name')}
                 name="name"
                 data-test="properties-modal-name-input"
                 type="text"
@@ -264,7 +248,7 @@ function PropertiesModal({
             <h3>{t('Certification')}</h3>
             <FormItem>
               <StyledFormItem label={t('Certified by')} name="certified_by">
-                <Input aria-label={t('Certified by')} />
+                <Input />
               </StyledFormItem>
               <StyledHelpBlock className="help-block">
                 {t('Person or group that has certified this chart.')}
@@ -275,7 +259,7 @@ function PropertiesModal({
                 label={t('Certification details')}
                 name="certification_details"
               >
-                <Input aria-label={t('Certification details')} />
+                <Input />
               </StyledFormItem>
               <StyledHelpBlock className="help-block">
                 {t(
@@ -287,8 +271,8 @@ function PropertiesModal({
           <Col xs={24} md={12}>
             <h3>{t('Configuration')}</h3>
             <FormItem>
-              <StyledFormItem label={t('Cache timeout')} name="cache_timeout">
-                <Input aria-label="Cache timeout" />
+              <StyledFormItem label={t('Cache timeout')} name="cacheTimeout">
+                <Input />
               </StyledFormItem>
               <StyledHelpBlock className="help-block">
                 {t(
@@ -316,9 +300,7 @@ function PropertiesModal({
             </FormItem>
           </Col>
         </Row>
-      </AntdForm>
+      </Form>
     </Modal>
   );
 }
-
-export default withToasts(PropertiesModal);

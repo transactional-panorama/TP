@@ -18,44 +18,26 @@
  */
 
 /* eslint-disable no-param-reassign */
-import throttle from 'lodash/throttle';
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  useRef,
-  createContext,
-} from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { DataMask, HandlerFunction, styled, t } from '@superset-ui/core';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
 import cx from 'classnames';
-import {
-  DataMaskStateWithId,
-  DataMaskWithId,
-  Filter,
-  DataMask,
-  HandlerFunction,
-  styled,
-  t,
-  SLOW_DEBOUNCE,
-  isNativeFilter,
-} from '@superset-ui/core';
 import Icons from 'src/components/Icons';
-import { AntdTabs } from 'src/components';
+import { Tabs } from 'src/common/components';
 import { useHistory } from 'react-router-dom';
-import { usePrevious } from 'src/hooks/usePrevious';
+import { usePrevious } from 'src/common/hooks/usePrevious';
+import rison from 'rison';
 import { FeatureFlag, isFeatureEnabled } from 'src/featureFlags';
 import { updateDataMask, clearDataMask } from 'src/dataMask/actions';
+import { DataMaskStateWithId, DataMaskWithId } from 'src/dataMask/types';
 import { useImmer } from 'use-immer';
-import { isEmpty, isEqual, debounce } from 'lodash';
+import { isEmpty, isEqual } from 'lodash';
 import { testWithId } from 'src/utils/testUtils';
+import { Filter } from 'src/dashboard/components/nativeFilters/types';
 import Loading from 'src/components/Loading';
 import { getInitialDataMask } from 'src/dataMask/reducer';
 import { URL_PARAMS } from 'src/constants';
-import { getUrlParam } from 'src/utils/urlUtils';
-import { EmptyStateSmall } from 'src/components/EmptyState';
-import { useTabId } from 'src/hooks/useTabId';
-import { RootState } from 'src/dashboard/types';
+import replaceUndefinedByNull from 'src/dashboard/util/replaceUndefinedByNull';
 import { checkIsApplyDisabled, TabIds } from './utils';
 import FilterSets from './FilterSets';
 import {
@@ -65,11 +47,9 @@ import {
   useFilterUpdates,
   useInitialization,
 } from './state';
-import { createFilterKey, updateFilterKey } from './keyValue';
 import EditSection from './FilterSets/EditSection';
 import Header from './Header';
 import FilterControls from './FilterControls/FilterControls';
-import { ActionButtons } from './ActionButtons';
 
 export const FILTER_BAR_TEST_ID = 'filter-bar';
 export const getFilterBarTestId = testWithId(FILTER_BAR_TEST_ID);
@@ -102,6 +82,7 @@ const Bar = styled.div<{ width: number }>`
   border-bottom: 1px solid ${({ theme }) => theme.colors.grayscale.light2};
   min-height: 100%;
   display: none;
+
   &.open {
     display: flex;
   }
@@ -116,12 +97,14 @@ const CollapsedBar = styled.div<{ offset: number }>`
   padding-top: ${({ theme }) => theme.gridUnit * 2}px;
   display: none;
   text-align: center;
+
   &.open {
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: ${({ theme }) => theme.gridUnit * 2}px;
   }
+
   svg {
     cursor: pointer;
   }
@@ -136,7 +119,7 @@ const StyledFilterIcon = styled(Icons.Filter)`
   color: ${({ theme }) => theme.colors.grayscale.base};
 `;
 
-const StyledTabs = styled(AntdTabs)`
+const StyledTabs = styled(Tabs)`
   & .ant-tabs-nav-list {
     width: 100%;
   }
@@ -146,14 +129,6 @@ const StyledTabs = styled(AntdTabs)`
     margin: 0;
     flex: 1;
   }
-
-  & > .ant-tabs-nav .ant-tabs-nav-operations {
-    display: none;
-  }
-`;
-
-const FilterBarEmptyStateContainer = styled.div`
-  margin-top: ${({ theme }) => theme.gridUnit * 8}px;
 `;
 
 export interface FiltersBarProps {
@@ -165,61 +140,6 @@ export interface FiltersBarProps {
   offset: number;
 }
 
-const EXCLUDED_URL_PARAMS: string[] = [
-  URL_PARAMS.nativeFilters.name,
-  URL_PARAMS.permalinkKey.name,
-];
-
-const publishDataMask = debounce(
-  async (
-    history,
-    dashboardId,
-    updateKey,
-    dataMaskSelected: DataMaskStateWithId,
-    tabId,
-  ) => {
-    const { location } = history;
-    const { search } = location;
-    const previousParams = new URLSearchParams(search);
-    const newParams = new URLSearchParams();
-    let dataMaskKey: string | null;
-    previousParams.forEach((value, key) => {
-      if (!EXCLUDED_URL_PARAMS.includes(key)) {
-        newParams.append(key, value);
-      }
-    });
-
-    const nativeFiltersCacheKey = getUrlParam(URL_PARAMS.nativeFiltersKey);
-    const dataMask = JSON.stringify(dataMaskSelected);
-    if (
-      updateKey &&
-      nativeFiltersCacheKey &&
-      (await updateFilterKey(
-        dashboardId,
-        dataMask,
-        nativeFiltersCacheKey,
-        tabId,
-      ))
-    ) {
-      dataMaskKey = nativeFiltersCacheKey;
-    } else {
-      dataMaskKey = await createFilterKey(dashboardId, dataMask, tabId);
-    }
-    if (dataMaskKey) {
-      newParams.set(URL_PARAMS.nativeFiltersKey.name, dataMaskKey);
-    }
-
-    // pathname could be updated somewhere else through window.history
-    // keep react router history in sync with window history
-    history.location.pathname = window.location.pathname;
-    history.replace({
-      search: newParams.toString(),
-    });
-  },
-  SLOW_DEBOUNCE,
-);
-
-export const FilterBarScrollContext = createContext(false);
 const FilterBar: React.FC<FiltersBarProps> = ({
   filtersOpen,
   toggleFiltersBar,
@@ -230,65 +150,78 @@ const FilterBar: React.FC<FiltersBarProps> = ({
 }) => {
   const history = useHistory();
   const dataMaskApplied: DataMaskStateWithId = useNativeFiltersDataMask();
-  const [editFilterSetId, setEditFilterSetId] = useState<number | null>(null);
-  const [dataMaskSelected, setDataMaskSelected] =
-    useImmer<DataMaskStateWithId>(dataMaskApplied);
+  const [editFilterSetId, setEditFilterSetId] = useState<string | null>(null);
+  const [dataMaskSelected, setDataMaskSelected] = useImmer<DataMaskStateWithId>(
+    dataMaskApplied,
+  );
   const dispatch = useDispatch();
-  const [updateKey, setUpdateKey] = useState(0);
-  const tabId = useTabId();
   const filterSets = useFilterSets();
   const filterSetFilterValues = Object.values(filterSets);
   const [tab, setTab] = useState(TabIds.AllFilters);
   const filters = useFilters();
   const previousFilters = usePrevious(filters);
-  const filterValues = Object.values(filters);
-  const nativeFilterValues = filterValues.filter(isNativeFilter);
-  const dashboardId = useSelector<any, string>(
-    ({ dashboardInfo }) => dashboardInfo?.id,
-  );
-  const canEdit = useSelector<RootState, boolean>(
-    ({ dashboardInfo }) => dashboardInfo.dash_edit_perm,
-  );
+  const filterValues = Object.values<Filter>(filters);
+  const [isFilterSetChanged, setIsFilterSetChanged] = useState(false);
 
-  const [isScrolling, setIsScrolling] = useState(false);
-  const timeout = useRef<any>();
+  const handleFilterSelectionChange = (
+    filter: Pick<Filter, 'id'> & Partial<Filter>,
+    dataMask: Partial<DataMask>,
+  ) => {
+    setIsFilterSetChanged(tab !== TabIds.AllFilters);
+    setDataMaskSelected(draft => {
+      // force instant updating on initialization for filters with `requiredFirst` is true or instant filters
+      if (
+        // filterState.value === undefined - means that value not initialized
+        dataMask.filterState?.value !== undefined &&
+        dataMaskSelected[filter.id]?.filterState?.value === undefined &&
+        filter.requiredFirst
+      ) {
+        dispatch(updateDataMask(filter.id, dataMask));
+      }
 
-  const handleFilterSelectionChange = useCallback(
-    (
-      filter: Pick<Filter, 'id'> & Partial<Filter>,
-      dataMask: Partial<DataMask>,
-    ) => {
-      setDataMaskSelected(draft => {
-        // force instant updating on initialization for filters with `requiredFirst` is true or instant filters
-        if (
-          // filterState.value === undefined - means that value not initialized
-          dataMask.filterState?.value !== undefined &&
-          dataMaskSelected[filter.id]?.filterState?.value === undefined &&
-          filter.requiredFirst
-        ) {
-          dispatch(updateDataMask(filter.id, dataMask));
+      draft[filter.id] = {
+        ...(getInitialDataMask(filter.id) as DataMaskWithId),
+        ...dataMask,
+      };
+    });
+  };
+
+  const publishDataMask = useCallback(
+    (dataMaskSelected: DataMaskStateWithId) => {
+      const { location } = history;
+      const { search } = location;
+      const previousParams = new URLSearchParams(search);
+      const newParams = new URLSearchParams();
+
+      previousParams.forEach((value, key) => {
+        if (key !== URL_PARAMS.nativeFilters.name) {
+          newParams.append(key, value);
         }
+      });
 
-        draft[filter.id] = {
-          ...(getInitialDataMask(filter.id) as DataMaskWithId),
-          ...dataMask,
-        };
+      newParams.set(
+        URL_PARAMS.nativeFilters.name,
+        rison.encode(replaceUndefinedByNull(dataMaskSelected)),
+      );
+
+      // pathname could be updated somewhere else through window.history
+      // keep react router history in sync with window history
+      history.location.pathname = window.location.pathname;
+      history.replace({
+        search: newParams.toString(),
       });
     },
-    [dataMaskSelected, dispatch, setDataMaskSelected],
+    [history],
   );
 
   useEffect(() => {
     if (previousFilters) {
       const updates = {};
       Object.values(filters).forEach(currentFilter => {
-        const previousFilter = previousFilters?.[currentFilter.id];
-        if (!previousFilter) {
-          return;
-        }
         const currentType = currentFilter.filterType;
         const currentTargets = currentFilter.targets;
         const currentDataMask = currentFilter.defaultDataMask;
+        const previousFilter = previousFilters?.[currentFilter.id];
         const previousType = previousFilter?.filterType;
         const previousTargets = previousFilter?.targets;
         const previousDataMask = previousFilter?.defaultDataMask;
@@ -308,200 +241,126 @@ const FilterBar: React.FC<FiltersBarProps> = ({
     }
   }, [JSON.stringify(filters), JSON.stringify(previousFilters)]);
 
-  const dataMaskAppliedText = JSON.stringify(dataMaskApplied);
-
   useEffect(() => {
     setDataMaskSelected(() => dataMaskApplied);
-  }, [dataMaskAppliedText, setDataMaskSelected]);
+  }, [JSON.stringify(dataMaskApplied), setDataMaskSelected]);
 
+  const dataMaskAppliedText = JSON.stringify(dataMaskApplied);
   useEffect(() => {
-    publishDataMask(history, dashboardId, updateKey, dataMaskApplied, tabId);
+    publishDataMask(dataMaskApplied);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dashboardId, dataMaskAppliedText, history, updateKey, tabId]);
+  }, [dataMaskAppliedText, publishDataMask]);
 
-  const handleApply = useCallback(() => {
+  const handleApply = () => {
     const filterIds = Object.keys(dataMaskSelected);
-    setUpdateKey(1);
     filterIds.forEach(filterId => {
       if (dataMaskSelected[filterId]) {
         dispatch(updateDataMask(filterId, dataMaskSelected[filterId]));
       }
     });
-  }, [dataMaskSelected, dispatch]);
+  };
 
-  const handleClearAll = useCallback(() => {
+  const handleClearAll = () => {
     const filterIds = Object.keys(dataMaskSelected);
     filterIds.forEach(filterId => {
       if (dataMaskSelected[filterId]) {
         dispatch(clearDataMask(filterId));
-        setDataMaskSelected(draft => {
-          if (draft[filterId].filterState?.value !== undefined) {
-            draft[filterId].filterState!.value = undefined;
-          }
-        });
       }
     });
-  }, [dataMaskSelected, dispatch, setDataMaskSelected]);
-
-  const openFiltersBar = useCallback(
-    () => toggleFiltersBar(true),
-    [toggleFiltersBar],
-  );
-
-  const onScroll = useCallback(
-    throttle(() => {
-      clearTimeout(timeout.current);
-      setIsScrolling(true);
-      timeout.current = setTimeout(() => {
-        setIsScrolling(false);
-      }, 300);
-    }, 200),
-    [],
-  );
-
-  useEffect(() => {
-    document.onscroll = onScroll;
-    return () => {
-      document.onscroll = null;
-    };
-  }, [onScroll]);
+  };
 
   useFilterUpdates(dataMaskSelected, setDataMaskSelected);
   const isApplyDisabled = checkIsApplyDisabled(
     dataMaskSelected,
     dataMaskApplied,
-    nativeFilterValues,
+    filterValues,
   );
   const isInitialized = useInitialization();
-  const tabPaneStyle = useMemo(
-    () => ({ overflow: 'auto', height, overscrollBehavior: 'contain' }),
-    [height],
-  );
-
-  const numberOfFilters = nativeFilterValues.length;
 
   return (
-    <FilterBarScrollContext.Provider value={isScrolling}>
-      <BarWrapper
-        {...getFilterBarTestId()}
-        className={cx({ open: filtersOpen })}
-        width={width}
+    <BarWrapper
+      {...getFilterBarTestId()}
+      className={cx({ open: filtersOpen })}
+      width={width}
+    >
+      <CollapsedBar
+        {...getFilterBarTestId('collapsable')}
+        className={cx({ open: !filtersOpen })}
+        onClick={() => toggleFiltersBar(true)}
+        offset={offset}
       >
-        <CollapsedBar
-          {...getFilterBarTestId('collapsable')}
-          className={cx({ open: !filtersOpen })}
-          onClick={openFiltersBar}
-          offset={offset}
-        >
-          <StyledCollapseIcon
-            {...getFilterBarTestId('expand-button')}
-            iconSize="l"
-          />
-          <StyledFilterIcon
-            {...getFilterBarTestId('filter-icon')}
-            iconSize="l"
-          />
-        </CollapsedBar>
-        <Bar className={cx({ open: filtersOpen })} width={width}>
-          <Header toggleFiltersBar={toggleFiltersBar} />
-          {!isInitialized ? (
-            <div css={{ height }}>
-              <Loading />
-            </div>
-          ) : isFeatureEnabled(FeatureFlag.DASHBOARD_NATIVE_FILTERS_SET) ? (
-            <StyledTabs
-              centered
-              onChange={setTab as HandlerFunction}
-              defaultActiveKey={TabIds.AllFilters}
-              activeKey={editFilterSetId ? TabIds.AllFilters : undefined}
+        <StyledCollapseIcon
+          {...getFilterBarTestId('expand-button')}
+          iconSize="l"
+        />
+        <StyledFilterIcon {...getFilterBarTestId('filter-icon')} iconSize="l" />
+      </CollapsedBar>
+      <Bar className={cx({ open: filtersOpen })} width={width}>
+        <Header
+          toggleFiltersBar={toggleFiltersBar}
+          onApply={handleApply}
+          onClearAll={handleClearAll}
+          isApplyDisabled={isApplyDisabled}
+          dataMaskSelected={dataMaskSelected}
+          dataMaskApplied={dataMaskApplied}
+        />
+        {!isInitialized ? (
+          <div css={{ height }}>
+            <Loading />
+          </div>
+        ) : isFeatureEnabled(FeatureFlag.DASHBOARD_NATIVE_FILTERS_SET) ? (
+          <StyledTabs
+            centered
+            onChange={setTab as HandlerFunction}
+            defaultActiveKey={TabIds.AllFilters}
+            activeKey={editFilterSetId ? TabIds.AllFilters : undefined}
+          >
+            <Tabs.TabPane
+              tab={t(`All Filters (${filterValues.length})`)}
+              key={TabIds.AllFilters}
+              css={{ overflow: 'auto', height }}
             >
-              <AntdTabs.TabPane
-                tab={t('All filters (%(filterCount)d)', {
-                  filterCount: numberOfFilters,
-                })}
-                key={TabIds.AllFilters}
-                css={tabPaneStyle}
-              >
-                {editFilterSetId && (
-                  <EditSection
-                    dataMaskSelected={dataMaskSelected}
-                    disabled={!isApplyDisabled}
-                    onCancel={() => setEditFilterSetId(null)}
-                    filterSetId={editFilterSetId}
-                  />
-                )}
-                {filterValues.length === 0 ? (
-                  <FilterBarEmptyStateContainer>
-                    <EmptyStateSmall
-                      title={t('No filters are currently added')}
-                      image="filter.svg"
-                      description={
-                        canEdit &&
-                        t(
-                          'Click the button above to add a filter to the dashboard',
-                        )
-                      }
-                    />
-                  </FilterBarEmptyStateContainer>
-                ) : (
-                  <FilterControls
-                    dataMaskSelected={dataMaskSelected}
-                    directPathToChild={directPathToChild}
-                    onFilterSelectionChange={handleFilterSelectionChange}
-                  />
-                )}
-              </AntdTabs.TabPane>
-              <AntdTabs.TabPane
-                disabled={!!editFilterSetId}
-                tab={t('Filter sets (%(filterSetCount)d)', {
-                  filterSetCount: filterSetFilterValues.length,
-                })}
-                key={TabIds.FilterSets}
-                css={tabPaneStyle}
-              >
-                <FilterSets
-                  onEditFilterSet={setEditFilterSetId}
+              {editFilterSetId && (
+                <EditSection
+                  dataMaskSelected={dataMaskSelected}
                   disabled={!isApplyDisabled}
-                  dataMaskSelected={dataMaskSelected}
-                  tab={tab}
-                  onFilterSelectionChange={handleFilterSelectionChange}
-                />
-              </AntdTabs.TabPane>
-            </StyledTabs>
-          ) : (
-            <div css={tabPaneStyle} onScroll={onScroll}>
-              {filterValues.length === 0 ? (
-                <FilterBarEmptyStateContainer>
-                  <EmptyStateSmall
-                    title={t('No filters are currently added')}
-                    image="filter.svg"
-                    description={
-                      canEdit &&
-                      t(
-                        'Click the button above to add a filter to the dashboard',
-                      )
-                    }
-                  />
-                </FilterBarEmptyStateContainer>
-              ) : (
-                <FilterControls
-                  dataMaskSelected={dataMaskSelected}
-                  directPathToChild={directPathToChild}
-                  onFilterSelectionChange={handleFilterSelectionChange}
+                  onCancel={() => setEditFilterSetId(null)}
+                  filterSetId={editFilterSetId}
                 />
               )}
-            </div>
-          )}
-          <ActionButtons
-            onApply={handleApply}
-            onClearAll={handleClearAll}
-            dataMaskSelected={dataMaskSelected}
-            dataMaskApplied={dataMaskApplied}
-            isApplyDisabled={isApplyDisabled}
-          />
-        </Bar>
-      </BarWrapper>
-    </FilterBarScrollContext.Provider>
+              <FilterControls
+                dataMaskSelected={dataMaskSelected}
+                directPathToChild={directPathToChild}
+                onFilterSelectionChange={handleFilterSelectionChange}
+              />
+            </Tabs.TabPane>
+            <Tabs.TabPane
+              disabled={!!editFilterSetId}
+              tab={t(`Filter Sets (${filterSetFilterValues.length})`)}
+              key={TabIds.FilterSets}
+              css={{ overflow: 'auto', height }}
+            >
+              <FilterSets
+                onEditFilterSet={setEditFilterSetId}
+                disabled={!isApplyDisabled}
+                dataMaskSelected={dataMaskSelected}
+                isFilterSetChanged={isFilterSetChanged}
+                onFilterSelectionChange={handleFilterSelectionChange}
+              />
+            </Tabs.TabPane>
+          </StyledTabs>
+        ) : (
+          <div css={{ overflow: 'auto', height }}>
+            <FilterControls
+              dataMaskSelected={dataMaskSelected}
+              directPathToChild={directPathToChild}
+              onFilterSelectionChange={handleFilterSelectionChange}
+            />
+          </div>
+        )}
+      </Bar>
+    </BarWrapper>
   );
 };
-export default React.memo(FilterBar);
+
+export default FilterBar;

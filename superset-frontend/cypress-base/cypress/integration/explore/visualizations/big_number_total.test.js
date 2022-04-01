@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { interceptChart } from 'cypress/utils';
 import { FORM_DATA_DEFAULTS, NUM_METRIC } from './shared.helper';
 
 describe('Visualization > Big Number Total', () => {
@@ -27,15 +26,15 @@ describe('Visualization > Big Number Total', () => {
 
   beforeEach(() => {
     cy.login();
-    interceptChart({ legacy: false }).as('chartData');
+    cy.intercept('POST', '/superset/explore_json/**').as('getJson');
   });
 
   it('Test big number chart with adhoc metric', () => {
     const formData = { ...BIG_NUMBER_DEFAULTS, metric: NUM_METRIC };
 
-    cy.visitChartByParams(formData);
+    cy.visitChartByParams(JSON.stringify(formData));
     cy.verifySliceSuccess({
-      waitAlias: '@chartData',
+      waitAlias: '@getJson',
       querySubstring: NUM_METRIC.label,
     });
   });
@@ -59,8 +58,8 @@ describe('Visualization > Big Number Total', () => {
       adhoc_filters: filters,
     };
 
-    cy.visitChartByParams(formData);
-    cy.verifySliceSuccess({ waitAlias: '@chartData' });
+    cy.visitChartByParams(JSON.stringify(formData));
+    cy.verifySliceSuccess({ waitAlias: '@getJson' });
   });
 
   it('Test big number chart ignores groupby', () => {
@@ -70,11 +69,11 @@ describe('Visualization > Big Number Total', () => {
       groupby: ['state'],
     };
 
-    cy.visitChartByParams(formData);
-    cy.wait(['@chartData']).then(async ({ response }) => {
+    cy.visitChartByParams(JSON.stringify(formData));
+    cy.wait(['@getJson']).then(async ({ response }) => {
       cy.verifySliceContainer();
       const responseBody = response?.body;
-      expect(responseBody.result[0].query).not.contains(formData.groupby[0]);
+      expect(responseBody.query).not.contains(formData.groupby[0]);
     });
   });
 });

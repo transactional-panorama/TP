@@ -17,27 +17,29 @@
  * under the License.
  */
 import {
-  AdhocFilter,
+  ExtraFormData,
+  QueryFormData,
+  getChartMetadataRegistry,
   Behavior,
-  DataMaskStateWithId,
   EXTRA_FORM_DATA_APPEND_KEYS,
   EXTRA_FORM_DATA_OVERRIDE_KEYS,
-  ExtraFormData,
+  AdhocFilter,
   FeatureFlag,
-  Filter,
-  getChartMetadataRegistry,
-  QueryFormData,
 } from '@superset-ui/core';
 import { Charts, DashboardLayout } from 'src/dashboard/types';
+import { RefObject } from 'react';
+import { DataMaskStateWithId } from 'src/dataMask/types';
 import extractUrlParams from 'src/dashboard/util/extractUrlParams';
 import { isFeatureEnabled } from 'src/featureFlags';
+import { Filter } from './types';
 import { CHART_TYPE, TAB_TYPE } from '../../util/componentTypes';
 import { DASHBOARD_GRID_ID, DASHBOARD_ROOT_ID } from '../../util/constants';
 
 export const getFormData = ({
   datasetId,
-  dependencies = {},
+  cascadingFilters = {},
   groupby,
+  inputRef,
   defaultDataMask,
   controlValues,
   filterType,
@@ -48,7 +50,8 @@ export const getFormData = ({
   type,
 }: Partial<Filter> & {
   datasetId?: number;
-  dependencies?: object;
+  inputRef?: RefObject<HTMLInputElement>;
+  cascadingFilters?: object;
   groupby?: string;
   adhoc_filters?: AdhocFilter[];
   time_range?: string;
@@ -72,16 +75,18 @@ export const getFormData = ({
     ...otherProps,
     adhoc_filters: adhoc_filters ?? [],
     extra_filters: [],
-    extra_form_data: dependencies,
+    extra_form_data: cascadingFilters,
     granularity_sqla,
     metrics: ['count'],
     row_limit: 1000,
     showSearch: true,
     defaultValue: defaultDataMask?.filterState?.value,
     time_range,
+    time_range_endpoints: ['inclusive', 'exclusive'],
     url_params: extractUrlParams('regular'),
     inView: true,
     viz_type: filterType,
+    inputRef,
     type,
   };
 };

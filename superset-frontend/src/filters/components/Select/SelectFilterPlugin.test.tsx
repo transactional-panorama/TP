@@ -20,7 +20,6 @@ import userEvent from '@testing-library/user-event';
 import { AppSection } from '@superset-ui/core';
 import React from 'react';
 import { render, screen } from 'spec/helpers/testing-library';
-import { NULL_STRING } from 'src/utils/common';
 import SelectFilterPlugin from './SelectFilterPlugin';
 import transformProps from './transformProps';
 
@@ -56,7 +55,7 @@ const selectMultipleProps = {
       rowcount: 2,
       colnames: ['gender'],
       coltypes: [1],
-      data: [{ gender: 'boy' }, { gender: 'girl' }, { gender: null }],
+      data: [{ gender: 'boy' }, { gender: 'girl' }],
       applied_filters: [{ column: 'gender' }],
       rejected_filters: [],
     },
@@ -192,30 +191,6 @@ describe('SelectFilterPlugin', () => {
       filterState: {
         label: 'girl (excluded)',
         value: ['girl'],
-      },
-    });
-  });
-
-  it('Select single null (empty) value', () => {
-    getWrapper();
-    userEvent.click(screen.getByRole('combobox'));
-    userEvent.click(screen.getByTitle(NULL_STRING));
-    expect(setDataMask).toHaveBeenLastCalledWith({
-      __cache: {
-        value: ['boy'],
-      },
-      extraFormData: {
-        filters: [
-          {
-            col: 'gender',
-            op: 'IN',
-            val: ['boy', null],
-          },
-        ],
-      },
-      filterState: {
-        label: `boy, ${NULL_STRING}`,
-        value: ['boy', null],
       },
     });
   });

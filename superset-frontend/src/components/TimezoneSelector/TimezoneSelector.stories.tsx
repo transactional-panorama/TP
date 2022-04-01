@@ -18,7 +18,7 @@
  */
 import React from 'react';
 import { useArgs } from '@storybook/client-api';
-import TimezoneSelector, { TimezoneSelectorProps } from './index';
+import TimezoneSelector, { TimezoneProps } from './index';
 
 export default {
   title: 'TimezoneSelector',
@@ -26,7 +26,7 @@ export default {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const InteractiveTimezoneSelector = (args: TimezoneSelectorProps) => {
+export const InteractiveTimezoneSelector = (args: TimezoneProps) => {
   const [{ timezone }, updateArgs] = useArgs();
   const onTimezoneChange = (value: string) => {
     updateArgs({ timezone: value });

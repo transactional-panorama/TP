@@ -22,11 +22,8 @@ import Collapse from 'src/components/Collapse';
 import { User } from 'src/types/bootstrapTypes';
 import { reject } from 'lodash';
 import {
-  getItem,
-  dangerouslyGetItemDoNotUse,
-  setItem,
-  dangerouslySetItemDoNotUse,
-  LocalStorageKeys,
+  getFromLocalStorage,
+  setInLocalStorage,
 } from 'src/utils/localStorageHelpers';
 import ListViewCard from 'src/components/ListViewCard';
 import withToasts from 'src/components/MessageToasts/withToasts';
@@ -38,8 +35,12 @@ import {
   getUserOwnedObjects,
   loadingCardCount,
 } from 'src/views/CRUD/utils';
+import {
+  HOMEPAGE_ACTIVITY_FILTER,
+  HOMEPAGE_COLLAPSE_STATE,
+} from 'src/views/CRUD/storageKeys';
 import { FeatureFlag, isFeatureEnabled } from 'src/featureFlags';
-import { AntdSwitch } from 'src/components';
+import { Switch } from 'src/common/components';
 
 import ActivityTable from './ActivityTable';
 import ChartTable from './ChartTable';
@@ -134,13 +135,8 @@ const WelcomeNav = styled.div`
 
 export const LoadingCards = ({ cover }: LoadingProps) => (
   <CardContainer showThumbnails={cover} className="loading-cards">
-    {[...new Array(loadingCardCount)].map((_, index) => (
-      <ListViewCard
-        key={index}
-        cover={cover ? false : <></>}
-        description=""
-        loading
-      />
+    {[...new Array(loadingCardCount)].map(() => (
+      <ListViewCard cover={cover ? false : <></>} description="" loading />
     ))}
   </CardContainer>
 );
@@ -150,7 +146,7 @@ function Welcome({ user, addDangerToast }: WelcomeProps) {
   const id = userid.toString();
   const recent = `/superset/recent_activity/${user.userId}/?limit=6`;
   const [activeChild, setActiveChild] = useState('Loading');
-  const userKey = dangerouslyGetItemDoNotUse(id, null);
+  const userKey = getFromLocalStorage(id, null);
   let defaultChecked = false;
   if (isFeatureEnabled(FeatureFlag.THUMBNAILS)) {
     defaultChecked =
@@ -165,17 +161,17 @@ function Welcome({ user, addDangerToast }: WelcomeProps) {
   );
   const [loadedCount, setLoadedCount] = useState(0);
 
-  const collapseState = getItem(LocalStorageKeys.homepage_collapse_state, []);
+  const collapseState = getFromLocalStorage(HOMEPAGE_COLLAPSE_STATE, null);
   const [activeState, setActiveState] = useState<Array<string>>(collapseState);
 
   const handleCollapse = (state: Array<string>) => {
     setActiveState(state);
-    setItem(LocalStorageKeys.homepage_collapse_state, state);
+    setInLocalStorage(HOMEPAGE_COLLAPSE_STATE, state);
   };
 
   useEffect(() => {
-    const activeTab = getItem(LocalStorageKeys.homepage_activity_filter, null);
-    setActiveState(collapseState.length > 0 ? collapseState : DEFAULT_TAB_ARR);
+    const activeTab = getFromLocalStorage(HOMEPAGE_ACTIVITY_FILTER, null);
+    setActiveState(collapseState || DEFAULT_TAB_ARR);
     getRecentAcitivtyObjs(user.userId, recent, addDangerToast)
       .then(res => {
         const data: ActivityData | null = {};
@@ -187,7 +183,7 @@ function Welcome({ user, addDangerToast }: WelcomeProps) {
             setActiveChild('Viewed');
           } else if (!activeTab && !data.Viewed) {
             setActiveChild('Created');
-          } else setActiveChild(activeTab || 'Created');
+          } else setActiveChild(activeTab);
         } else if (!activeTab) setActiveChild('Created');
         else setActiveChild(activeTab);
         setActivityData(activityData => ({ ...activityData, ...data }));
@@ -202,13 +198,7 @@ function Welcome({ user, addDangerToast }: WelcomeProps) {
       );
 
     // Sets other activity data in parallel with recents api call
-    const ownSavedQueryFilters = [
-      {
-        col: 'created_by',
-        opr: 'rel_o_m',
-        value: `${id}`,
-      },
-    ];
+
     getUserOwnedObjects(id, 'dashboard')
       .then(r => {
         setDashboardData(r);
@@ -218,7 +208,7 @@ function Welcome({ user, addDangerToast }: WelcomeProps) {
         setDashboardData([]);
         setLoadedCount(loadedCount => loadedCount + 1);
         addDangerToast(
-          t('There was an issue fetching your dashboards: %s', err),
+          t('There was an issues fetching your dashboards: %s', err),
         );
       });
     getUserOwnedObjects(id, 'chart')
@@ -229,9 +219,9 @@ function Welcome({ user, addDangerToast }: WelcomeProps) {
       .catch((err: unknown) => {
         setChartData([]);
         setLoadedCount(loadedCount => loadedCount + 1);
-        addDangerToast(t('There was an issue fetching your chart: %s', err));
+        addDangerToast(t('There was an issues fetching your chart: %s', err));
       });
-    getUserOwnedObjects(id, 'saved_query', ownSavedQueryFilters)
+    getUserOwnedObjects(id, 'saved_query')
       .then(r => {
         setQueryData(r);
         setLoadedCount(loadedCount => loadedCount + 1);
@@ -247,7 +237,7 @@ function Welcome({ user, addDangerToast }: WelcomeProps) {
 
   const handleToggle = () => {
     setChecked(!checked);
-    dangerouslySetItemDoNotUse(id, { thumbnails: !checked });
+    setInLocalStorage(id, { thumbnails: !checked });
   };
 
   useEffect(() => {
@@ -278,7 +268,7 @@ function Welcome({ user, addDangerToast }: WelcomeProps) {
         <span className="navbar-brand">Home</span>
         {isFeatureEnabled(FeatureFlag.THUMBNAILS) ? (
           <div className="switch">
-            <AntdSwitch checked={checked} onChange={handleToggle} />
+            <Switch checked={checked} onChange={handleToggle} />
             <span>Thumbnails</span>
           </div>
         ) : null}

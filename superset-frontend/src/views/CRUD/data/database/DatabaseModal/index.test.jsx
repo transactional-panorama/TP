@@ -591,15 +591,6 @@ describe('DatabaseModal', () => {
       const allowDbExplorationText = screen.getByText(
         /allow this database to be explored/i,
       );
-      const disableSQLLabDataPreviewQueriesCheckbox = screen.getByRole(
-        'checkbox',
-        {
-          name: /Disable SQL Lab data preview queries/i,
-        },
-      );
-      const disableSQLLabDataPreviewQueriesText = screen.getByText(
-        /Disable SQL Lab data preview queries/i,
-      );
 
       // ---------- Assertions ----------
       const visibleComponents = [
@@ -619,7 +610,6 @@ describe('DatabaseModal', () => {
         checkboxOffSVGs[4],
         checkboxOffSVGs[5],
         checkboxOffSVGs[6],
-        checkboxOffSVGs[7],
         tooltipIcons[0],
         tooltipIcons[1],
         tooltipIcons[2],
@@ -627,7 +617,6 @@ describe('DatabaseModal', () => {
         tooltipIcons[4],
         tooltipIcons[5],
         tooltipIcons[6],
-        tooltipIcons[7],
         exposeInSQLLabText,
         allowCTASText,
         allowCVASText,
@@ -638,7 +627,6 @@ describe('DatabaseModal', () => {
         allowMultiSchemaMDFetchText,
         enableQueryCostEstimationText,
         allowDbExplorationText,
-        disableSQLLabDataPreviewQueriesText,
       ];
       // These components exist in the DOM but are not visible
       const invisibleComponents = [
@@ -649,7 +637,6 @@ describe('DatabaseModal', () => {
         allowMultiSchemaMDFetchCheckbox,
         enableQueryCostEstimationCheckbox,
         allowDbExplorationCheckbox,
-        disableSQLLabDataPreviewQueriesCheckbox,
       ];
 
       visibleComponents.forEach(component => {
@@ -658,8 +645,8 @@ describe('DatabaseModal', () => {
       invisibleComponents.forEach(component => {
         expect(component).not.toBeVisible();
       });
-      expect(checkboxOffSVGs).toHaveLength(8);
-      expect(tooltipIcons).toHaveLength(8);
+      expect(checkboxOffSVGs).toHaveLength(7);
+      expect(tooltipIcons).toHaveLength(7);
     });
 
     it('renders the "Advanced" - PERFORMANCE tab correctly', async () => {
@@ -1027,26 +1014,6 @@ describe('DatabaseModal', () => {
 
         */
       });
-    });
-  });
-  describe('DatabaseModal w/ Deeplinking Engine', () => {
-    const renderAndWait = async () => {
-      const mounted = act(async () => {
-        render(<DatabaseModal {...dbProps} dbEngine="PostgreSQL" />, {
-          useRedux: true,
-        });
-      });
-
-      return mounted;
-    };
-
-    beforeEach(async () => {
-      await renderAndWait();
-    });
-
-    it('enters step 2 of 3 when proper database is selected', () => {
-      const step2of3text = screen.getByText(/step 2 of 3/i);
-      expect(step2of3text).toBeVisible();
     });
   });
 });

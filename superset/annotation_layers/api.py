@@ -49,11 +49,7 @@ from superset.annotation_layers.schemas import (
 from superset.constants import MODEL_API_RW_METHOD_PERMISSION_MAP, RouteMethod
 from superset.extensions import event_logger
 from superset.models.annotations import AnnotationLayer
-from superset.views.base_api import (
-    BaseSupersetModelRestApi,
-    requires_json,
-    statsd_metrics,
-)
+from superset.views.base_api import BaseSupersetModelRestApi, statsd_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +171,6 @@ class AnnotationLayerRestApi(BaseSupersetModelRestApi):
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}.post",
         log_to_statsd=False,
     )
-    @requires_json
     def post(self) -> Response:
         """Creates a new Annotation Layer
         ---
@@ -210,6 +205,8 @@ class AnnotationLayerRestApi(BaseSupersetModelRestApi):
             500:
               $ref: '#/components/responses/500'
         """
+        if not request.is_json:
+            return self.response_400(message="Request is not JSON")
         try:
             item = self.add_model_schema.load(request.json)
         # This validates custom Schema with custom validations
@@ -240,7 +237,6 @@ class AnnotationLayerRestApi(BaseSupersetModelRestApi):
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}.put",
         log_to_statsd=False,
     )
-    @requires_json
     def put(self, pk: int) -> Response:
         """Updates an Annotation Layer
         ---
@@ -281,6 +277,8 @@ class AnnotationLayerRestApi(BaseSupersetModelRestApi):
             500:
               $ref: '#/components/responses/500'
         """
+        if not request.is_json:
+            return self.response_400(message="Request is not JSON")
         try:
             item = self.edit_model_schema.load(request.json)
             item["layer"] = pk

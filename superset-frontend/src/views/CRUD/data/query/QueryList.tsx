@@ -27,7 +27,7 @@ import {
 } from 'src/views/CRUD/utils';
 import withToasts from 'src/components/MessageToasts/withToasts';
 import { useListViewResource } from 'src/views/CRUD/hooks';
-import SubMenu, { SubMenuProps } from 'src/views/components/SubMenu';
+import SubMenu, { SubMenuProps } from 'src/components/Menu/SubMenu';
 import Popover from 'src/components/Popover';
 import { commonMenuData } from 'src/views/CRUD/data/common';
 import ListView, {
@@ -91,8 +91,10 @@ function QueryList({ addDangerToast, addSuccessToast }: QueryListProps) {
     false,
   );
 
-  const [queryCurrentlyPreviewing, setQueryCurrentlyPreviewing] =
-    useState<QueryObject>();
+  const [
+    queryCurrentlyPreviewing,
+    setQueryCurrentlyPreviewing,
+  ] = useState<QueryObject>();
 
   const theme = useTheme();
 

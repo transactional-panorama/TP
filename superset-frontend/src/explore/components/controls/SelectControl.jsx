@@ -18,8 +18,8 @@
  */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { css, isEqualArray, t } from '@superset-ui/core';
-import Select from 'src/components/Select/Select';
+import { css, t } from '@superset-ui/core';
+import { Select } from 'src/components';
 import ControlHeader from 'src/explore/components/ControlHeader';
 
 const propTypes = {
@@ -52,7 +52,6 @@ const propTypes = {
   options: PropTypes.array,
   placeholder: PropTypes.string,
   filterOption: PropTypes.func,
-  tokenSeparators: PropTypes.arrayOf(PropTypes.string),
 
   // ControlHeader props
   label: PropTypes.string,
@@ -95,8 +94,8 @@ export default class SelectControl extends React.PureComponent {
 
   UNSAFE_componentWillReceiveProps(nextProps) {
     if (
-      !isEqualArray(nextProps.choices, this.props.choices) ||
-      !isEqualArray(nextProps.options, this.props.options)
+      nextProps.choices !== this.props.choices ||
+      nextProps.options !== this.props.options
     ) {
       const options = this.getOptions(nextProps);
       this.setState({ options });
@@ -111,12 +110,10 @@ export default class SelectControl extends React.PureComponent {
     let onChangeVal = val;
 
     if (Array.isArray(val)) {
-      const values = val.map(v =>
-        v?.[valueKey] !== undefined ? v[valueKey] : v,
-      );
+      const values = val.map(v => v?.[valueKey] || v);
       onChangeVal = values;
     }
-    if (typeof val === 'object' && val?.[valueKey] !== undefined) {
+    if (typeof val === 'object' && val?.[valueKey]) {
       onChangeVal = val[valueKey];
     }
     this.props.onChange(onChangeVal, []);
@@ -178,7 +175,6 @@ export default class SelectControl extends React.PureComponent {
       optionRenderer,
       showHeader,
       value,
-      tokenSeparators,
       // ControlHeader props
       description,
       renderTrigger,
@@ -242,9 +238,7 @@ export default class SelectControl extends React.PureComponent {
       optionRenderer,
       options: this.state.options,
       placeholder,
-      sortComparator: this.props.sortComparator,
       value: getValue(),
-      tokenSeparators,
     };
 
     return (

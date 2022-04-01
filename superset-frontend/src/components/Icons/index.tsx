@@ -165,7 +165,7 @@ IconFileNames.forEach(fileName => {
   );
 });
 
-export type { IconType };
+export { IconType };
 
 export default {
   ...AntdEnhancedIcons,

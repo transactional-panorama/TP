@@ -17,12 +17,30 @@
  * under the License.
  */
 
+import { DataMaskStateWithId } from 'src/dataMask/types';
 import { areObjectsEqual } from 'src/reduxUtils';
-import { DataMaskStateWithId, Filter, FilterState } from '@superset-ui/core';
+import { FilterState } from '@superset-ui/core';
+import { Filter } from '../types';
 
 export enum TabIds {
   AllFilters = 'allFilters',
   FilterSets = 'filterSets',
+}
+
+export function mapParentFiltersToChildren(
+  filters: Filter[],
+): { [id: string]: Filter[] } {
+  const cascadeChildren = {};
+  filters.forEach(filter => {
+    const [parentId] = filter.cascadeParentIds || [];
+    if (parentId) {
+      if (!cascadeChildren[parentId]) {
+        cascadeChildren[parentId] = [];
+      }
+      cascadeChildren[parentId].push(filter);
+    }
+  });
+  return cascadeChildren;
 }
 
 export const getOnlyExtraFormData = (data: DataMaskStateWithId) =>
@@ -50,6 +68,7 @@ export const checkIsApplyDisabled = (
 ) => {
   const dataSelectedValues = Object.values(dataMaskSelected);
   const dataAppliedValues = Object.values(dataMaskApplied);
+
   return (
     areObjectsEqual(
       getOnlyExtraFormData(dataMaskSelected),

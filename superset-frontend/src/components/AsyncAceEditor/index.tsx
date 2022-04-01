@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { forwardRef } from 'react';
+import React from 'react';
 import {
   Editor as OrigEditor,
   IEditSession,
@@ -68,7 +68,6 @@ const aceModuleLoaders = {
   'theme/textmate': () => import('brace/theme/textmate'),
   'theme/github': () => import('brace/theme/github'),
   'ext/language_tools': () => import('brace/ext/language_tools'),
-  'ext/searchbox': () => import('brace/ext/searchbox'),
 };
 
 export type AceModule = keyof typeof aceModuleLoaders;
@@ -113,7 +112,7 @@ export default function AsyncAceEditor(
       defaultTheme ||
       aceModules.find(x => x.startsWith('theme/'))?.replace('theme/', '');
 
-    return forwardRef<AceEditor, AsyncAceEditorProps>(
+    return React.forwardRef<AceEditor, AsyncAceEditorProps>(
       function ExtendedAceEditor(
         {
           keywords,
@@ -165,11 +164,10 @@ export const SQLEditor = AsyncAceEditor([
   'mode/sql',
   'theme/github',
   'ext/language_tools',
-  'ext/searchbox',
 ]);
 
 export const FullSQLEditor = AsyncAceEditor(
-  ['mode/sql', 'theme/github', 'ext/language_tools', 'ext/searchbox'],
+  ['mode/sql', 'theme/github', 'ext/language_tools'],
   {
     // a custom placeholder in SQL lab for less jumpy re-renders
     placeholder: () => {

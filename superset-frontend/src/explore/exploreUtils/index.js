@@ -18,6 +18,7 @@
  */
 
 import { useCallback, useEffect } from 'react';
+import { omit } from 'lodash';
 /* eslint camelcase: 0 */
 import URI from 'urijs';
 import {
@@ -34,7 +35,8 @@ import {
   OPERATOR_ENUM_TO_OPERATOR_TYPE,
 } from 'src/explore/constants';
 import { DashboardStandaloneMode } from 'src/dashboard/util/constants';
-import { optionLabel } from '../../utils/common';
+
+const MAX_URL_LENGTH = 8000;
 
 export function getChartKey(explore) {
   const { slice } = explore;
@@ -88,20 +90,60 @@ export function getURIDirectory(endpointType = 'base') {
   return '/superset/explore/';
 }
 
-export function mountExploreUrl(endpointType, extraSearch = {}, force = false) {
+/**
+ * This gets the url of the explore page, with all the form data included explicitly.
+ * This includes any form data overrides from the dashboard.
+ */
+export function getExploreLongUrl(
+  formData,
+  endpointType,
+  allowOverflow = true,
+  extraSearch = {},
+) {
+  if (!formData.datasource) {
+    return null;
+  }
+
+  // remove formData params that we don't need in the explore url.
+  // These are present when generating explore urls from the dashboard page.
+  // This should be superseded by some sort of "exploration context" system
+  // where form data and other context is referenced by id.
+  const trimmedFormData = omit(formData, ['dataMask', 'url_params']);
+
   const uri = new URI('/');
   const directory = getURIDirectory(endpointType);
   const search = uri.search(true);
   Object.keys(extraSearch).forEach(key => {
     search[key] = extraSearch[key];
   });
+  search.form_data = safeStringify(trimmedFormData);
   if (endpointType === URL_PARAMS.standalone.name) {
-    if (force) {
-      search.force = '1';
-    }
     search.standalone = DashboardStandaloneMode.HIDE_NAV;
   }
-  return uri.directory(directory).search(search).toString();
+  const url = uri.directory(directory).search(search).toString();
+  if (!allowOverflow && url.length > MAX_URL_LENGTH) {
+    const minimalFormData = {
+      datasource: formData.datasource,
+      viz_type: formData.viz_type,
+    };
+    return getExploreLongUrl(minimalFormData, endpointType, false, {
+      URL_IS_TOO_LONG_TO_SHARE: null,
+    });
+  }
+  return url;
+}
+
+export function getExploreUrlFromDashboard(formData) {
+  // remove formData params that we don't need in the explore url.
+  // These are present when generating explore urls from the dashboard page.
+  // This should be superseded by some sort of "exploration context" system
+  // where form data and other context is referenced by id.
+  const trimmedFormData = omit(formData, [
+    'dataMask',
+    'url_params',
+    'label_colors',
+  ]);
+  return getExploreLongUrl(trimmedFormData, null, false);
 }
 
 export function getChartDataUri({ path, qs, allowDomainSharding = false }) {
@@ -328,12 +370,10 @@ export const getSimpleSQLExpression = (subject, operator, comparator) => {
       firstValue !== undefined && Number.isNaN(Number(firstValue));
     const quote = isString ? "'" : '';
     const [prefix, suffix] = isMulti ? ['(', ')'] : ['', ''];
-    const formattedComparators = comparatorArray
-      .map(val => optionLabel(val))
-      .map(
-        val =>
-          `${quote}${isString ? String(val).replace("'", "''") : val}${quote}`,
-      );
+    const formattedComparators = comparatorArray.map(
+      val =>
+        `${quote}${isString ? String(val).replace("'", "''") : val}${quote}`,
+    );
     if (comparatorArray.length > 0) {
       expression += ` ${prefix}${formattedComparators.join(', ')}${suffix}`;
     }

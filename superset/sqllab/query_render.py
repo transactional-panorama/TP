@@ -32,8 +32,8 @@ from superset.utils import core as utils
 MSG_OF_1006 = "Issue 1006 - One or more parameters specified in the query are missing."
 
 if TYPE_CHECKING:
-    from superset.jinja_context import BaseTemplateProcessor
     from superset.sqllab.sqllab_execution_context import SqlJsonExecutionContext
+    from superset.jinja_context import BaseTemplateProcessor
 
 PARAMETER_MISSING_ERR = (
     "Please check your template parameters for syntax errors and make sure "
@@ -100,12 +100,7 @@ class SqlQueryRenderImpl(SqlQueryRender):
             extra={
                 "undefined_parameters": list(undefined_parameters),
                 "template_parameters": execution_context.template_params,
-                "issue_codes": [
-                    {
-                        "code": 1006,
-                        "message": MSG_OF_1006,
-                    }
-                ],
+                "issue_codes": [{"code": 1006, "message": MSG_OF_1006,}],
             },
         )
 

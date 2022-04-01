@@ -29,7 +29,7 @@ from superset.charts.commands.export import ExportChartsCommand
 from superset.dashboards.commands.exceptions import DashboardNotFoundError
 from superset.dashboards.commands.importers.v1.utils import find_chart_uuids
 from superset.dashboards.dao import DashboardDAO
-from superset.commands.export.models import ExportModelsCommand
+from superset.commands.export import ExportModelsCommand
 from superset.datasets.commands.export import ExportDatasetsCommand
 from superset.datasets.dao import DatasetDAO
 from superset.models.dashboard import Dashboard
@@ -106,11 +106,8 @@ class ExportDashboardsCommand(ExportModelsCommand):
     dao = DashboardDAO
     not_found = DashboardNotFoundError
 
-    # pylint: disable=too-many-locals
     @staticmethod
-    def _export(
-        model: Dashboard, export_related: bool = True
-    ) -> Iterator[Tuple[str, str]]:
+    def _export(model: Dashboard) -> Iterator[Tuple[str, str]]:
         dashboard_slug = secure_filename(model.dashboard_title)
         file_name = f"dashboards/{dashboard_slug}.yaml"
 
@@ -140,10 +137,8 @@ class ExportDashboardsCommand(ExportModelsCommand):
                 dataset_id = target.pop("datasetId", None)
                 if dataset_id is not None:
                     dataset = DatasetDAO.find_by_id(dataset_id)
-                    if dataset:
-                        target["datasetUuid"] = str(dataset.uuid)
-                        if export_related:
-                            yield from ExportDatasetsCommand([dataset_id]).run()
+                    target["datasetUuid"] = str(dataset.uuid)
+                    yield from ExportDatasetsCommand([dataset_id]).run()
 
         # the mapping between dashboard -> charts is inferred from the position
         # attribute, so if it's not present we need to add a default config
@@ -165,6 +160,5 @@ class ExportDashboardsCommand(ExportModelsCommand):
         file_content = yaml.safe_dump(payload, sort_keys=False)
         yield file_name, file_content
 
-        if export_related:
-            chart_ids = [chart.id for chart in model.slices]
-            yield from ExportChartsCommand(chart_ids).run()
+        chart_ids = [chart.id for chart in model.slices]
+        yield from ExportChartsCommand(chart_ids).run()

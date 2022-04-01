@@ -17,27 +17,25 @@
  * under the License.
  */
 import React, { useState } from 'react';
-import { styled, SupersetClient, t, useTheme } from '@superset-ui/core';
+import { t, SupersetClient, styled, useTheme } from '@superset-ui/core';
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/cjs/light';
 import sql from 'react-syntax-highlighter/dist/cjs/languages/hljs/sql';
 import github from 'react-syntax-highlighter/dist/cjs/styles/hljs/github';
 import { LoadingCards } from 'src/views/CRUD/welcome/Welcome';
 import withToasts from 'src/components/MessageToasts/withToasts';
-import { AntdDropdown } from 'src/components';
-import { Menu } from 'src/components/Menu';
-import { copyQueryLink, useListViewResource } from 'src/views/CRUD/hooks';
+import { Dropdown, Menu } from 'src/common/components';
+import { useListViewResource, copyQueryLink } from 'src/views/CRUD/hooks';
 import ListViewCard from 'src/components/ListViewCard';
 import DeleteModal from 'src/components/DeleteModal';
 import Icons from 'src/components/Icons';
-import SubMenu from 'src/views/components/SubMenu';
+import SubMenu from 'src/components/Menu/SubMenu';
 import EmptyState from './EmptyState';
 import {
   CardContainer,
   createErrorHandler,
-  PAGE_SIZE,
   shortenSQL,
+  PAGE_SIZE,
 } from '../utils';
-import { WelcomeTable } from './types';
 
 SyntaxHighlighter.registerLanguage('sql', sql);
 
@@ -285,7 +283,7 @@ const SavedQueries = ({
             name: (
               <>
                 <i className="fa fa-plus" />
-                {t('SQL Query')}
+                SQL Query
               </>
             ),
             buttonStyle: 'tertiary',
@@ -294,7 +292,7 @@ const SavedQueries = ({
             },
           },
           {
-            name: t('View All »'),
+            name: 'View All »',
             buttonStyle: 'link',
             onClick: () => {
               window.location.href = '/savedqueryview/list';
@@ -353,11 +351,11 @@ const SavedQueries = ({
                         e.preventDefault();
                       }}
                     >
-                      <AntdDropdown overlay={renderMenu(q)}>
+                      <Dropdown overlay={renderMenu(q)}>
                         <Icons.MoreVert
                           iconColor={theme.colors.grayscale.base}
                         />
-                      </AntdDropdown>
+                      </Dropdown>
                     </ListViewCard.Actions>
                   </QueryData>
                 }
@@ -366,7 +364,7 @@ const SavedQueries = ({
           ))}
         </CardContainer>
       ) : (
-        <EmptyState tableName={WelcomeTable.SavedQueries} tab={queryFilter} />
+        <EmptyState tableName="SAVED_QUERIES" tab={queryFilter} />
       )}
     </>
   );

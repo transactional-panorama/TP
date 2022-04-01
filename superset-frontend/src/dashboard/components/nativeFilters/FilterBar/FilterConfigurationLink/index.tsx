@@ -20,13 +20,13 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setFilterConfiguration } from 'src/dashboard/actions/nativeFilters';
 import Button from 'src/components/Button';
-import { FilterConfiguration, styled } from '@superset-ui/core';
+import { styled } from '@superset-ui/core';
+import { FilterConfiguration } from 'src/dashboard/components/nativeFilters/types';
 import { FiltersConfigModal } from 'src/dashboard/components/nativeFilters/FiltersConfigModal/FiltersConfigModal';
 import { getFilterBarTestId } from '..';
 
 export interface FCBProps {
   createNewOnOpen?: boolean;
-  dashboardId?: number;
 }
 
 const HeaderButton = styled(Button)`
@@ -35,7 +35,6 @@ const HeaderButton = styled(Button)`
 
 export const FilterConfigurationLink: React.FC<FCBProps> = ({
   createNewOnOpen,
-  dashboardId,
   children,
 }) => {
   const dispatch = useDispatch();
@@ -66,7 +65,6 @@ export const FilterConfigurationLink: React.FC<FCBProps> = ({
         onSave={submit}
         onCancel={close}
         createNewOnOpen={createNewOnOpen}
-        key={`filters-for-${dashboardId}`}
       />
     </>
   );

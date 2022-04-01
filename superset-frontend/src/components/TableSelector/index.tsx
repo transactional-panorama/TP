@@ -31,9 +31,8 @@ import DatabaseSelector, {
   DatabaseObject,
 } from 'src/components/DatabaseSelector';
 import RefreshLabel from 'src/components/RefreshLabel';
-import CertifiedBadge from 'src/components/CertifiedBadge';
+import CertifiedIcon from 'src/components/CertifiedIcon';
 import WarningIconWithTooltip from 'src/components/WarningIconWithTooltip';
-import { useToasts } from 'src/components/MessageToasts/withToasts';
 
 const TableSelectorWrapper = styled.div`
   ${({ theme }) => `
@@ -124,7 +123,7 @@ const TableOption = ({ table }: { table: Table }) => {
         <Icons.Table iconSize="m" />
       )}
       {extra?.certification && (
-        <CertifiedBadge
+        <CertifiedIcon
           certifiedBy={extra.certification.certified_by}
           details={extra.certification.details}
           size="l"
@@ -168,7 +167,6 @@ const TableSelector: FunctionComponent<TableSelectorProps> = ({
   const [previousRefresh, setPreviousRefresh] = useState(0);
   const [loadingTables, setLoadingTables] = useState(false);
   const [tableOptions, setTableOptions] = useState<TableOption[]>([]);
-  const { addSuccessToast } = useToasts();
 
   useEffect(() => {
     // reset selections
@@ -208,14 +206,18 @@ const TableSelector: FunctionComponent<TableSelectorProps> = ({
               currentTable = option;
             }
           });
-
-          onTablesLoad?.(json.options);
-          setTableOptions(options);
+          if (onTablesLoad) {
+            onTablesLoad(json.options);
+          }
+          setTableOptions(
+            options.sort((a: { text: string }, b: { text: string }) =>
+              a.text.localeCompare(b.text),
+            ),
+          );
           setCurrentTable(currentTable);
           setLoadingTables(false);
-          if (forceRefresh) addSuccessToast('List updated');
         })
-        .catch(() => {
+        .catch(e => {
           setLoadingTables(false);
           handleError(t('There was an error loading the tables'));
         });

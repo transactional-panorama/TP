@@ -21,7 +21,6 @@
 from enum import Enum
 
 NULL_STRING = "<NULL>"
-EMPTY_STRING = "<empty string>"
 
 CHANGE_ME_SECRET_KEY = "CHANGE_ME_TO_A_COMPLEX_RANDOM_SECRET"
 
@@ -102,6 +101,7 @@ MODEL_API_RW_METHOD_PERMISSION_MAP = {
     "bulk_delete": "write",
     "delete": "write",
     "distinct": "read",
+    "export": "read",
     "get": "read",
     "get_list": "read",
     "info": "read",
@@ -146,6 +146,7 @@ EXTRA_FORM_DATA_OVERRIDE_REGULAR_MAPPINGS = {
     "time_range": "time_range",
     "druid_time_origin": "druid_time_origin",
     "time_grain_sqla": "time_grain_sqla",
+    "time_range_endpoints": "time_range_endpoints",
 }
 
 EXTRA_FORM_DATA_OVERRIDE_EXTRA_KEYS = {

@@ -20,7 +20,10 @@ import React, { useRef, useState } from 'react';
 import { isNil } from 'lodash';
 import { styled, t } from '@superset-ui/core';
 import { css } from '@emotion/react';
-import { AntdModal, AntdModalProps } from 'src/components';
+import {
+  Modal as AntdModal,
+  ModalProps as AntdModalProps,
+} from 'src/common/components';
 import Button from 'src/components/Button';
 import { Resizable, ResizableProps } from 're-resizable';
 import Draggable, {

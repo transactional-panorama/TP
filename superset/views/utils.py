@@ -16,6 +16,7 @@
 # under the License.
 import logging
 from collections import defaultdict
+from datetime import date
 from functools import wraps
 from typing import Any, Callable, DefaultDict, Dict, List, Optional, Set, Tuple, Union
 from urllib import parse
@@ -40,13 +41,14 @@ from superset.exceptions import (
     SupersetException,
     SupersetSecurityException,
 )
-from superset.extensions import cache_manager, feature_flag_manager, security_manager
+from superset.extensions import cache_manager, security_manager
 from superset.legacy import update_time_range
 from superset.models.core import Database
 from superset.models.dashboard import Dashboard
 from superset.models.slice import Slice
 from superset.models.sql_lab import Query
-from superset.superset_typing import FormData
+from superset.typing import FormData
+from superset.utils.core import TimeRangeEndpoint
 from superset.utils.decorators import stats_timing
 from superset.viz import BaseViz
 
@@ -55,7 +57,7 @@ stats_logger = app.config["STATS_LOGGER"]
 
 
 REJECTED_FORM_DATA_KEYS: List[str] = []
-if not feature_flag_manager.is_feature_enabled("ENABLE_JAVASCRIPT_CONTROLS"):
+if not app.config["ENABLE_JAVASCRIPT_CONTROLS"]:
     REJECTED_FORM_DATA_KEYS = ["js_tooltip", "js_onclick_href", "js_data_mutator"]
 
 
@@ -79,7 +81,6 @@ def bootstrap_user_data(user: User, include_perms: bool = False) -> Dict[str, An
             "lastName": user.last_name,
             "userId": user.id,
             "isActive": user.is_active,
-            "isAnonymous": user.is_anonymous,
             "createdOn": user.created_on.isoformat(),
             "email": user.email,
         }
@@ -136,11 +137,9 @@ def loads_request_json(request_json_data: str) -> Dict[Any, Any]:
 
 
 def get_form_data(  # pylint: disable=too-many-locals
-    slice_id: Optional[int] = None,
-    use_slice_data: bool = False,
-    initial_form_data: Optional[Dict[str, Any]] = None,
+    slice_id: Optional[int] = None, use_slice_data: bool = False
 ) -> Tuple[Dict[str, Any], Optional[Slice]]:
-    form_data: Dict[str, Any] = initial_form_data or {}
+    form_data: Dict[str, Any] = {}
 
     if has_request_context():  # type: ignore
         # chart data API requests are JSON
@@ -209,6 +208,12 @@ def get_form_data(  # pylint: disable=too-many-locals
             form_data = slice_form_data
 
     update_time_range(form_data)
+
+    if app.config["SIP_15_ENABLED"]:
+        form_data["time_range_endpoints"] = get_time_range_endpoints(
+            form_data, slc, slice_id
+        )
+
     return form_data, slc
 
 
@@ -279,7 +284,6 @@ def apply_display_max_row_limit(
     metadata.
 
     :param sql_results: The results of a sql query from sql_lab.get_sql_results
-    :param rows: The number of rows to apply a limit to
     :returns: The mutated sql_results structure
     """
 
@@ -293,6 +297,59 @@ def apply_display_max_row_limit(
         sql_results["data"] = sql_results["data"][:display_limit]
         sql_results["displayLimitReached"] = True
     return sql_results
+
+
+def get_time_range_endpoints(
+    form_data: FormData, slc: Optional[Slice] = None, slice_id: Optional[int] = None
+) -> Optional[Tuple[TimeRangeEndpoint, TimeRangeEndpoint]]:
+    """
+    Get the slice aware time range endpoints from the form-data falling back to the SQL
+    database specific definition or default if not defined.
+
+    Note under certain circumstances the slice object may not exist, however the slice
+    ID may be defined which serves as a fallback.
+
+    When SIP-15 is enabled all new slices will use the [start, end) interval. If the
+    grace period is defined and has ended all slices will adhere to the [start, end)
+    interval.
+
+    :param form_data: The form-data
+    :param slc: The slice
+    :param slice_id: The slice ID
+    :returns: The time range endpoints tuple
+    """
+
+    if (
+        app.config["SIP_15_GRACE_PERIOD_END"]
+        and date.today() >= app.config["SIP_15_GRACE_PERIOD_END"]
+    ):
+        return (TimeRangeEndpoint.INCLUSIVE, TimeRangeEndpoint.EXCLUSIVE)
+
+    endpoints = form_data.get("time_range_endpoints")
+
+    if (slc or slice_id) and not endpoints:
+        try:
+            _, datasource_type = get_datasource_info(None, None, form_data)
+        except SupersetException:
+            return None
+
+        if datasource_type == "table":
+            if not slc:
+                slc = db.session.query(Slice).filter_by(id=slice_id).one_or_none()
+
+            if slc and slc.datasource:
+                endpoints = slc.datasource.database.get_extra().get(
+                    "time_range_endpoints"
+                )
+
+            if not endpoints:
+                endpoints = app.config["SIP_15_DEFAULT_TIME_RANGE_ENDPOINTS"]
+
+    if endpoints:
+        start, end = endpoints
+        return (TimeRangeEndpoint(start), TimeRangeEndpoint(end))
+
+    return (TimeRangeEndpoint.INCLUSIVE, TimeRangeEndpoint.EXCLUSIVE)
 
 
 # see all dashboard components type in
@@ -418,9 +475,7 @@ def is_owner(obj: Union[Dashboard, Slice], user: User) -> bool:
     return obj and user in obj.owners
 
 
-def check_resource_permissions(
-    check_perms: Callable[..., Any],
-) -> Callable[..., Any]:
+def check_resource_permissions(check_perms: Callable[..., Any],) -> Callable[..., Any]:
     """
     A decorator for checking permissions on a request using the passed-in function.
     """

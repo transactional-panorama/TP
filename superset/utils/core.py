@@ -16,7 +16,6 @@
 # under the License.
 """Utility functions used across Superset"""
 # pylint: disable=too-many-lines
-import _thread
 import collections
 import decimal
 import errno
@@ -40,7 +39,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
 from enum import Enum, IntEnum
-from io import BytesIO
 from timeit import default_timer
 from types import TracebackType
 from typing import (
@@ -62,7 +60,6 @@ from typing import (
     Union,
 )
 from urllib.parse import unquote_plus
-from zipfile import ZipFile
 
 import bleach
 import markdown as md
@@ -87,7 +84,9 @@ from sqlalchemy.sql.type_api import Variant
 from sqlalchemy.types import TEXT, TypeDecorator, TypeEngine
 from typing_extensions import TypedDict, TypeGuard
 
+import _thread  # pylint: disable=C0411
 from superset.constants import (
+    EXAMPLES_DB_UUID,
     EXTRA_FORM_DATA_APPEND_KEYS,
     EXTRA_FORM_DATA_OVERRIDE_EXTRA_KEYS,
     EXTRA_FORM_DATA_OVERRIDE_REGULAR_MAPPINGS,
@@ -99,17 +98,14 @@ from superset.exceptions import (
     SupersetTimeoutException,
 )
 from superset.sql_parse import sanitize_clause
-from superset.superset_typing import (
-    AdhocColumn,
+from superset.typing import (
     AdhocMetric,
     AdhocMetricColumn,
-    Column,
     FilterValues,
     FlaskResponse,
     FormData,
     Metric,
 )
-from superset.utils.database import get_example_database
 from superset.utils.dates import datetime_to_epoch, EPOCH
 from superset.utils.hashing import md5_sha_from_dict, md5_sha_from_str
 
@@ -120,6 +116,8 @@ except ImportError:
 
 if TYPE_CHECKING:
     from superset.connectors.base.models import BaseColumn, BaseDatasource
+    from superset.models.core import Database
+
 
 logging.getLogger("MARKDOWN").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
@@ -172,6 +170,29 @@ class GenericDataType(IntEnum):
     # JSON = 5      # and leaving these as a reminder.
     # MAP = 6
     # ROW = 7
+
+
+class ChartDataResultFormat(str, Enum):
+    """
+    Chart data response format
+    """
+
+    CSV = "csv"
+    JSON = "json"
+
+
+class ChartDataResultType(str, Enum):
+    """
+    Chart data response type
+    """
+
+    COLUMNS = "columns"
+    FULL = "full"
+    QUERY = "query"
+    RESULTS = "results"
+    SAMPLES = "samples"
+    TIMEGRAINS = "timegrains"
+    POST_PROCESSED = "post_processed"
 
 
 class DatasourceDict(TypedDict):
@@ -304,7 +325,7 @@ class ReservedUrlParameters(str, Enum):
     @staticmethod
     def is_standalone_mode() -> Optional[bool]:
         standalone_param = request.args.get(ReservedUrlParameters.STANDALONE.value)
-        standalone: Optional[bool] = bool(
+        standalone: Optional[bool] = (
             standalone_param and standalone_param != "false" and standalone_param != "0"
         )
         return standalone
@@ -313,6 +334,22 @@ class ReservedUrlParameters(str, Enum):
 class RowLevelSecurityFilterType(str, Enum):
     REGULAR = "Regular"
     BASE = "Base"
+
+
+class TimeRangeEndpoint(str, Enum):
+    """
+    The time range endpoint types which represent inclusive, exclusive, or unknown.
+
+    Unknown represents endpoints which are ill-defined as though the interval may be
+    [start, end] the filter may behave like (start, end] due to mixed data types and
+    lexicographical ordering.
+
+    :see: https://github.com/apache/superset/issues/6360
+    """
+
+    EXCLUSIVE = "exclusive"
+    INCLUSIVE = "inclusive"
+    UNKNOWN = "unknown"
 
 
 class TemporalType(str, Enum):
@@ -325,9 +362,7 @@ class TemporalType(str, Enum):
     SMALLDATETIME = "SMALLDATETIME"
     TEXT = "TEXT"
     TIME = "TIME"
-    TIME_WITH_TIME_ZONE = "TIME WITH TIME ZONE"
     TIMESTAMP = "TIMESTAMP"
-    TIMESTAMP_WITH_TIME_ZONE = "TIMESTAMP WITH TIME ZONE"
 
 
 class ColumnTypeSource(Enum):
@@ -356,6 +391,7 @@ try:
                     "value": args["value"],
                 }
             }
+
 
 except NameError:
     pass
@@ -512,9 +548,7 @@ def format_timedelta(time_delta: timedelta) -> str:
     return str(time_delta)
 
 
-def base_json_conv(  # pylint: disable=inconsistent-return-statements
-    obj: Any,
-) -> Any:
+def base_json_conv(obj: Any,) -> Any:  # pylint: disable=inconsistent-return-statements
     if isinstance(obj, memoryview):
         obj = obj.tobytes()
     if isinstance(obj, np.int64):
@@ -1015,8 +1049,7 @@ def zlib_decompress(blob: bytes, decode: Optional[bool] = True) -> Union[bytes, 
 
 
 def simple_filter_to_adhoc(
-    filter_clause: QueryObjectFilterClause,
-    clause: str = "where",
+    filter_clause: QueryObjectFilterClause, clause: str = "where",
 ) -> AdhocFilterClause:
     result: AdhocFilterClause = {
         "clause": clause.upper(),
@@ -1086,13 +1119,11 @@ def merge_extra_form_data(form_data: Dict[str, Any]) -> None:
         {"isExtra": True, **fltr} for fltr in append_adhoc_filters  # type: ignore
     )
     if append_filters:
-        for key, value in form_data.items():
-            if re.match("adhoc_filter.*", key):
-                value.extend(
-                    simple_filter_to_adhoc({"isExtra": True, **fltr})  # type: ignore
-                    for fltr in append_filters
-                    if fltr
-                )
+        adhoc_filters.extend(
+            simple_filter_to_adhoc({"isExtra": True, **fltr})  # type: ignore
+            for fltr in append_filters
+            if fltr
+        )
 
 
 def merge_extra_filters(form_data: Dict[str, Any]) -> None:
@@ -1198,6 +1229,49 @@ def user_label(user: User) -> Optional[str]:
     return None
 
 
+def get_or_create_db(
+    database_name: str, sqlalchemy_uri: str, always_create: Optional[bool] = True
+) -> "Database":
+    # pylint: disable=import-outside-toplevel
+    from superset import db
+    from superset.models import core as models
+
+    database = (
+        db.session.query(models.Database).filter_by(database_name=database_name).first()
+    )
+
+    # databases with a fixed UUID
+    uuids = {
+        "examples": EXAMPLES_DB_UUID,
+    }
+
+    if not database and always_create:
+        logger.info("Creating database reference for %s", database_name)
+        database = models.Database(
+            database_name=database_name, uuid=uuids.get(database_name)
+        )
+        db.session.add(database)
+
+    if database:
+        database.set_sqlalchemy_uri(sqlalchemy_uri)
+        db.session.commit()
+
+    return database
+
+
+def get_example_database() -> "Database":
+    db_uri = (
+        current_app.config.get("SQLALCHEMY_EXAMPLES_URI")
+        or current_app.config["SQLALCHEMY_DATABASE_URI"]
+    )
+    return get_or_create_db("examples", db_uri)
+
+
+def get_main_database() -> "Database":
+    db_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+    return get_or_create_db("main", db_uri)
+
+
 def get_example_default_schema() -> Optional[str]:
     """
     Return the default schema of the examples database, if any.
@@ -1215,43 +1289,11 @@ def is_adhoc_metric(metric: Metric) -> TypeGuard[AdhocMetric]:
     return isinstance(metric, dict) and "expressionType" in metric
 
 
-def is_adhoc_column(column: Column) -> TypeGuard[AdhocColumn]:
-    return isinstance(column, dict)
-
-
-def get_column_name(
-    column: Column, verbose_map: Optional[Dict[str, Any]] = None
-) -> str:
-    """
-    Extract label from column
-
-    :param column: object to extract label from
-    :param verbose_map: verbose_map from dataset for optional mapping from
-                        raw name to verbose name
-    :return: String representation of column
-    :raises ValueError: if metric object is invalid
-    """
-    if isinstance(column, dict):
-        label = column.get("label")
-        if label:
-            return label
-        expr = column.get("sqlExpression")
-        if expr:
-            return expr
-        raise ValueError("Missing label")
-    verbose_map = verbose_map or {}
-    return verbose_map.get(column, column)
-
-
-def get_metric_name(
-    metric: Metric, verbose_map: Optional[Dict[str, Any]] = None
-) -> str:
+def get_metric_name(metric: Metric) -> str:
     """
     Extract label from metric
 
     :param metric: object to extract label from
-    :param verbose_map: verbose_map from dataset for optional mapping from
-                        raw name to verbose name
     :return: String representation of metric
     :raises ValueError: if metric object is invalid
     """
@@ -1273,38 +1315,15 @@ def get_metric_name(
             if column_name:
                 return column_name
         raise ValueError(__("Invalid metric object"))
-
-    verbose_map = verbose_map or {}
-    return verbose_map.get(metric, metric)  # type: ignore
+    return metric  # type: ignore
 
 
-def get_column_names(
-    columns: Optional[Sequence[Column]],
-    verbose_map: Optional[Dict[str, Any]] = None,
-) -> List[str]:
-    return [
-        column
-        for column in [get_column_name(column, verbose_map) for column in columns or []]
-        if column
-    ]
+def get_metric_names(metrics: Sequence[Metric]) -> List[str]:
+    return [metric for metric in map(get_metric_name, metrics) if metric]
 
 
-def get_metric_names(
-    metrics: Optional[Sequence[Metric]],
-    verbose_map: Optional[Dict[str, Any]] = None,
-) -> List[str]:
-    return [
-        metric
-        for metric in [get_metric_name(metric, verbose_map) for metric in metrics or []]
-        if metric
-    ]
-
-
-def get_first_metric_name(
-    metrics: Optional[Sequence[Metric]],
-    verbose_map: Optional[Dict[str, Any]] = None,
-) -> Optional[str]:
-    metric_labels = get_metric_names(metrics, verbose_map)
+def get_first_metric_name(metrics: Sequence[Metric]) -> Optional[str]:
+    metric_labels = get_metric_names(metrics)
     return metric_labels[0] if metric_labels else None
 
 
@@ -1525,30 +1544,6 @@ def get_form_data_token(form_data: Dict[str, Any]) -> str:
     return form_data.get("token") or "token_" + uuid.uuid4().hex[:8]
 
 
-def get_column_name_from_column(column: Column) -> Optional[str]:
-    """
-    Extract the physical column that a column is referencing. If the column is
-    an adhoc column, always returns `None`.
-
-    :param column: Physical and ad-hoc column
-    :return: column name if physical column, otherwise None
-    """
-    if is_adhoc_column(column):
-        return None
-    return column  # type: ignore
-
-
-def get_column_names_from_columns(columns: List[Column]) -> List[str]:
-    """
-    Extract the physical columns that a list of columns are referencing. Ignore
-    adhoc columns
-
-    :param columns: Physical and adhoc columns
-    :return: column names of all physical columns
-    """
-    return [col for col in map(get_column_name_from_column, columns) if col]
-
-
 def get_column_name_from_metric(metric: Metric) -> Optional[str]:
     """
     Extract the column that a metric is referencing. If the metric isn't
@@ -1575,10 +1570,7 @@ def get_column_names_from_metrics(metrics: List[Metric]) -> List[str]:
     return [col for col in map(get_column_name_from_metric, metrics) if col]
 
 
-def extract_dataframe_dtypes(
-    df: pd.DataFrame,
-    datasource: Optional["BaseDatasource"] = None,
-) -> List[GenericDataType]:
+def extract_dataframe_dtypes(df: pd.DataFrame) -> List[GenericDataType]:
     """Serialize pandas/numpy dtypes to generic types"""
 
     # omitting string types as those will be the default type
@@ -1593,21 +1585,11 @@ def extract_dataframe_dtypes(
         "date": GenericDataType.TEMPORAL,
     }
 
-    columns_by_name = (
-        {column.column_name: column for column in datasource.columns}
-        if datasource
-        else {}
-    )
     generic_types: List[GenericDataType] = []
     for column in df.columns:
-        column_object = columns_by_name.get(column)
         series = df[column]
         inferred_type = infer_dtype(series)
-        generic_type = (
-            GenericDataType.TEMPORAL
-            if column_object and column_object.is_dttm
-            else inferred_type_map.get(inferred_type, GenericDataType.STRING)
-        )
+        generic_type = inferred_type_map.get(inferred_type, GenericDataType.STRING)
         generic_types.append(generic_type)
 
     return generic_types
@@ -1638,8 +1620,7 @@ def is_test() -> bool:
 
 
 def get_time_filter_status(
-    datasource: "BaseDatasource",
-    applied_time_extras: Dict[str, str],
+    datasource: "BaseDatasource", applied_time_extras: Dict[str, str],
 ) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
     temporal_columns = {col.column_name for col in datasource.columns if col.is_dttm}
     applied: List[Dict[str, str]] = []
@@ -1793,10 +1774,7 @@ def parse_boolean_string(bool_str: Optional[str]) -> bool:
         return False
 
 
-def apply_max_row_limit(
-    limit: int,
-    max_limit: Optional[int] = None,
-) -> int:
+def apply_max_row_limit(limit: int, max_limit: Optional[int] = None,) -> int:
     """
     Override row limit if max global limit is defined
 
@@ -1816,13 +1794,3 @@ def apply_max_row_limit(
     if limit != 0:
         return min(max_limit, limit)
     return max_limit
-
-
-def create_zip(files: Dict[str, Any]) -> BytesIO:
-    buf = BytesIO()
-    with ZipFile(buf, "w") as bundle:
-        for filename, contents in files.items():
-            with bundle.open(filename, "w") as fp:
-                fp.write(contents)
-    buf.seek(0)
-    return buf

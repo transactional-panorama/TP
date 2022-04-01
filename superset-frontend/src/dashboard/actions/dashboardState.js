@@ -18,18 +18,9 @@
  */
 /* eslint camelcase: 0 */
 import { ActionCreators as UndoActionCreators } from 'redux-undo';
-import {
-  ensureIsArray,
-  t,
-  SupersetClient,
-  getSharedLabelColor,
-} from '@superset-ui/core';
-import {
-  addChart,
-  removeChart,
-  refreshChart,
-} from 'src/components/Chart/chartAction';
-import { chart as initChart } from 'src/components/Chart/chartReducer';
+import { ensureIsArray, t, SupersetClient } from '@superset-ui/core';
+import { addChart, removeChart, refreshChart } from 'src/chart/chartAction';
+import { chart as initChart } from 'src/chart/chartReducer';
 import { applyDefaultFormData } from 'src/explore/store';
 import { getClientErrorObject } from 'src/utils/getClientErrorObject';
 import { SAVE_TYPE_OVERWRITE } from 'src/dashboard/util/constants';
@@ -70,11 +61,6 @@ export function addSlice(slice) {
 export const REMOVE_SLICE = 'REMOVE_SLICE';
 export function removeSlice(sliceId) {
   return { type: REMOVE_SLICE, sliceId };
-}
-
-export const RESET_SLICE = 'RESET_SLICE';
-export function resetSlice() {
-  return { type: RESET_SLICE };
 }
 
 const FAVESTAR_BASE_URL = '/superset/favstar/Dashboard';
@@ -137,13 +123,8 @@ export function savePublished(id, isPublished) {
       }),
     })
       .then(() => {
-        dispatch(
-          addSuccessToast(
-            isPublished
-              ? t('This dashboard is now published')
-              : t('This dashboard is now hidden'),
-          ),
-        );
+        const nowPublished = isPublished ? 'published' : 'hidden';
+        dispatch(addSuccessToast(t(`This dashboard is now ${nowPublished}`)));
         dispatch(togglePublished(isPublished));
       })
       .catch(() => {
@@ -242,7 +223,6 @@ export function saveDashboardRequest(data, id, saveType) {
         color_scheme: data.metadata?.color_scheme || '',
         expanded_slices: data.metadata?.expanded_slices || {},
         label_colors: data.metadata?.label_colors || {},
-        shared_label_colors: data.metadata?.shared_label_colors || {},
         refresh_frequency: data.metadata?.refresh_frequency || 0,
         timed_refresh_immune_slices:
           data.metadata?.timed_refresh_immune_slices || [],
@@ -433,16 +413,6 @@ const refreshCharts = (chartList, force, interval, dashboardId, dispatch) =>
     resolve();
   });
 
-export const ON_FILTERS_REFRESH = 'ON_FILTERS_REFRESH';
-export function onFiltersRefresh() {
-  return { type: ON_FILTERS_REFRESH };
-}
-
-export const ON_FILTERS_REFRESH_SUCCESS = 'ON_FILTERS_REFRESH_SUCCESS';
-export function onFiltersRefreshSuccess() {
-  return { type: ON_FILTERS_REFRESH_SUCCESS };
-}
-
 export const ON_REFRESH_SUCCESS = 'ON_REFRESH_SUCCESS';
 export function onRefreshSuccess() {
   return { type: ON_REFRESH_SUCCESS };
@@ -457,11 +427,8 @@ export function onRefresh(
 ) {
   return dispatch => {
     dispatch({ type: ON_REFRESH });
-    refreshCharts(chartList, force, interval, dashboardId, dispatch).then(
-      () => {
-        dispatch(onRefreshSuccess());
-        dispatch(onFiltersRefresh());
-      },
+    refreshCharts(chartList, force, interval, dashboardId, dispatch).then(() =>
+      dispatch({ type: ON_REFRESH_SUCCESS }),
     );
   };
 }
@@ -506,28 +473,6 @@ export function addSliceToDashboard(id, component) {
   };
 }
 
-export function postAddSliceFromDashboard() {
-  return (dispatch, getState) => {
-    const {
-      dashboardInfo: { metadata },
-      dashboardState,
-    } = getState();
-
-    if (dashboardState?.updateSlice && dashboardState?.editMode) {
-      metadata.shared_label_colors = getSharedLabelColor().getColorMap(
-        metadata?.color_namespace,
-        metadata?.color_scheme,
-      );
-      dispatch(
-        dashboardInfoChanged({
-          metadata,
-        }),
-      );
-      dispatch(resetSlice());
-    }
-  };
-}
-
 export function removeSliceFromDashboard(id) {
   return (dispatch, getState) => {
     const sliceEntity = getState().sliceEntities.slices[id];
@@ -537,20 +482,6 @@ export function removeSliceFromDashboard(id) {
 
     dispatch(removeSlice(id));
     dispatch(removeChart(id));
-
-    const {
-      dashboardInfo: { metadata },
-    } = getState();
-    getSharedLabelColor().removeSlice(id);
-    metadata.shared_label_colors = getSharedLabelColor().getColorMap(
-      metadata?.color_namespace,
-      metadata?.color_scheme,
-    );
-    dispatch(
-      dashboardInfoChanged({
-        metadata,
-      }),
-    );
   };
 }
 
@@ -610,13 +541,5 @@ export function maxUndoHistoryToast() {
         `You have used all ${historyLength} undo slots and will not be able to fully undo subsequent actions. You may save your current state to reset the history.`,
       ),
     );
-  };
-}
-
-export const SET_DATASETS_STATUS = 'SET_DATASETS_STATUS';
-export function setDatasetsStatus(status) {
-  return {
-    type: SET_DATASETS_STATUS,
-    status,
   };
 }

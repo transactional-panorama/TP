@@ -40,7 +40,6 @@ export type PluginFilterGroupByProps = PluginFilterStylesProps & {
   data: DataRecord[];
   filterState: FilterState;
   formData: PluginFilterGroupByQueryFormData;
-  inputRef: RefObject<HTMLInputElement>;
 } & PluginFilterHooks;
 
 export const DEFAULT_FORM_DATA: PluginFilterGroupByCustomizeProps = {

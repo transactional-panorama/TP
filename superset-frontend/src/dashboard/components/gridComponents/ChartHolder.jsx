@@ -22,7 +22,7 @@ import cx from 'classnames';
 import { useTheme } from '@superset-ui/core';
 import { useSelector, connect } from 'react-redux';
 
-import { getChartIdsInFilterBoxScope } from 'src/dashboard/util/activeDashboardFilters';
+import { getChartIdsInFilterScope } from 'src/dashboard/util/activeDashboardFilters';
 import Chart from '../../containers/Chart';
 import AnchorLink from '../../../components/AnchorLink';
 import DeleteComponentButton from '../DeleteComponentButton';
@@ -69,7 +69,6 @@ const propTypes = {
   updateComponents: PropTypes.func.isRequired,
   handleComponentDrop: PropTypes.func.isRequired,
   setFullSizeChartId: PropTypes.func.isRequired,
-  postAddSliceFromDashboard: PropTypes.func,
 };
 
 const defaultProps = {
@@ -116,9 +115,8 @@ const FilterFocusHighlight = React.forwardRef(
       dashboardFilters,
     );
     const focusedNativeFilterId = nativeFilters.focusedFilterId;
-    if (!(focusedFilterScope || focusedNativeFilterId)) {
+    if (!(focusedFilterScope || focusedNativeFilterId))
       return <div ref={ref} {...otherProps} />;
-    }
 
     // we use local styles here instead of a conditionally-applied class,
     // because adding any conditional class to this container
@@ -143,7 +141,7 @@ const FilterFocusHighlight = React.forwardRef(
       }
     } else if (
       chartId === focusedFilterScope.chartId ||
-      getChartIdsInFilterBoxScope({
+      getChartIdsInFilterScope({
         filterScope: focusedFilterScope.scope,
       }).includes(chartId)
     ) {
@@ -169,8 +167,10 @@ class ChartHolder extends React.Component {
 
   static getDerivedStateFromProps(props, state) {
     const { component, directPathToChild, directPathLastUpdated } = props;
-    const { label: columnName, chart: chartComponentId } =
-      getChartAndLabelComponentIdFromPath(directPathToChild);
+    const {
+      label: columnName,
+      chart: chartComponentId,
+    } = getChartAndLabelComponentIdFromPath(directPathToChild);
 
     if (
       directPathLastUpdated !== state.directPathLastUpdated &&
@@ -198,7 +198,6 @@ class ChartHolder extends React.Component {
     this.handleDeleteComponent = this.handleDeleteComponent.bind(this);
     this.handleUpdateSliceName = this.handleUpdateSliceName.bind(this);
     this.handleToggleFullSize = this.handleToggleFullSize.bind(this);
-    this.handlePostTransformProps = this.handlePostTransformProps.bind(this);
   }
 
   componentDidMount() {
@@ -251,11 +250,6 @@ class ChartHolder extends React.Component {
     const { chartId } = component.meta;
     const isFullSize = fullSizeChartId === chartId;
     setFullSizeChartId(isFullSize ? null : chartId);
-  }
-
-  handlePostTransformProps(props) {
-    this.props.postAddSliceFromDashboard();
-    return props;
   }
 
   render() {
@@ -371,7 +365,6 @@ class ChartHolder extends React.Component {
                 isComponentVisible={isComponentVisible}
                 handleToggleFullSize={this.handleToggleFullSize}
                 isFullSize={isFullSize}
-                postTransformProps={this.handlePostTransformProps}
               />
               {editMode && (
                 <HoverMenu position="top">

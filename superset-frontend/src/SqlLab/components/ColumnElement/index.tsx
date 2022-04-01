@@ -17,9 +17,15 @@
  * under the License.
  */
 import React from 'react';
+import PropTypes from 'prop-types';
 import { ClassNames } from '@emotion/react';
 import { styled, useTheme } from '@superset-ui/core';
+
 import { Tooltip } from 'src/components/Tooltip';
+
+const propTypes = {
+  column: PropTypes.object.isRequired,
+};
 
 const StyledTooltip = (props: any) => {
   const theme = useTheme();
@@ -58,7 +64,6 @@ const iconMap = {
   fk: 'fa-link',
   index: 'fa-bookmark',
 };
-
 const tooltipTitleMap = {
   pk: 'Primary key',
   fk: 'Foreign key',
@@ -75,11 +80,7 @@ interface ColumnElementProps {
   };
 }
 
-const NowrapDiv = styled.div`
-  white-space: nowrap;
-`;
-
-const ColumnElement = ({ column }: ColumnElementProps) => {
+export default function ColumnElement({ column }: ColumnElementProps) {
   let columnName: React.ReactNode = column.name;
   let icons;
   if (column.keys && column.keys.length > 0) {
@@ -109,11 +110,10 @@ const ColumnElement = ({ column }: ColumnElementProps) => {
         {columnName}
         {icons}
       </div>
-      <NowrapDiv className="pull-right text-muted">
+      <div className="pull-right text-muted">
         <small> {column.type}</small>
-      </NowrapDiv>
+      </div>
     </div>
   );
-};
-
-export default ColumnElement;
+}
+ColumnElement.propTypes = propTypes;

@@ -21,19 +21,14 @@ import { styled } from '@superset-ui/core';
 import { ToastMeta } from 'src/components/MessageToasts/types';
 import Toast from './Toast';
 
-export interface VisualProps {
-  position: 'bottom' | 'top';
-}
-
-const StyledToastPresenter = styled.div<VisualProps>`
+const StyledToastPresenter = styled.div`
   max-width: 600px;
   position: fixed;
-  ${({ position }) => (position === 'bottom' ? 'bottom' : 'top')}: 0px;
+  bottom: 0px;
   right: 0px;
   margin-right: 50px;
   margin-bottom: 50px;
   z-index: ${({ theme }) => theme.zIndex.max};
-  word-break: break-word;
 
   .toast {
     background: ${({ theme }) => theme.colors.grayscale.dark1};
@@ -73,25 +68,22 @@ const StyledToastPresenter = styled.div<VisualProps>`
   }
 `;
 
-type ToastPresenterProps = Partial<VisualProps> & {
+type ToastPresenterProps = {
   toasts: Array<ToastMeta>;
-  removeToast: () => any;
+  removeToast: () => void;
 };
 
 export default function ToastPresenter({
   toasts,
   removeToast,
-  position = 'bottom',
 }: ToastPresenterProps) {
   return (
-    <>
-      {toasts.length > 0 && (
-        <StyledToastPresenter id="toast-presenter" position={position}>
-          {toasts.map(toast => (
-            <Toast key={toast.id} toast={toast} onCloseToast={removeToast} />
-          ))}
-        </StyledToastPresenter>
-      )}
-    </>
+    toasts.length > 0 && (
+      <StyledToastPresenter id="toast-presenter">
+        {toasts.map(toast => (
+          <Toast key={toast.id} toast={toast} onCloseToast={removeToast} />
+        ))}
+      </StyledToastPresenter>
+    )
   );
 }

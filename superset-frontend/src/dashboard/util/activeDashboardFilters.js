@@ -18,6 +18,7 @@
  */
 import { isEmpty } from 'lodash';
 import { mapValues, flow, keyBy } from 'lodash/fp';
+
 import {
   getChartIdAndColumnFromFilterKey,
   getDashboardFilterKey,
@@ -48,9 +49,9 @@ export function isFilterBox(chartId) {
 export function getAppliedFilterValues(chartId) {
   // use cached data if possible
   if (!(chartId in appliedFilterValuesByChart)) {
-    const applicableFilters = Object.entries(activeFilters).filter(
-      ([, { scope: chartIds }]) => chartIds.includes(chartId),
-    );
+    const applicableFilters = Object.entries(
+      activeFilters,
+    ).filter(([, { scope: chartIds }]) => chartIds.includes(chartId));
     appliedFilterValuesByChart[chartId] = flow(
       keyBy(
         ([filterKey]) => getChartIdAndColumnFromFilterKey(filterKey).column,
@@ -61,10 +62,9 @@ export function getAppliedFilterValues(chartId) {
   return appliedFilterValuesByChart[chartId];
 }
 
-// Legacy - getChartIdsInFilterBoxScope is used only by
-// components and functions related to filter box
-// Please use src/dashboard/util/getChartIdsInFilterScope instead
-export function getChartIdsInFilterBoxScope({ filterScope }) {
+export function getChartIdsInFilterScope({
+  filterScope = DASHBOARD_FILTER_SCOPE_GLOBAL,
+}) {
   function traverse(chartIds = [], component = {}, immuneChartIds = []) {
     if (!component) {
       return;
@@ -85,8 +85,7 @@ export function getChartIdsInFilterBoxScope({ filterScope }) {
   }
 
   const chartIds = [];
-  const { scope: scopeComponentIds, immune: immuneChartIds } =
-    filterScope || DASHBOARD_FILTER_SCOPE_GLOBAL;
+  const { scope: scopeComponentIds, immune: immuneChartIds } = filterScope;
   scopeComponentIds.forEach(componentId =>
     traverse(chartIds, allComponents[componentId], immuneChartIds),
   );
@@ -119,7 +118,7 @@ export function buildActiveFilters({ dashboardFilters = {}, components = {} }) {
           : columns[column] !== undefined
       ) {
         // remove filter itself
-        const scope = getChartIdsInFilterBoxScope({
+        const scope = getChartIdsInFilterScope({
           filterScope: scopes[column],
         }).filter(id => chartId !== id);
 

@@ -44,7 +44,6 @@ jest.mock('src/components/Select/Select', () => ({
       </button>
     </div>
   ),
-  propertyComparator: jest.fn(),
 }));
 
 fetchMock.get(datasetsOwnersEndpoint, {

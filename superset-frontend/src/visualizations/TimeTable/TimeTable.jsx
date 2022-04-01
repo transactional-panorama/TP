@@ -27,22 +27,12 @@ import {
   MetricOption,
 } from '@superset-ui/chart-controls';
 import moment from 'moment';
-import sortNumericValues from 'src/utils/sortNumericValues';
 
 import FormattedNumber from './FormattedNumber';
 import SparklineCell from './SparklineCell';
 import './TimeTable.less';
 
 const ACCESSIBLE_COLOR_BOUNDS = ['#ca0020', '#0571b0'];
-
-const sortNumberWithMixedTypes = (rowA, rowB, columnId, descending) =>
-  sortNumericValues(
-    rowA.values[columnId].props['data-value'],
-    rowB.values[columnId].props['data-value'],
-    { descending, nanTreatment: 'asSmallest' },
-  ) *
-  // react-table sort function always expects -1 for smaller number
-  (descending ? -1 : 1);
 
 function colorFromBounds(value, bounds, colorBounds = ACCESSIBLE_COLOR_BOUNDS) {
   if (bounds) {
@@ -136,7 +126,11 @@ const TimeTable = ({
             )}
           </>
         ),
-        sortType: sortNumberWithMixedTypes,
+        sortType: (rowA, rowB, columnId) => {
+          const rowAVal = rowA.values[columnId].props['data-value'];
+          const rowBVal = rowB.values[columnId].props['data-value'];
+          return rowAVal - rowBVal;
+        },
       })),
     ],
     [columnConfigs],
@@ -198,17 +192,14 @@ const TimeTable = ({
         } else {
           v = reversedEntries[timeLag][valueField];
         }
-        if (typeof v === 'number' && typeof recent === 'number') {
-          if (column.comparisonType === 'diff') {
-            v = recent - v;
-          } else if (column.comparisonType === 'perc') {
-            v = recent / v;
-          } else if (column.comparisonType === 'perc_change') {
-            v = recent / v - 1;
-          }
-        } else {
-          v = null;
+        if (column.comparisonType === 'diff') {
+          v = recent - v;
+        } else if (column.comparisonType === 'perc') {
+          v = recent / v;
+        } else if (column.comparisonType === 'perc_change') {
+          v = recent / v - 1;
         }
+        v = v || 0;
       } else if (column.colType === 'contrib') {
         // contribution to column total
         v =

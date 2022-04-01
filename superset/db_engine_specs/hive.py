@@ -248,9 +248,7 @@ class HiveEngineSpec(PrestoEngineSpec):
             )
 
     @classmethod
-    def convert_dttm(
-        cls, target_type: str, dttm: datetime, db_extra: Optional[Dict[str, Any]] = None
-    ) -> Optional[str]:
+    def convert_dttm(cls, target_type: str, dttm: datetime) -> Optional[str]:
         tt = target_type.upper()
         if tt == utils.TemporalType.DATE:
             return f"CAST('{dttm.date().isoformat()}' AS DATE)"
@@ -335,10 +333,6 @@ class HiveEngineSpec(PrestoEngineSpec):
         job_id = None
         query_id = query.id
         while polled.operationState in unfinished_states:
-            # Queries don't terminate when user clicks the STOP button on SQL LAB.
-            # Refresh session so that the `query.status` modified in stop_query in
-            # views/core.py is reflected here.
-            session.refresh(query)
             query = session.query(type(query)).filter_by(id=query_id).one()
             if query.status == QueryStatus.STOPPED:
                 cursor.cancel()
@@ -435,12 +429,9 @@ class HiveEngineSpec(PrestoEngineSpec):
 
     @classmethod
     def _latest_partition_from_df(cls, df: pd.DataFrame) -> Optional[List[str]]:
-        """Hive partitions look like ds={partition name}/ds={partition name}"""
+        """Hive partitions look like ds={partition name}"""
         if not df.empty:
-            return [
-                partition_str.split("=")[1]
-                for partition_str in df.iloc[:, 0].max().split("/")
-            ]
+            return [df.ix[:, 0].max().split("=")[1]]
         return None
 
     @classmethod
@@ -496,10 +487,7 @@ class HiveEngineSpec(PrestoEngineSpec):
 
     @classmethod
     def update_impersonation_config(
-        cls,
-        connect_args: Dict[str, Any],
-        uri: str,
-        username: Optional[str],
+        cls, connect_args: Dict[str, Any], uri: str, username: Optional[str],
     ) -> None:
         """
         Update a configuration dictionary

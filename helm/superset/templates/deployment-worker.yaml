@@ -42,7 +42,6 @@ spec:
         checksum/extraSecrets: {{ .Values.extraSecrets | toYaml | sha256sum }}
         checksum/extraSecretEnv: {{ .Values.extraSecretEnv | toYaml | sha256sum }}
         checksum/configOverrides: {{ .Values.configOverrides | toYaml | sha256sum }}
-        checksum/configOverridesFiles: {{ .Values.configOverridesFiles | toYaml | sha256sum }}
         {{ if .Values.supersetWorker.forceReload }}
         # Optionally force the thing to reload
         force-reload: {{ randAlphaNum 5 | quote }}
@@ -53,12 +52,9 @@ spec:
       labels:
         app: {{ template "superset.name" . }}-worker
         release: {{ .Release.Name }}
-      {{- if .Values.supersetWorker.podLabels }}
-        {{ toYaml .Values.supersetWorker.podLabels | nindent 8 }}
-      {{- end }}
     spec:
-      {{- if or (.Values.serviceAccount.create) (.Values.serviceAccountName) }}
-      serviceAccountName: {{ template "superset.serviceAccountName" . }}
+      {{- if .Values.serviceAccountName }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
       {{- end }}
       securityContext:
         runAsUser: {{ .Values.runAsUser }}

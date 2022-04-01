@@ -19,8 +19,9 @@
 import React, { CSSProperties } from 'react';
 import ButtonGroup from 'src/components/ButtonGroup';
 import Alert from 'src/components/Alert';
+import ProgressBar from 'src/components/ProgressBar';
 import moment from 'moment';
-import { RadioChangeEvent } from 'src/components';
+import { RadioChangeEvent } from 'antd/lib/radio';
 import Button from 'src/components/Button';
 import shortid from 'shortid';
 import rison from 'rison';
@@ -35,11 +36,8 @@ import { debounce } from 'lodash';
 import ErrorMessageWithStackTrace from 'src/components/ErrorMessage/ErrorMessageWithStackTrace';
 import { SaveDatasetModal } from 'src/SqlLab/components/SaveDatasetModal';
 import { UserWithPermissionsAndRoles } from 'src/types/bootstrapTypes';
-import ProgressBar from 'src/components/ProgressBar';
 import Loading from 'src/components/Loading';
-import FilterableTable, {
-  MAX_COLUMNS_FOR_TABLE,
-} from 'src/components/FilterableTable/FilterableTable';
+import FilterableTable from 'src/components/FilterableTable/FilterableTable';
 import CopyToClipboard from 'src/components/CopyToClipboard';
 import { prepareCopyToClipboardTabularData } from 'src/utils/common';
 import { exploreChart } from 'src/explore/exploreUtils';
@@ -149,7 +147,6 @@ const ResultSetErrorMessage = styled.div`
 `;
 
 const updateDataset = async (
-  dbId: number,
   datasetId: number,
   sql: string,
   columns: Array<Record<string, any>>,
@@ -162,7 +159,6 @@ const updateDataset = async (
     sql,
     columns,
     owners,
-    database_id: dbId,
   });
 
   const data: JsonResponse = await SupersetClient.put({
@@ -205,25 +201,30 @@ export default class ResultSet extends React.PureComponent<
     this.fetchResults = this.fetchResults.bind(this);
     this.popSelectStar = this.popSelectStar.bind(this);
     this.reFetchQueryResults = this.reFetchQueryResults.bind(this);
-    this.toggleExploreResultsButton =
-      this.toggleExploreResultsButton.bind(this);
+    this.toggleExploreResultsButton = this.toggleExploreResultsButton.bind(
+      this,
+    );
     this.handleSaveInDataset = this.handleSaveInDataset.bind(this);
     this.handleHideSaveModal = this.handleHideSaveModal.bind(this);
     this.handleDatasetNameChange = this.handleDatasetNameChange.bind(this);
-    this.handleSaveDatasetRadioBtnState =
-      this.handleSaveDatasetRadioBtnState.bind(this);
+    this.handleSaveDatasetRadioBtnState = this.handleSaveDatasetRadioBtnState.bind(
+      this,
+    );
     this.handleOverwriteCancel = this.handleOverwriteCancel.bind(this);
     this.handleOverwriteDataset = this.handleOverwriteDataset.bind(this);
-    this.handleOverwriteDatasetOption =
-      this.handleOverwriteDatasetOption.bind(this);
+    this.handleOverwriteDatasetOption = this.handleOverwriteDatasetOption.bind(
+      this,
+    );
     this.handleSaveDatasetModalSearch = debounce(
       this.handleSaveDatasetModalSearch.bind(this),
       1000,
     );
-    this.handleFilterAutocompleteOption =
-      this.handleFilterAutocompleteOption.bind(this);
-    this.handleOnChangeAutoComplete =
-      this.handleOnChangeAutoComplete.bind(this);
+    this.handleFilterAutocompleteOption = this.handleFilterAutocompleteOption.bind(
+      this,
+    );
+    this.handleOnChangeAutoComplete = this.handleOnChangeAutoComplete.bind(
+      this,
+    );
     this.handleExploreBtnClick = this.handleExploreBtnClick.bind(this);
   }
 
@@ -271,17 +272,13 @@ export default class ResultSet extends React.PureComponent<
   };
 
   handleOverwriteDataset = async () => {
-    const { sql, results, dbId } = this.props.query;
+    const { sql, results } = this.props.query;
     const { datasetToOverwrite } = this.state;
 
     await updateDataset(
-      dbId,
       datasetToOverwrite.datasetId,
       sql,
-      results.selected_columns.map(d => ({
-        column_name: d.name,
-        is_dttm: d.is_date,
-      })),
+      results.selected_columns.map(d => ({ column_name: d.name })),
       datasetToOverwrite.owners.map((o: DatasetOwner) => o.id),
       true,
     );
@@ -530,9 +527,13 @@ export default class ResultSet extends React.PureComponent<
           />
           <ResultSetButtons>
             {this.props.visualize &&
-              this.props.database?.allows_virtual_table_explore && (
+              this.props.database &&
+              this.props.database.allows_virtual_table_explore && (
                 <ExploreResultsButton
+                  // @ts-ignore Redux types are difficult to work with, ignoring for now
+                  query={this.props.query}
                   database={this.props.database}
+                  actions={this.props.actions}
                   onClick={this.handleExploreBtnClick}
                 />
               )}
@@ -553,7 +554,6 @@ export default class ResultSet extends React.PureComponent<
                   <i className="fa fa-clipboard" /> {t('Copy to Clipboard')}
                 </Button>
               }
-              hideTooltip
             />
           </ResultSetButtons>
           {this.props.search && (
@@ -562,12 +562,7 @@ export default class ResultSet extends React.PureComponent<
               onChange={this.changeSearch}
               value={this.state.searchText}
               className="form-control input-sm"
-              disabled={columns.length > MAX_COLUMNS_FOR_TABLE}
-              placeholder={
-                columns.length > MAX_COLUMNS_FOR_TABLE
-                  ? t('Too many columns to filter')
-                  : t('Filter results')
-              }
+              placeholder={t('Filter results')}
             />
           )}
         </ResultSetControls>
@@ -586,20 +581,26 @@ export default class ResultSet extends React.PureComponent<
     const limitReached = results?.displayLimitReached;
     const limit = queryLimit || results.query.limit;
     const isAdmin = !!this.props.user?.roles?.Admin;
-    const rowsCount = Math.min(rows || 0, results?.data?.length || 0);
-
     const displayMaxRowsReachedMessage = {
       withAdmin: t(
-        'The number of results displayed is limited to %(rows)d by the configuration DISPLAY_MAX_ROWS. ' +
-          'Please add additional limits/filters or download to csv to see more rows up to ' +
-          'the %(limit)d limit.',
-        { rows: rowsCount, limit },
+        `The number of results displayed is limited to %(rows)d by the configuration DISPLAY_MAX_ROWS. `,
+        { rows },
+      ).concat(
+        t(
+          `Please add additional limits/filters or download to csv to see more rows up to `,
+        ),
+        t(`the %(limit)d limit.`, { limit }),
       ),
       withoutAdmin: t(
-        'The number of results displayed is limited to %(rows)d. ' +
-          'Please add additional limits/filters, download to csv, or contact an admin ' +
-          'to see more rows up to the %(limit)d limit.',
-        { rows: rowsCount, limit },
+        `The number of results displayed is limited to %(rows)d. `,
+        { rows },
+      ).concat(
+        t(
+          `Please add additional limits/filters, download to csv, or contact an admin `,
+        ),
+        t(`to see more rows up to the %(limit)d limit.`, {
+          limit,
+        }),
       ),
     };
     const shouldUseDefaultDropdownAlert =
@@ -610,7 +611,7 @@ export default class ResultSet extends React.PureComponent<
       limitMessage = (
         <span className="limitMessage">
           {t(
-            'The number of rows displayed is limited to %(rows)d by the query',
+            `The number of rows displayed is limited to %(rows)d by the query`,
             { rows },
           )}
         </span>
@@ -622,7 +623,7 @@ export default class ResultSet extends React.PureComponent<
       limitMessage = (
         <span className="limitMessage">
           {t(
-            'The number of rows displayed is limited to %(rows)d by the limit dropdown.',
+            `The number of rows displayed is limited to %(rows)d by the limit dropdown.`,
             { rows },
           )}
         </span>
@@ -631,7 +632,7 @@ export default class ResultSet extends React.PureComponent<
       limitMessage = (
         <span className="limitMessage">
           {t(
-            'The number of rows displayed is limited to %(rows)d by the query and limit dropdown.',
+            `The number of rows displayed is limited to %(rows)d by the query and limit dropdown.`,
             { rows },
           )}
         </span>
@@ -641,17 +642,17 @@ export default class ResultSet extends React.PureComponent<
       <ReturnedRows>
         {!limitReached && !shouldUseDefaultDropdownAlert && (
           <span>
-            {t('%(rows)d rows returned', { rows })} {limitMessage}
+            {t(`%(rows)d rows returned`, { rows })} {limitMessage}
           </span>
         )}
         {!limitReached && shouldUseDefaultDropdownAlert && (
           <div ref={this.calculateAlertRefHeight}>
             <Alert
               type="warning"
-              message={t('%(rows)d rows returned', { rows })}
+              message={t(`%(rows)d rows returned`, { rows })}
               onClose={this.onAlertClose}
               description={t(
-                'The number of rows displayed is limited to %s by the dropdown.',
+                `The number of rows displayed is limited to %s by the dropdown.`,
                 rows,
               )}
             />
@@ -662,7 +663,7 @@ export default class ResultSet extends React.PureComponent<
             <Alert
               type="warning"
               onClose={this.onAlertClose}
-              message={t('%(rows)d rows returned', { rows: rowsCount })}
+              message={t(`%(rows)d rows returned`, { rows })}
               description={
                 isAdmin
                   ? displayMaxRowsReachedMessage.withAdmin
@@ -732,10 +733,11 @@ export default class ResultSet extends React.PureComponent<
                   </Button>
                   <ExploreCtasResultsButton
                     // @ts-ignore Redux types are difficult to work with, ignoring for now
-                    actions={this.props.actions}
                     table={tempTable}
                     schema={tempSchema}
                     dbId={exploreDBId}
+                    database={this.props.database}
+                    actions={this.props.actions}
                   />
                 </ButtonGroup>
               </>
@@ -809,8 +811,8 @@ export default class ResultSet extends React.PureComponent<
         );
       }
     }
-    let trackingUrl;
     let progressBar;
+    let trackingUrl;
     if (query.progress > 0) {
       progressBar = (
         <ProgressBar
@@ -833,17 +835,14 @@ export default class ResultSet extends React.PureComponent<
       query && query.extra && query.extra.progress
         ? query.extra.progress
         : null;
-
     return (
       <div style={LOADING_STYLES}>
         <div>{!progressBar && <Loading position="normal" />}</div>
-        {/* show loading bar whenever progress bar is completed but needs time to render */}
-        <div>{query.progress === 100 && <Loading position="normal" />}</div>
         <QueryStateLabel query={query} />
         <div>
           {progressMsg && <Alert type="success" message={progressMsg} />}
         </div>
-        <div>{query.progress !== 100 && progressBar}</div>
+        <div>{progressBar}</div>
         <div>{trackingUrl}</div>
       </div>
     );

@@ -18,10 +18,11 @@
  */
 
 import React, { FC, useCallback, useState } from 'react';
-import { NativeFilterScope, styled, t } from '@superset-ui/core';
+import { t, styled } from '@superset-ui/core';
 import { Radio } from 'src/components/Radio';
-import { AntdForm, Typography } from 'src/components';
-import { useComponentDidUpdate } from 'src/hooks/useComponentDidUpdate/useComponentDidUpdate';
+import { Form, Typography } from 'src/common/components';
+import { useComponentDidUpdate } from 'src/common/hooks/useComponentDidUpdate/useComponentDidUpdate';
+import { Scope } from '../../../types';
 import { ScopingType } from './types';
 import ScopingTree from './ScopingTree';
 import { getDefaultScopeValue, isScopingAll } from './utils';
@@ -29,9 +30,9 @@ import { getDefaultScopeValue, isScopingAll } from './utils';
 type FilterScopeProps = {
   pathToFormValue?: string[];
   updateFormValues: (values: any) => void;
-  formFilterScope?: NativeFilterScope;
+  formFilterScope?: Scope;
   forceUpdate: Function;
-  filterScope?: NativeFilterScope;
+  filterScope?: Scope;
   formScopingType?: ScopingType;
   chartId?: number;
   initiallyExcludedCharts?: number[];
@@ -43,10 +44,9 @@ const Wrapper = styled.div`
   & > * {
     margin-bottom: ${({ theme }) => theme.gridUnit}px;
   }
-  padding: 0px ${({ theme }) => theme.gridUnit * 4}px;
 `;
 
-const CleanFormItem = styled(AntdForm.Item)`
+const CleanFormItem = styled(Form.Item)`
   margin-bottom: 0;
 `;
 

@@ -21,13 +21,9 @@ import {
   InfoTooltipWithTrigger,
 } from '@superset-ui/chart-controls';
 import React from 'react';
-import { AntdCheckbox, FormInstance } from 'src/components';
-import {
-  Filter,
-  getChartControlPanelRegistry,
-  styled,
-  t,
-} from '@superset-ui/core';
+import { Checkbox } from 'src/common/components';
+import { FormInstance } from 'antd/lib/form';
+import { getChartControlPanelRegistry, styled, t } from '@superset-ui/core';
 import { Tooltip } from 'src/components/Tooltip';
 import { FormItem } from 'src/components/Form';
 import {
@@ -41,6 +37,7 @@ import {
   StyledLabel,
   StyledRowFormItem,
 } from './FiltersConfigForm';
+import { Filter } from '../../types';
 import { ColumnSelect } from './ColumnSelect';
 
 export interface ControlItemsProps {
@@ -109,7 +106,7 @@ export default function getControlItemsMap({
             initialValue={initColumn}
             label={
               <StyledLabel>
-                {mainControlItem.config?.label || t('Column')}
+                {t(`${mainControlItem.config?.label}`) || t('Column')}
               </StyledLabel>
             }
             rules={[
@@ -148,8 +145,7 @@ export default function getControlItemsMap({
     .filter(
       (controlItem: CustomControlItem) =>
         controlItem?.config?.renderTrigger &&
-        controlItem.name !== 'sortAscending' &&
-        controlItem.name !== 'enableSingleValue',
+        controlItem.name !== 'sortAscending',
     )
     .forEach(controlItem => {
       const initialValue =
@@ -180,7 +176,7 @@ export default function getControlItemsMap({
               valuePropName="checked"
               colon={false}
             >
-              <AntdCheckbox
+              <Checkbox
                 disabled={controlItem.config.affectsDataMask && disabled}
                 onChange={({ target: { checked } }) => {
                   if (controlItem.config.requiredFirst) {
@@ -207,7 +203,7 @@ export default function getControlItemsMap({
                     tooltip={controlItem.config.description}
                   />
                 )}
-              </AntdCheckbox>
+              </Checkbox>
             </StyledRowFormItem>
           </Tooltip>
         </>

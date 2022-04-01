@@ -21,11 +21,11 @@ import PropTypes from 'prop-types';
 import { t } from '@superset-ui/core';
 
 import URLShortLinkButton from 'src/components/URLShortLinkButton';
+import getDashboardUrl from 'src/dashboard/util/getDashboardUrl';
 import getLocationHash from 'src/dashboard/util/getLocationHash';
 
 const propTypes = {
   anchorLinkId: PropTypes.string.isRequired,
-  dashboardId: PropTypes.number,
   filters: PropTypes.object,
   showShortLinkButton: PropTypes.bool,
   inFocus: PropTypes.bool,
@@ -70,14 +70,21 @@ class AnchorLink extends React.PureComponent {
   }
 
   render() {
-    const { anchorLinkId, dashboardId, showShortLinkButton, placement } =
-      this.props;
+    const {
+      anchorLinkId,
+      filters,
+      showShortLinkButton,
+      placement,
+    } = this.props;
     return (
       <span className="anchor-link-container" id={anchorLinkId}>
         {showShortLinkButton && (
           <URLShortLinkButton
-            anchorLinkId={anchorLinkId}
-            dashboardId={dashboardId}
+            url={getDashboardUrl({
+              pathname: window.location.pathname,
+              filters,
+              hash: anchorLinkId,
+            })}
             emailSubject={t('Superset chart')}
             emailContent={t('Check out this chart in dashboard:')}
             placement={placement}

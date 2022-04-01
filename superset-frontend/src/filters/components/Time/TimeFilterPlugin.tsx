@@ -17,7 +17,7 @@
  * under the License.
  */
 import { styled } from '@superset-ui/core';
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import DateFilterControl from 'src/explore/components/controls/DateFilterControl';
 import { NO_TIME_RANGE } from 'src/explore/constants';
 import { PluginFilterTimeProps } from './types';
@@ -60,29 +60,25 @@ export default function TimeFilterPlugin(props: PluginFilterTimeProps) {
     setDataMask,
     setFocusedFilter,
     unsetFocusedFilter,
-    setFilterActive,
     width,
     height,
     filterState,
-    inputRef,
+    formData: { inputRef },
   } = props;
 
-  const handleTimeRangeChange = useCallback(
-    (timeRange?: string): void => {
-      const isSet = timeRange && timeRange !== NO_TIME_RANGE;
-      setDataMask({
-        extraFormData: isSet
-          ? {
-              time_range: timeRange,
-            }
-          : {},
-        filterState: {
-          value: isSet ? timeRange : undefined,
-        },
-      });
-    },
-    [setDataMask],
-  );
+  const handleTimeRangeChange = (timeRange?: string): void => {
+    const isSet = timeRange && timeRange !== NO_TIME_RANGE;
+    setDataMask({
+      extraFormData: isSet
+        ? {
+            time_range: timeRange,
+          }
+        : {},
+      filterState: {
+        value: isSet ? timeRange : undefined,
+      },
+    });
+  };
 
   useEffect(() => {
     handleTimeRangeChange(filterState.value);
@@ -101,12 +97,11 @@ export default function TimeFilterPlugin(props: PluginFilterTimeProps) {
         onMouseLeave={unsetFocusedFilter}
       >
         <DateFilterControl
+          endpoints={['inclusive', 'exclusive']}
           value={filterState.value || NO_TIME_RANGE}
           name="time_range"
           onChange={handleTimeRangeChange}
           type={filterState.validateStatus}
-          onOpenPopover={() => setFilterActive(true)}
-          onClosePopover={() => setFilterActive(false)}
         />
       </ControlContainer>
     </TimeFilterStyles>

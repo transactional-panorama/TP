@@ -24,19 +24,17 @@ import {
   ensureIsArray,
   ExtraFormData,
   GenericDataType,
-  getColumnLabel,
   JsonObject,
   smartDateDetailedFormatter,
   t,
   tn,
 } from '@superset-ui/core';
-import { LabeledValue as AntdLabeledValue } from 'antd/lib/select';
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { Select } from 'src/components';
 import debounce from 'lodash/debounce';
 import { SLOW_DEBOUNCE } from 'src/constants';
 import { useImmerReducer } from 'use-immer';
-import { propertyComparator } from 'src/components/Select/Select';
+import { FormItemProps } from 'antd/lib/form';
 import { PluginFilterSelectProps, SelectValue } from './types';
 import { StyledFormItem, FilterPluginStyle, StatusMessage } from '../common';
 import { getDataRecordFormatter, getSelectExtraFormData } from '../../utils';
@@ -84,24 +82,18 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
     setDataMask,
     setFocusedFilter,
     unsetFocusedFilter,
-    setFilterActive,
     appSection,
-    showOverflow,
-    parentRef,
-    inputRef,
   } = props;
   const {
     enableEmptyFilter,
     multiSelect,
     showSearch,
     inverseSelection,
+    inputRef,
     defaultToFirstItem,
     searchAllOptions,
   } = formData;
-  const groupby = useMemo(
-    () => ensureIsArray(formData.groupby).map(getColumnLabel),
-    [formData.groupby],
-  );
+  const groupby = ensureIsArray<string>(formData.groupby);
   const [col] = groupby;
   const [initialColtypeMap] = useState(coltypeMap);
   const [dataMask, dispatchDataMask] = useImmerReducer(reducer, {
@@ -122,7 +114,8 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
       const emptyFilter =
         enableEmptyFilter && !inverseSelection && !values?.length;
 
-      const suffix = inverseSelection && values?.length ? t(' (excluded)') : '';
+      const suffix =
+        inverseSelection && values?.length ? ` (${t('excluded')})` : '';
 
       dispatchDataMask({
         type: 'filterState',
@@ -181,16 +174,13 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
     [],
   );
 
-  const searchWrapper = useCallback(
-    (val: string) => {
-      if (searchAllOptions) {
-        debouncedOwnStateFunc(val);
-      }
-    },
-    [debouncedOwnStateFunc, searchAllOptions],
-  );
+  const searchWrapper = (val: string) => {
+    if (searchAllOptions) {
+      debouncedOwnStateFunc(val);
+    }
+  };
 
-  const clearSuggestionSearch = useCallback(() => {
+  const clearSuggestionSearch = () => {
     if (searchAllOptions) {
       dispatchDataMask({
         type: 'ownState',
@@ -200,25 +190,21 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
         },
       });
     }
-  }, [dispatchDataMask, initialColtypeMap, searchAllOptions]);
+  };
 
-  const handleBlur = useCallback(() => {
+  const handleBlur = () => {
     clearSuggestionSearch();
     unsetFocusedFilter();
-  }, [clearSuggestionSearch, unsetFocusedFilter]);
+  };
 
-  const handleChange = useCallback(
-    (value?: SelectValue | number | string) => {
-      const values = value === null ? [null] : ensureIsArray(value);
-
-      if (values.length === 0) {
-        updateDataMask(null);
-      } else {
-        updateDataMask(values);
-      }
-    },
-    [updateDataMask],
-  );
+  const handleChange = (value?: SelectValue | number | string) => {
+    const values = ensureIsArray(value);
+    if (values.length === 0) {
+      updateDataMask(null);
+    } else {
+      updateDataMask(values);
+    }
+  };
 
   useEffect(() => {
     if (defaultToFirstItem && filterState.value === undefined) {
@@ -259,16 +245,14 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
       ? t('No data')
       : tn('%s option', '%s options', data.length, data.length);
 
-  const formItemExtra = useMemo(() => {
-    if (filterState.validateMessage) {
-      return (
-        <StatusMessage status={filterState.validateStatus}>
-          {filterState.validateMessage}
-        </StatusMessage>
-      );
-    }
-    return undefined;
-  }, [filterState.validateMessage, filterState.validateStatus]);
+  const formItemData: FormItemProps = {};
+  if (filterState.validateMessage) {
+    formItemData.extra = (
+      <StatusMessage status={filterState.validateStatus}>
+        {filterState.validateMessage}
+      </StatusMessage>
+    );
+  }
 
   const options = useMemo(() => {
     const options: { label: string; value: DataRecordValue }[] = [];
@@ -282,22 +266,11 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
     return options;
   }, [data, datatype, groupby, labelFormatter]);
 
-  const sortComparator = useCallback(
-    (a: AntdLabeledValue, b: AntdLabeledValue) => {
-      const labelComparator = propertyComparator('label');
-      if (formData.sortAscending) {
-        return labelComparator(a, b);
-      }
-      return labelComparator(b, a);
-    },
-    [formData.sortAscending],
-  );
-
   return (
     <FilterPluginStyle height={height} width={width}>
       <StyledFormItem
         validateStatus={filterState.validateStatus}
-        extra={formItemExtra}
+        {...formItemData}
       >
         <Select
           allowClear
@@ -305,9 +278,6 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
           // @ts-ignore
           value={filterState.value || []}
           disabled={isDisabled}
-          getPopupContainer={
-            showOverflow ? () => parentRef?.current : undefined
-          }
           showSearch={showSearch}
           mode={multiSelect ? 'multiple' : 'single'}
           placeholder={placeholderText}
@@ -324,8 +294,6 @@ export default function PluginFilterSelect(props: PluginFilterSelectProps) {
           invertSelection={inverseSelection}
           // @ts-ignore
           options={options}
-          sortComparator={sortComparator}
-          onDropdownVisibleChange={setFilterActive}
         />
       </StyledFormItem>
     </FilterPluginStyle>

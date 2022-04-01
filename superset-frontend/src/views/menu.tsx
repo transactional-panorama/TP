@@ -24,11 +24,8 @@ import ReactDOM from 'react-dom';
 import { CacheProvider } from '@emotion/react';
 import createCache from '@emotion/cache';
 import { ThemeProvider } from '@superset-ui/core';
-import Menu from 'src/views/components/Menu';
+import Menu from 'src/components/Menu/Menu';
 import { theme } from 'src/preamble';
-
-import { Provider } from 'react-redux';
-import { store } from './store';
 
 const container = document.getElementById('app');
 const bootstrapJson = container?.getAttribute('data-bootstrap') ?? '{}';
@@ -43,9 +40,7 @@ const app = (
   // @ts-ignore: emotion types defs are incompatible between core and cache
   <CacheProvider value={emotionCache}>
     <ThemeProvider theme={theme}>
-      <Provider store={store}>
-        <Menu data={menu} />
-      </Provider>
+      <Menu data={menu} />
     </ThemeProvider>
   </CacheProvider>
 );

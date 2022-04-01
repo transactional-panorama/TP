@@ -68,7 +68,6 @@ export type AlertObject = {
   dashboard?: MetaObject;
   database?: MetaObject;
   description?: string;
-  force_screenshot: boolean;
   grace_period?: number;
   id: number;
   last_eval_dttm?: number;
@@ -101,14 +100,14 @@ export type LogObject = {
 };
 
 export enum AlertState {
-  Success = 'Success',
-  Working = 'Working',
-  Error = 'Error',
-  Noop = 'Not triggered',
-  Grace = 'On Grace',
+  success = 'Success',
+  working = 'Working',
+  error = 'Error',
+  noop = 'Not triggered',
+  grace = 'On Grace',
 }
 
 export enum RecipientIconName {
-  Email = 'Email',
-  Slack = 'Slack',
+  email = 'Email',
+  slack = 'Slack',
 }

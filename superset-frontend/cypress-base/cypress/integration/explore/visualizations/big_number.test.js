@@ -16,8 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { interceptChart } from 'cypress/utils';
-
 describe('Visualization > Big Number with Trendline', () => {
   const BIG_NUMBER_FORM_DATA = {
     datasource: '2__table',
@@ -44,21 +42,21 @@ describe('Visualization > Big Number with Trendline', () => {
   function verify(formData) {
     cy.visitChartByParams(JSON.stringify(formData));
     cy.verifySliceSuccess({
-      waitAlias: '@chartData',
+      waitAlias: '@getJson',
       chartSelector: '.superset-legacy-chart-big-number',
     });
   }
 
   beforeEach(() => {
     cy.login();
-    interceptChart({ legacy: false }).as('chartData');
+    cy.intercept('POST', '/superset/explore_json/**').as('getJson');
   });
 
   it('should work', () => {
     verify(BIG_NUMBER_FORM_DATA);
     cy.get('.chart-container .header-line');
     cy.get('.chart-container .subheader-line');
-    cy.get('.chart-container canvas');
+    cy.get('.chart-container svg path.vx-linepath');
   });
 
   it('should work without subheader', () => {
@@ -68,7 +66,7 @@ describe('Visualization > Big Number with Trendline', () => {
     });
     cy.get('.chart-container .header-line');
     cy.get('.chart-container .subheader-line').should('not.exist');
-    cy.get('.chart-container canvas');
+    cy.get('.chart-container svg path.vx-linepath');
   });
 
   it('should not render trendline when hidden', () => {
@@ -78,6 +76,6 @@ describe('Visualization > Big Number with Trendline', () => {
     });
     cy.get('[data-test="chart-container"] .header-line');
     cy.get('[data-test="chart-container"] .subheader-line');
-    cy.get('[data-test="chart-container"] canvas').should('not.exist');
+    cy.get('[data-test="chart-container"] svg').should('not.exist');
   });
 });

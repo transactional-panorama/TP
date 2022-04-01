@@ -25,8 +25,7 @@ import Chart from 'src/types/Chart';
 
 import ListViewCard from 'src/components/ListViewCard';
 import Label from 'src/components/Label';
-import { AntdDropdown } from 'src/components';
-import { Menu } from 'src/components/Menu';
+import { Dropdown, Menu } from 'src/common/components';
 import FaveStar from 'src/components/FaveStar';
 import FacePile from 'src/components/FacePile';
 import { handleChartDelete, CardStyles } from '../utils';
@@ -67,7 +66,7 @@ export default function ChartCard({
   const canEdit = hasPerm('can_write');
   const canDelete = hasPerm('can_write');
   const canExport =
-    hasPerm('can_export') && isFeatureEnabled(FeatureFlag.VERSIONED_EXPORT);
+    hasPerm('can_read') && isFeatureEnabled(FeatureFlag.VERSIONED_EXPORT);
   const theme = useTheme();
 
   const menu = (
@@ -170,9 +169,9 @@ export default function ChartCard({
               saveFaveStar={saveFavoriteStatus}
               isStarred={favoriteStatus}
             />
-            <AntdDropdown overlay={menu}>
+            <Dropdown overlay={menu}>
               <Icons.MoreVert iconColor={theme.colors.grayscale.base} />
-            </AntdDropdown>
+            </Dropdown>
           </ListViewCard.Actions>
         }
       />

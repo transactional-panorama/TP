@@ -14,10 +14,8 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-import uuid
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
-from flask import g
 from flask_appbuilder.security.sqla.models import Role
 from flask_babel import lazy_gettext as _
 from sqlalchemy import and_, or_
@@ -26,10 +24,8 @@ from sqlalchemy.orm.query import Query
 from superset import db, is_feature_enabled, security_manager
 from superset.models.core import FavStar
 from superset.models.dashboard import Dashboard
-from superset.models.embedded_dashboard import EmbeddedDashboard
 from superset.models.slice import Slice
-from superset.security.guest_token import GuestTokenResourceType, GuestUser
-from superset.views.base import BaseFilter, is_user_admin
+from superset.views.base import BaseFilter, get_user_roles, is_user_admin
 from superset.views.base_api import BaseFavoriteFilter
 
 
@@ -59,14 +55,6 @@ class DashboardFavoriteFilter(  # pylint: disable=too-few-public-methods
     arg_name = "dashboard_is_favorite"
     class_name = "Dashboard"
     model = Dashboard
-
-
-def is_uuid(value: Union[str, int]) -> bool:
-    try:
-        uuid.UUID(str(value))
-        return True
-    except ValueError:
-        return False
 
 
 class DashboardAccessFilter(BaseFilter):  # pylint: disable=too-few-public-methods
@@ -124,7 +112,7 @@ class DashboardAccessFilter(BaseFilter):  # pylint: disable=too-few-public-metho
             )
         )
 
-        feature_flagged_filters = []
+        dashboard_rbac_or_filters = []
         if is_feature_enabled("DASHBOARD_RBAC"):
             roles_based_query = (
                 db.session.query(Dashboard.id)
@@ -133,41 +121,19 @@ class DashboardAccessFilter(BaseFilter):  # pylint: disable=too-few-public-metho
                     and_(
                         Dashboard.published.is_(True),
                         dashboard_has_roles,
-                        Role.id.in_([x.id for x in security_manager.get_user_roles()]),
+                        Role.id.in_([x.id for x in get_user_roles()]),
                     ),
                 )
             )
 
-            feature_flagged_filters.append(Dashboard.id.in_(roles_based_query))
-
-        if is_feature_enabled("EMBEDDED_SUPERSET") and security_manager.is_guest_user(
-            g.user
-        ):
-
-            guest_user: GuestUser = g.user
-            embedded_dashboard_ids = [
-                r["id"]
-                for r in guest_user.resources
-                if r["type"] == GuestTokenResourceType.DASHBOARD.value
-            ]
-
-            # TODO (embedded): only use uuid filter once uuids are rolled out
-            condition = (
-                Dashboard.embedded.any(
-                    EmbeddedDashboard.uuid.in_(embedded_dashboard_ids)
-                )
-                if any(is_uuid(id_) for id_ in embedded_dashboard_ids)
-                else Dashboard.id.in_(embedded_dashboard_ids)
-            )
-
-            feature_flagged_filters.append(condition)
+            dashboard_rbac_or_filters.append(Dashboard.id.in_(roles_based_query))
 
         query = query.filter(
             or_(
                 Dashboard.id.in_(owner_ids_query),
                 Dashboard.id.in_(datasource_perm_query),
                 Dashboard.id.in_(users_favorite_dash_query),
-                *feature_flagged_filters,
+                *dashboard_rbac_or_filters,
             )
         )
 
@@ -190,9 +156,7 @@ class FilterRelatedRoles(BaseFilter):  # pylint: disable=too-few-public-methods
     def apply(self, query: Query, value: Optional[Any]) -> Query:
         role_model = security_manager.role_model
         if value:
-            return query.filter(
-                role_model.name.ilike(f"%{value}%"),
-            )
+            return query.filter(role_model.name.ilike(f"%{value}%"),)
         return query
 
 
@@ -206,15 +170,7 @@ class DashboardCertifiedFilter(BaseFilter):  # pylint: disable=too-few-public-me
 
     def apply(self, query: Query, value: Any) -> Query:
         if value is True:
-            return query.filter(
-                and_(
-                    Dashboard.certified_by.isnot(None),
-                )
-            )
+            return query.filter(and_(Dashboard.certified_by.isnot(None),))
         if value is False:
-            return query.filter(
-                and_(
-                    Dashboard.certified_by.is_(None),
-                )
-            )
+            return query.filter(and_(Dashboard.certified_by.is_(None),))
         return query

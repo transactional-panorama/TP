@@ -40,7 +40,7 @@ export function fetchAllSlicesFailed(error) {
 }
 
 const FETCH_SLICES_PAGE_SIZE = 200;
-export function fetchAllSlices(userId, excludeFilterBox = false) {
+export function fetchAllSlices(userId) {
   return (dispatch, getState) => {
     const { sliceEntities } = getState();
     if (sliceEntities.lastUpdated === 0) {
@@ -71,12 +71,7 @@ export function fetchAllSlices(userId, excludeFilterBox = false) {
       })
         .then(({ json }) => {
           const slices = {};
-          let { result } = json;
-          // disable add filter_box viz to dashboard
-          if (excludeFilterBox) {
-            result = result.filter(slice => slice.viz_type !== 'filter_box');
-          }
-          result.forEach(slice => {
+          json.result.forEach(slice => {
             let form_data = JSON.parse(slice.params);
             form_data = {
               ...form_data,

@@ -17,11 +17,12 @@
  * under the License.
  */
 import React, { FC, useMemo, useState } from 'react';
-import { DataMaskState, HandlerFunction, styled, t } from '@superset-ui/core';
-import { Typography, AntdTooltip } from 'src/components';
+import { HandlerFunction, styled, t } from '@superset-ui/core';
+import { Typography, Tooltip } from 'src/common/components';
 import { useDispatch } from 'react-redux';
 import Button from 'src/components/Button';
-import { updateFilterSet } from 'src/dashboard/actions/nativeFilters';
+import { setFilterSetsConfiguration } from 'src/dashboard/actions/nativeFilters';
+import { DataMaskState } from 'src/dataMask/types';
 import { WarningOutlined } from '@ant-design/icons';
 import { ActionButtons } from './Footer';
 import { useNativeFiltersDataMask, useFilters, useFilterSets } from '../state';
@@ -59,7 +60,7 @@ const ActionButton = styled.div<{ disabled?: boolean }>`
 `;
 
 export type EditSectionProps = {
-  filterSetId: number;
+  filterSetId: string;
   dataMaskSelected: DataMaskState;
   onCancel: HandlerFunction;
   disabled: boolean;
@@ -88,12 +89,17 @@ const EditSection: FC<EditSectionProps> = ({
 
   const handleSave = () => {
     dispatch(
-      updateFilterSet({
-        id: filterSetId,
-        name: filterSetName,
-        nativeFilters: filters,
-        dataMask: { ...dataMaskApplied },
-      }),
+      setFilterSetsConfiguration(
+        filterSetFilterValues.map(filterSet => {
+          const newFilterSet = {
+            ...filterSet,
+            name: filterSetName,
+            nativeFilters: filters,
+            dataMask: { ...dataMaskApplied },
+          };
+          return filterSetId === filterSet.id ? newFilterSet : filterSet;
+        }),
+      ),
     );
     onCancel();
   };
@@ -135,7 +141,7 @@ const EditSection: FC<EditSectionProps> = ({
         >
           {t('Cancel')}
         </Button>
-        <AntdTooltip
+        <Tooltip
           placement="right"
           title={
             (isFilterSetNameDuplicated &&
@@ -156,7 +162,7 @@ const EditSection: FC<EditSectionProps> = ({
               {t('Save')}
             </Button>
           </ActionButton>
-        </AntdTooltip>
+        </Tooltip>
       </ActionButtons>
       {isDuplicateFilterSet && (
         <Warning mark>

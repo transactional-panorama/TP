@@ -19,7 +19,6 @@ from unittest import mock
 
 import pytest
 
-from superset.connectors.sqla.models import TableColumn
 from superset.db_engine_specs import get_engine_specs
 from superset.db_engine_specs.base import (
     BaseEngineSpec,
@@ -31,18 +30,11 @@ from superset.db_engine_specs.mysql import MySQLEngineSpec
 from superset.db_engine_specs.sqlite import SqliteEngineSpec
 from superset.errors import ErrorLevel, SupersetError, SupersetErrorType
 from superset.sql_parse import ParsedQuery
-from superset.utils.database import get_example_database
+from superset.utils.core import get_example_database
 from tests.integration_tests.db_engine_specs.base_tests import TestDbEngineSpec
 from tests.integration_tests.test_app import app
 
-from ..fixtures.birth_names_dashboard import (
-    load_birth_names_dashboard_with_slices,
-    load_birth_names_data,
-)
-from ..fixtures.energy_dashboard import (
-    load_energy_table_data,
-    load_energy_table_with_slice,
-)
+from ..fixtures.energy_dashboard import load_energy_table_with_slice
 from ..fixtures.pyodbcRow import Row
 
 
@@ -93,9 +85,7 @@ class TestDbEngineSpecs(TestDbEngineSpec):
 
     def test_limit_query_without_force(self):
         self.sql_limit_regex(
-            "SELECT * FROM a LIMIT 10",
-            "SELECT * FROM a LIMIT 10",
-            limit=11,
+            "SELECT * FROM a LIMIT 10", "SELECT * FROM a LIMIT 10", limit=11,
         )
 
     def test_limit_query_with_force(self):
@@ -259,7 +249,7 @@ class TestDbEngineSpecs(TestDbEngineSpec):
 
     def test_convert_dttm(self):
         dttm = self.get_dttm()
-        self.assertIsNone(BaseEngineSpec.convert_dttm("", dttm, db_extra=None))
+        self.assertIsNone(BaseEngineSpec.convert_dttm("", dttm))
 
     def test_pyodbc_rows_to_tuples(self):
         # Test for case when pyodbc.Row is returned (odbc driver)
@@ -282,38 +272,6 @@ class TestDbEngineSpecs(TestDbEngineSpec):
         ]
         result = BaseEngineSpec.pyodbc_rows_to_tuples(data)
         self.assertListEqual(result, data)
-
-    @mock.patch("superset.models.core.Database.db_engine_spec", BaseEngineSpec)
-    @pytest.mark.usefixtures("load_birth_names_dashboard_with_slices")
-    def test_calculated_column_in_order_by_base_engine_spec(self):
-        table = self.get_table(name="birth_names")
-        TableColumn(
-            column_name="gender_cc",
-            type="VARCHAR(255)",
-            table=table,
-            expression="""
-            case
-              when gender=true then "male"
-              else "female"
-            end
-            """,
-        )
-
-        table.database.sqlalchemy_uri = "sqlite://"
-        query_obj = {
-            "groupby": ["gender_cc"],
-            "is_timeseries": False,
-            "filter": [],
-            "orderby": [["gender_cc", True]],
-        }
-        sql = table.get_query_str(query_obj)
-        assert (
-            """ORDER BY case
-             when gender=true then "male"
-             else "female"
-         end ASC;"""
-            in sql
-        )
 
 
 def test_is_readonly():
@@ -401,11 +359,7 @@ def test_get_time_grain_with_unkown_values():
     config = app.config.copy()
 
     app.config["TIME_GRAIN_ADDON_EXPRESSIONS"] = {
-        "mysql": {
-            "PT2H": "foo",
-            "weird": "foo",
-            "PT12H": "foo",
-        }
+        "mysql": {"PT2H": "foo", "weird": "foo", "PT12H": "foo",}
     }
 
     with app.app_context():

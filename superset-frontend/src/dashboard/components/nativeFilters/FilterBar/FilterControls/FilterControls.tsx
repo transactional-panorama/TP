@@ -16,33 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { FC, useCallback, useMemo } from 'react';
+import React, { FC, useMemo, useState } from 'react';
+import { DataMask, styled, t } from '@superset-ui/core';
 import { css } from '@emotion/react';
-import {
-  DataMask,
-  DataMaskStateWithId,
-  Filter,
-  isFilterDivider,
-  styled,
-  t,
-} from '@superset-ui/core';
-import {
-  createHtmlPortalNode,
-  InPortal,
-  OutPortal,
-} from 'react-reverse-portal';
-import { AntdCollapse } from 'src/components';
-import {
-  useDashboardHasTabs,
-  useSelectFiltersInScope,
-} from 'src/dashboard/components/nativeFilters/state';
+import * as portals from 'react-reverse-portal';
+import { DataMaskStateWithId } from 'src/dataMask/types';
+import { Collapse } from 'src/common/components';
+import CascadePopover from '../CascadeFilters/CascadePopover';
+import { buildCascadeFiltersTree } from './utils';
 import { useFilters } from '../state';
-import FilterControl from './FilterControl';
+import { Filter } from '../../types';
+import { useDashboardHasTabs, useSelectFiltersInScope } from '../../state';
 
 const Wrapper = styled.div`
   padding: ${({ theme }) => theme.gridUnit * 4}px;
-  // 108px padding to make room for buttons with position: absolute
-  padding-bottom: ${({ theme }) => theme.gridUnit * 27}px;
+  &:hover {
+    cursor: pointer;
+  }
 `;
 
 type FilterControlsProps = {
@@ -56,72 +46,60 @@ const FilterControls: FC<FilterControlsProps> = ({
   dataMaskSelected,
   onFilterSelectionChange,
 }) => {
+  const [visiblePopoverId, setVisiblePopoverId] = useState<string | null>(null);
   const filters = useFilters();
-  const filterValues = useMemo(() => Object.values(filters), [filters]);
-  const portalNodes = useMemo(() => {
+  const filterValues = Object.values<Filter>(filters);
+  const portalNodes = React.useMemo(() => {
     const nodes = new Array(filterValues.length);
     for (let i = 0; i < filterValues.length; i += 1) {
-      nodes[i] = createHtmlPortalNode();
+      nodes[i] = portals.createHtmlPortalNode();
     }
     return nodes;
   }, [filterValues.length]);
 
-  const filtersWithValues = useMemo(
-    () =>
-      filterValues.map(filter => ({
-        ...filter,
-        dataMask: dataMaskSelected[filter.id],
-      })),
-    [filterValues, dataMaskSelected],
-  );
-  const filterIds = new Set(filtersWithValues.map(item => item.id));
+  const cascadeFilters = useMemo(() => {
+    const filtersWithValue = filterValues.map(filter => ({
+      ...filter,
+      dataMask: dataMaskSelected[filter.id],
+    }));
+    return buildCascadeFiltersTree(filtersWithValue);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(filterValues), dataMaskSelected]);
+  const cascadeFilterIds = new Set(cascadeFilters.map(item => item.id));
 
-  const [filtersInScope, filtersOutOfScope] =
-    useSelectFiltersInScope(filtersWithValues);
+  const [filtersInScope, filtersOutOfScope] = useSelectFiltersInScope(
+    cascadeFilters,
+  );
   const dashboardHasTabs = useDashboardHasTabs();
-  const showCollapsePanel = dashboardHasTabs && filtersWithValues.length > 0;
+  const showCollapsePanel = dashboardHasTabs && cascadeFilters.length > 0;
 
-  const filterControlFactory = useCallback(
-    index => {
-      const filter = filtersWithValues[index];
-      if (isFilterDivider(filter)) {
-        return (
-          <div>
-            <h3>{filter.title}</h3>
-            <p>{filter.description}</p>
-          </div>
-        );
-      }
-      return (
-        <FilterControl
-          dataMaskSelected={dataMaskSelected}
-          filter={filter}
-          directPathToChild={directPathToChild}
-          onFilterSelectionChange={onFilterSelectionChange}
-          inView={false}
-        />
-      );
-    },
-    [
-      filtersWithValues,
-      JSON.stringify(dataMaskSelected),
-      directPathToChild,
-      onFilterSelectionChange,
-    ],
-  );
   return (
     <Wrapper>
       {portalNodes
-        .filter((node, index) => filterIds.has(filterValues[index].id))
+        .filter((node, index) => cascadeFilterIds.has(filterValues[index].id))
         .map((node, index) => (
-          <InPortal node={node}>{filterControlFactory(index)}</InPortal>
+          <portals.InPortal node={node}>
+            <CascadePopover
+              data-test="cascade-filters-control"
+              key={cascadeFilters[index].id}
+              dataMaskSelected={dataMaskSelected}
+              visible={visiblePopoverId === cascadeFilters[index].id}
+              onVisibleChange={visible =>
+                setVisiblePopoverId(visible ? cascadeFilters[index].id : null)
+              }
+              filter={cascadeFilters[index]}
+              onFilterSelectionChange={onFilterSelectionChange}
+              directPathToChild={directPathToChild}
+              inView={false}
+            />
+          </portals.InPortal>
         ))}
       {filtersInScope.map(filter => {
         const index = filterValues.findIndex(f => f.id === filter.id);
-        return <OutPortal node={portalNodes[index]} inView />;
+        return <portals.OutPortal node={portalNodes[index]} inView />;
       })}
       {showCollapsePanel && (
-        <AntdCollapse
+        <Collapse
           ghost
           bordered
           expandIconPosition="right"
@@ -148,21 +126,21 @@ const FilterControls: FC<FilterControlsProps> = ({
             }
           `}
         >
-          <AntdCollapse.Panel
-            header={t('Filters out of scope (%d)', filtersOutOfScope.length)}
+          <Collapse.Panel
+            header={`${t('Filters out of scope')} (${
+              filtersOutOfScope.length
+            })`}
             key="1"
           >
             {filtersOutOfScope.map(filter => {
-              const index = filtersWithValues.findIndex(
-                f => f.id === filter.id,
-              );
-              return <OutPortal node={portalNodes[index]} inView />;
+              const index = cascadeFilters.findIndex(f => f.id === filter.id);
+              return <portals.OutPortal node={portalNodes[index]} inView />;
             })}
-          </AntdCollapse.Panel>
-        </AntdCollapse>
+          </Collapse.Panel>
+        </Collapse>
       )}
     </Wrapper>
   );
 };
 
-export default React.memo(FilterControls);
+export default FilterControls;

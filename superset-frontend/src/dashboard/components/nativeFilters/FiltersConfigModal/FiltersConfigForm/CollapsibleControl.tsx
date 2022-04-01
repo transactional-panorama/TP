@@ -18,7 +18,7 @@
  */
 import React, { ReactNode, useEffect, useState } from 'react';
 import { styled } from '@superset-ui/core';
-import { AntdCheckbox } from 'src/components';
+import { Checkbox } from 'src/common/components';
 import { InfoTooltipWithTrigger } from '@superset-ui/chart-controls';
 
 interface CollapsibleControlProps {
@@ -48,10 +48,6 @@ const StyledContainer = styled.div<{ checked: boolean }>`
   }
 `;
 
-const ChildrenContainer = styled.div`
-  margin-left: ${({ theme }) => theme.gridUnit * 6}px;
-`;
-
 const CollapsibleControl = (props: CollapsibleControlProps) => {
   const {
     checked,
@@ -74,7 +70,7 @@ const CollapsibleControl = (props: CollapsibleControlProps) => {
 
   return (
     <StyledContainer checked={isChecked}>
-      <AntdCheckbox
+      <Checkbox
         className="checkbox"
         checked={isChecked}
         disabled={disabled}
@@ -94,8 +90,8 @@ const CollapsibleControl = (props: CollapsibleControlProps) => {
             <InfoTooltipWithTrigger placement="top" tooltip={tooltip} />
           )}
         </>
-      </AntdCheckbox>
-      {isChecked && <ChildrenContainer>{children}</ChildrenContainer>}
+      </Checkbox>
+      {isChecked && children}
     </StyledContainer>
   );
 };

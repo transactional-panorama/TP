@@ -39,7 +39,6 @@ export type PluginFilterTimeColumnProps = PluginFilterStylesProps & {
   data: DataRecord[];
   filterState: FilterState;
   formData: PluginFilterTimeColumnQueryFormData;
-  inputRef: RefObject<HTMLInputElement>;
 } & PluginFilterHooks;
 
 export const DEFAULT_FORM_DATA: PluginFilterTimeColumnCustomizeProps = {

@@ -28,14 +28,12 @@ import {
   ROW_TYPE,
   TABS_TYPE,
   TAB_TYPE,
-  DYNAMIC_TYPE,
 } from './componentTypes';
 
 import {
   MEDIUM_HEADER,
   BACKGROUND_TRANSPARENT,
   GRID_DEFAULT_CHART_WIDTH,
-  GRID_COLUMN_COUNT,
 } from './constants';
 
 const typeToDefaultMetaData = {
@@ -57,10 +55,6 @@ const typeToDefaultMetaData = {
     text: '',
     defaultText: t('Tab title'),
     placeholder: t('Tab title'),
-  },
-  [DYNAMIC_TYPE]: {
-    width: GRID_COLUMN_COUNT,
-    background: BACKGROUND_TRANSPARENT,
   },
 };
 

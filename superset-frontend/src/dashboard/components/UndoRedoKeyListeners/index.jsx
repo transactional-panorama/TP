@@ -45,10 +45,8 @@ class UndoRedoKeyListeners extends React.PureComponent {
       const isYChar = event.key === 'y' || event.keyCode === 89;
       const isEditingMarkdown =
         document && document.querySelector('.dashboard-markdown--editing');
-      const isEditingTitle =
-        document && document.querySelector('.editable-title--editing');
 
-      if (!isEditingMarkdown && !isEditingTitle && (isZChar || isYChar)) {
+      if (!isEditingMarkdown && (isZChar || isYChar)) {
         event.preventDefault();
         const func = isZChar ? this.props.onUndo : this.props.onRedo;
         func();

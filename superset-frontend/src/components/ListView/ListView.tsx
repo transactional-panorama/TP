@@ -18,15 +18,14 @@
  */
 import { t, styled } from '@superset-ui/core';
 import React, { useEffect } from 'react';
-import { Empty } from 'src/components';
+import { Empty } from 'src/common/components';
 import Alert from 'src/components/Alert';
 import EmptyImage from 'src/assets/images/empty.svg';
 import cx from 'classnames';
 import Button from 'src/components/Button';
 import Icons from 'src/components/Icons';
 import IndeterminateCheckbox from 'src/components/IndeterminateCheckbox';
-import Pagination from 'src/components/Pagination';
-import TableCollection from 'src/components/TableCollection';
+import { TableCollection, Pagination } from 'src/components/dataViewCommon';
 import CardCollection from './CardCollection';
 import FilterControls from './Filters';
 import { CardSortSelect } from './CardSortSelect';
@@ -136,7 +135,6 @@ const bulkSelectColumnConfig = {
 const ViewModeContainer = styled.div`
   padding-right: ${({ theme }) => theme.gridUnit * 4}px;
   margin-top: ${({ theme }) => theme.gridUnit * 5 + 1}px;
-  white-space: nowrap;
   display: inline-block;
 
   .toggle-button {

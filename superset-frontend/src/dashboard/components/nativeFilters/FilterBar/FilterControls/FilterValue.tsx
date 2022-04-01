@@ -16,13 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   QueryFormData,
   SuperChart,
@@ -36,18 +30,17 @@ import {
 } from '@superset-ui/core';
 import { useDispatch, useSelector } from 'react-redux';
 import { isEqual, isEqualWith } from 'lodash';
-import { getChartDataRequest } from 'src/components/Chart/chartAction';
+import { getChartDataRequest } from 'src/chart/chartAction';
 import Loading from 'src/components/Loading';
 import BasicErrorAlert from 'src/components/ErrorMessage/BasicErrorAlert';
 import { FeatureFlag, isFeatureEnabled } from 'src/featureFlags';
 import { waitForAsyncData } from 'src/middleware/asyncEvent';
 import { ClientErrorObject } from 'src/utils/getClientErrorObject';
 import { RootState } from 'src/dashboard/types';
-import { onFiltersRefreshSuccess } from 'src/dashboard/actions/dashboardState';
 import { dispatchFocusAction } from './utils';
 import { FilterProps } from './types';
 import { getFormData } from '../../utils';
-import { useFilterDependencies } from './state';
+import { useCascadingFilters } from './state';
 import { checkIsMissingRequiredValue } from '../utils';
 
 const HEIGHT = 32;
@@ -60,35 +53,19 @@ const StyledDiv = styled.div`
   }
 `;
 
-const queriesDataPlaceholder = [{ data: [{}] }];
-const behaviors = [Behavior.NATIVE_FILTER];
-
-const useShouldFilterRefresh = () => {
-  const isDashboardRefreshing = useSelector<RootState, boolean>(
-    state => state.dashboardState.isRefreshing,
-  );
-  const isFilterRefreshing = useSelector<RootState, boolean>(
-    state => state.dashboardState.isFiltersRefreshing,
-  );
-
-  // trigger filter requests only after charts requests were triggered
-  return !isDashboardRefreshing && isFilterRefreshing;
-};
-
 const FilterValue: React.FC<FilterProps> = ({
   dataMaskSelected,
   filter,
   directPathToChild,
   onFilterSelectionChange,
   inView = true,
-  showOverflow,
-  parentRef,
-  setFilterActive,
 }) => {
   const { id, targets, filterType, adhoc_filters, time_range } = filter;
   const metadata = getChartMetadataRegistry().get(filterType);
-  const dependencies = useFilterDependencies(id, dataMaskSelected);
-  const shouldRefresh = useShouldFilterRefresh();
+  const cascadingFilters = useCascadingFilters(id, dataMaskSelected);
+  const isDashboardRefreshing = useSelector<RootState, boolean>(
+    state => state.dashboardState.isRefreshing,
+  );
   const [state, setState] = useState<ChartDataResponseResult[]>([]);
   const [error, setError] = useState<string>('');
   const [formData, setFormData] = useState<Partial<QueryFormData>>({
@@ -108,14 +85,6 @@ const FilterValue: React.FC<FilterProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const dispatch = useDispatch();
 
-  const handleFilterLoadFinish = useCallback(() => {
-    setIsRefreshing(false);
-    setIsLoading(false);
-    if (shouldRefresh) {
-      dispatch(onFiltersRefreshSuccess());
-    }
-  }, [dispatch, shouldRefresh]);
-
   useEffect(() => {
     if (!inViewFirstTime && inView) {
       setInViewFirstTime(true);
@@ -129,8 +98,9 @@ const FilterValue: React.FC<FilterProps> = ({
     const newFormData = getFormData({
       ...filter,
       datasetId,
-      dependencies,
+      cascadingFilters,
       groupby,
+      inputRef,
       adhoc_filters,
       time_range,
     });
@@ -146,7 +116,7 @@ const FilterValue: React.FC<FilterProps> = ({
       !isRefreshing &&
       (!isEqualWith(formData, newFormData, customizer) ||
         !isEqual(ownState, filterOwnState) ||
-        shouldRefresh)
+        isDashboardRefreshing)
     ) {
       setFormData(newFormData);
       setOwnState(filterOwnState);
@@ -166,19 +136,22 @@ const FilterValue: React.FC<FilterProps> = ({
             const result = 'result' in json ? json.result[0] : json;
 
             if (response.status === 200) {
+              setIsRefreshing(false);
+              setIsLoading(false);
               setState([result]);
-              handleFilterLoadFinish();
             } else if (response.status === 202) {
               waitForAsyncData(result)
                 .then((asyncResult: ChartDataResponseResult[]) => {
+                  setIsRefreshing(false);
+                  setIsLoading(false);
                   setState(asyncResult);
-                  handleFilterLoadFinish();
                 })
                 .catch((error: ClientErrorObject) => {
                   setError(
                     error.message || error.error || t('Check configuration'),
                   );
-                  handleFilterLoadFinish();
+                  setIsRefreshing(false);
+                  setIsLoading(false);
                 });
             } else {
               throw new Error(
@@ -188,68 +161,43 @@ const FilterValue: React.FC<FilterProps> = ({
           } else {
             setState(json.result);
             setError('');
-            handleFilterLoadFinish();
+            setIsRefreshing(false);
+            setIsLoading(false);
           }
         })
         .catch((error: Response) => {
           setError(error.statusText);
-          handleFilterLoadFinish();
+          setIsRefreshing(false);
+          setIsLoading(false);
         });
     }
   }, [
     inViewFirstTime,
-    dependencies,
+    cascadingFilters,
     datasetId,
     groupby,
-    handleFilterLoadFinish,
     JSON.stringify(filter),
     hasDataSource,
     isRefreshing,
-    shouldRefresh,
+    isDashboardRefreshing,
   ]);
 
   useEffect(() => {
     if (directPathToChild?.[0] === filter.id) {
-      inputRef?.current?.focus();
+      // wait for Cascade Popover to open
+      const timeout = setTimeout(() => {
+        inputRef?.current?.focus();
+      }, 200);
+      return () => clearTimeout(timeout);
     }
+    return undefined;
   }, [inputRef, directPathToChild, filter.id]);
 
-  const setDataMask = useCallback(
-    (dataMask: DataMask) => onFilterSelectionChange(filter, dataMask),
-    [filter, onFilterSelectionChange],
-  );
+  const setDataMask = (dataMask: DataMask) =>
+    onFilterSelectionChange(filter, dataMask);
 
-  const setFocusedFilter = useCallback(
-    () => dispatchFocusAction(dispatch, id),
-    [dispatch, id],
-  );
-  const unsetFocusedFilter = useCallback(
-    () => dispatchFocusAction(dispatch),
-    [dispatch],
-  );
-
-  const hooks = useMemo(
-    () => ({
-      setDataMask,
-      setFocusedFilter,
-      unsetFocusedFilter,
-      setFilterActive,
-    }),
-    [setDataMask, setFilterActive, setFocusedFilter, unsetFocusedFilter],
-  );
-
-  const isMissingRequiredValue = checkIsMissingRequiredValue(
-    filter,
-    filter.dataMask?.filterState,
-  );
-
-  const filterState = useMemo(
-    () => ({
-      ...filter.dataMask?.filterState,
-      validateStatus: isMissingRequiredValue && 'error',
-    }),
-    [filter.dataMask?.filterState, isMissingRequiredValue],
-  );
+  const setFocusedFilter = () => dispatchFocusAction(dispatch, id);
+  const unsetFocusedFilter = () => dispatchFocusAction(dispatch);
 
   if (error) {
     return (
@@ -260,6 +208,14 @@ const FilterValue: React.FC<FilterProps> = ({
       />
     );
   }
+  const isMissingRequiredValue = checkIsMissingRequiredValue(
+    filter,
+    filter.dataMask?.filterState,
+  );
+  const filterState = {
+    ...filter.dataMask?.filterState,
+    validateStatus: isMissingRequiredValue && 'error',
+  };
 
   return (
     <StyledDiv data-test="form-item-value">
@@ -269,22 +225,20 @@ const FilterValue: React.FC<FilterProps> = ({
         <SuperChart
           height={HEIGHT}
           width="100%"
-          showOverflow={showOverflow}
           formData={formData}
-          parentRef={parentRef}
-          inputRef={inputRef}
           // For charts that don't have datasource we need workaround for empty placeholder
-          queriesData={hasDataSource ? state : queriesDataPlaceholder}
+          queriesData={hasDataSource ? state : [{ data: [{}] }]}
           chartType={filterType}
-          behaviors={behaviors}
+          behaviors={[Behavior.NATIVE_FILTER]}
           filterState={filterState}
           ownState={filter.dataMask?.ownState}
           enableNoResults={metadata?.enableNoResults}
           isRefreshing={isRefreshing}
-          hooks={hooks}
+          hooks={{ setDataMask, setFocusedFilter, unsetFocusedFilter }}
         />
       )}
     </StyledDiv>
   );
 };
+
 export default FilterValue;

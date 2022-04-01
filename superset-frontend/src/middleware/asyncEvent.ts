@@ -16,12 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import {
-  ensureIsArray,
-  makeApi,
-  SupersetClient,
-  logging,
-} from '@superset-ui/core';
+import { ensureIsArray, makeApi, SupersetClient } from '@superset-ui/core';
 import { SupersetError } from 'src/components/ErrorMessage/types';
 import { FeatureFlag, isFeatureEnabled } from '../featureFlags';
 import {
@@ -87,7 +82,7 @@ export const init = (appConfig?: AppConfig) => {
       config = bootstrapData?.common?.conf;
     } else {
       config = {};
-      logging.warn('asyncEvent: app config data not found');
+      console.warn('asyncEvent: app config data not found');
     }
   }
   transport = config.GLOBAL_ASYNC_QUERIES_TRANSPORT || TRANSPORT_POLLING;
@@ -96,7 +91,7 @@ export const init = (appConfig?: AppConfig) => {
   try {
     lastReceivedEventId = localStorage.getItem(LOCALSTORAGE_KEY);
   } catch (err) {
-    logging.warn('Failed to fetch last event Id from localStorage');
+    console.warn('Failed to fetch last event Id from localStorage');
   }
 
   if (transport === TRANSPORT_POLLING) {
@@ -137,7 +132,7 @@ export const waitForAsyncData = async (asyncResponse: AsyncEvent) =>
           break;
         }
         default: {
-          logging.warn('received event with status', asyncEvent.status);
+          console.warn('received event with status', asyncEvent.status);
         }
       }
       removeListener(jobId);
@@ -176,7 +171,7 @@ const setLastId = (asyncEvent: AsyncEvent) => {
   try {
     localStorage.setItem(LOCALSTORAGE_KEY, lastReceivedEventId as string);
   } catch (err) {
-    logging.warn('Error saving event Id to localStorage', err);
+    console.warn('Error saving event Id to localStorage', err);
   }
 };
 
@@ -187,7 +182,7 @@ const loadEventsFromApi = async () => {
       const { result: events } = await fetchEvents(eventArgs);
       if (events && events.length) await processEvents(events);
     } catch (err) {
-      logging.warn(err);
+      console.warn(err);
     }
   }
 
@@ -215,7 +210,7 @@ export const processEvents = async (events: AsyncEvent[]) => {
         }, RETRY_DELAY * retriesByJobId[jobId]);
       } else {
         delete retriesByJobId[jobId];
-        logging.warn('listener not found for job_id', asyncEvent.job_id);
+        console.warn('listener not found for job_id', asyncEvent.job_id);
       }
     }
     setLastId(asyncEvent);
@@ -234,7 +229,7 @@ const wsConnect = (): void => {
   ws = new WebSocket(url);
 
   ws.addEventListener('open', event => {
-    logging.log('WebSocket connected');
+    console.log('WebSocket connected');
     clearTimeout(wsConnectTimeout);
     wsConnectRetries = 0;
   });
@@ -245,7 +240,7 @@ const wsConnect = (): void => {
       if (wsConnectRetries <= wsConnectMaxRetries) {
         wsConnect();
       } else {
-        logging.warn('WebSocket not available, falling back to async polling');
+        console.warn('WebSocket not available, falling back to async polling');
         loadEventsFromApi();
       }
     }, wsConnectErrorDelay);
@@ -262,7 +257,7 @@ const wsConnect = (): void => {
       events = [JSON.parse(event.data)];
       await processEvents(events);
     } catch (err) {
-      logging.warn(err);
+      console.warn(err);
     }
   });
 };

@@ -18,7 +18,7 @@
  */
 
 import React from 'react';
-import { Menu } from 'src/components/Menu';
+import { Menu } from 'src/common/components';
 import { render, screen, waitFor } from 'spec/helpers/testing-library';
 import userEvent from '@testing-library/user-event';
 import * as copyTextToClipboard from 'src/utils/copy';
@@ -27,16 +27,14 @@ import ShareMenuItems from '.';
 
 const spy = jest.spyOn(copyTextToClipboard, 'default');
 
-const DASHBOARD_ID = '26';
 const createProps = () => ({
   addDangerToast: jest.fn(),
   addSuccessToast: jest.fn(),
-  url: `/superset/dashboard/${DASHBOARD_ID}`,
+  url: '/superset/dashboard/26/?preselect_filters=%7B%7D',
   copyMenuItemTitle: 'Copy dashboard URL',
   emailMenuItemTitle: 'Share dashboard by email',
   emailSubject: 'Superset dashboard COVID Vaccine Dashboard',
   emailBody: 'Check out this dashboard: ',
-  dashboardId: DASHBOARD_ID,
 });
 
 const { location } = window;
@@ -45,10 +43,10 @@ beforeAll((): void => {
   // @ts-ignore
   delete window.location;
   fetchMock.post(
-    `http://localhost/api/v1/dashboard/${DASHBOARD_ID}/permalink`,
-    { key: '123', url: 'http://localhost/superset/dashboard/p/123/' },
+    'http://localhost/r/shortner/',
+    { body: 'http://localhost:8088/r/3' },
     {
-      sendAsJson: true,
+      sendAsJson: false,
     },
   );
 });
@@ -104,7 +102,7 @@ test('Click on "Copy dashboard URL" and succeed', async () => {
 
   await waitFor(() => {
     expect(spy).toBeCalledTimes(1);
-    expect(spy).toBeCalledWith('http://localhost/superset/dashboard/p/123/');
+    expect(spy).toBeCalledWith('http://localhost:8088/r/3');
     expect(props.addSuccessToast).toBeCalledTimes(1);
     expect(props.addSuccessToast).toBeCalledWith('Copied to clipboard!');
     expect(props.addDangerToast).toBeCalledTimes(0);
@@ -130,11 +128,11 @@ test('Click on "Copy dashboard URL" and fail', async () => {
 
   await waitFor(() => {
     expect(spy).toBeCalledTimes(1);
-    expect(spy).toBeCalledWith('http://localhost/superset/dashboard/p/123/');
+    expect(spy).toBeCalledWith('http://localhost:8088/r/3');
     expect(props.addSuccessToast).toBeCalledTimes(0);
     expect(props.addDangerToast).toBeCalledTimes(1);
     expect(props.addDangerToast).toBeCalledWith(
-      'Sorry, something went wrong. Try again later.',
+      'Sorry, your browser does not support copying.',
     );
   });
 });
@@ -159,14 +157,14 @@ test('Click on "Share dashboard by email" and succeed', async () => {
   await waitFor(() => {
     expect(props.addDangerToast).toBeCalledTimes(0);
     expect(window.location.href).toBe(
-      'mailto:?Subject=Superset%20dashboard%20COVID%20Vaccine%20Dashboard%20&Body=Check%20out%20this%20dashboard%3A%20http%3A%2F%2Flocalhost%2Fsuperset%2Fdashboard%2Fp%2F123%2F',
+      'mailto:?Subject=Superset dashboard COVID Vaccine Dashboard%20&Body=Check out this dashboard: http://localhost:8088/r/3',
     );
   });
 });
 
 test('Click on "Share dashboard by email" and fail', async () => {
   fetchMock.post(
-    `http://localhost/api/v1/dashboard/${DASHBOARD_ID}/permalink`,
+    'http://localhost/r/shortner/',
     { status: 404 },
     { overwriteRoutes: true },
   );

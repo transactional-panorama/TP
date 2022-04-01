@@ -29,21 +29,17 @@ describe('Visualization > Line', () => {
   it('should show validator error when no metric', () => {
     const formData = { ...LINE_CHART_DEFAULTS, metrics: [] };
     cy.visitChartByParams(JSON.stringify(formData));
-    cy.get('.panel-body').contains(
-      `Add required control values to preview chart`,
-    );
+    cy.get('.ant-alert-warning').contains(`Metrics: cannot be empty`);
   });
 
   it('should not show validator error when metric added', () => {
     const formData = { ...LINE_CHART_DEFAULTS, metrics: [] };
     cy.visitChartByParams(JSON.stringify(formData));
-    cy.get('.panel-body').contains(
-      `Add required control values to preview chart`,
-    );
+    cy.get('.ant-alert-warning').contains(`Metrics: cannot be empty`);
     cy.get('.text-danger').contains('Metrics');
 
     cy.get('[data-test=metrics]')
-      .contains('Drop columns/metrics here or click')
+      .find('[data-test="add-metric-button"]')
       .click();
 
     // Title edit for saved metrics is disabled - switch to Simple
@@ -75,7 +71,7 @@ describe('Visualization > Line', () => {
       .focus()
       .type('bnbColors{enter}');
     cy.get(
-      '.Control[data-test="color_scheme"] .ant-select-selection-item ul[data-test="bnbColors"]',
+      '.Control[data-test="color_scheme"] .ant-select-selection-item > ul[data-test="bnbColors"]',
     ).should('exist');
   });
 
@@ -231,7 +227,6 @@ describe('Visualization > Line', () => {
           value: 'y=140000',
           overrides: { time_range: null },
           show: false,
-          showLabel: false,
           titleColumn: '',
           descriptionColumns: [],
           timeColumn: '',
@@ -268,7 +263,6 @@ describe('Visualization > Line', () => {
               value,
               overrides: { time_range: null },
               show: true,
-              showLabel: false,
               titleColumn: 'ds',
               descriptionColumns: ['ds'],
               timeColumn: 'ds',

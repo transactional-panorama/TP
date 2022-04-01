@@ -17,7 +17,7 @@
  * under the License.
  */
 import React, { ReactNode } from 'react';
-import { AntdDropdown, AntdTooltip } from 'src/components';
+import { Dropdown as AntdDropdown, Tooltip } from 'src/common/components';
 import { styled } from '@superset-ui/core';
 import kebabCase from 'lodash/kebabCase';
 
@@ -92,13 +92,13 @@ export const DropdownButton = ({
   if (tooltip) {
     return buildButton({
       buttonsRender: ([leftButton, rightButton]) => [
-        <AntdTooltip
+        <Tooltip
           placement={placement}
           id={`${kebabCase(tooltip)}-tooltip`}
           title={tooltip}
         >
           {leftButton}
-        </AntdTooltip>,
+        </Tooltip>,
         rightButton,
       ],
     });

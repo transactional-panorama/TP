@@ -15,14 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 import logging
-import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import cast, List, Optional, Set, Tuple
+from typing import List, Optional, Set
 from urllib import parse
 
 import sqlparse
-from sqlalchemy import and_
 from sqlparse.sql import (
     Identifier,
     IdentifierList,
@@ -43,6 +41,7 @@ from sqlparse.tokens import (
     String,
     Whitespace,
 )
+from sqlparse.tokens import Keyword, Name, Punctuation, String, Whitespace
 from sqlparse.utils import imt
 
 from superset.exceptions import QueryClauseValidationException
@@ -52,16 +51,6 @@ ON_KEYWORD = "ON"
 PRECEDES_TABLE_NAME = {"FROM", "JOIN", "DESCRIBE", "WITH", "LEFT JOIN", "RIGHT JOIN"}
 CTE_PREFIX = "CTE__"
 logger = logging.getLogger(__name__)
-
-
-# TODO: Workaround for https://github.com/andialbrecht/sqlparse/issues/652.
-sqlparse.keywords.SQL_REGEX.insert(
-    0,
-    (
-        re.compile(r"'(''|\\\\|\\|[^'])*'", sqlparse.keywords.FLAGS).match,
-        sqlparse.tokens.String.Single,
-    ),
-)
 
 
 class CtasMethod(str, Enum):
@@ -88,58 +77,6 @@ def _extract_limit_from_query(statement: TokenList) -> Optional[int]:
             if token and token.ttype == sqlparse.tokens.Literal.Number.Integer:
                 return int(token.value)
     return None
-
-
-def extract_top_from_query(
-    statement: TokenList, top_keywords: Set[str]
-) -> Optional[int]:
-    """
-    Extract top clause value from SQL statement.
-
-    :param statement: SQL statement
-    :param top_keywords: keywords that are considered as synonyms to TOP
-    :return: top value extracted from query, None if no top value present in statement
-    """
-
-    str_statement = str(statement)
-    str_statement = str_statement.replace("\n", " ").replace("\r", "")
-    token = str_statement.rstrip().split(" ")
-    token = [part for part in token if part]
-    top = None
-    for i, _ in enumerate(token):
-        if token[i].upper() in top_keywords and len(token) - 1 > i:
-            try:
-                top = int(token[i + 1])
-            except ValueError:
-                top = None
-            break
-    return top
-
-
-def get_cte_remainder_query(sql: str) -> Tuple[Optional[str], str]:
-    """
-    parse the SQL and return the CTE and rest of the block to the caller
-
-    :param sql: SQL query
-    :return: CTE and remainder block to the caller
-
-    """
-    cte: Optional[str] = None
-    remainder = sql
-    stmt = sqlparse.parse(sql)[0]
-
-    # The first meaningful token for CTE will be with WITH
-    idx, token = stmt.token_next(-1, skip_ws=True, skip_cm=True)
-    if not (token and token.ttype == CTE):
-        return cte, remainder
-    idx, token = stmt.token_next(idx)
-    idx = stmt.token_index(token) + 1
-
-    # extract rest of the SQLs after CTE
-    remainder = "".join(str(token) for token in stmt.tokens[idx:]).strip()
-    cte = f"WITH {token.value}"
-
-    return cte, remainder
 
 
 def strip_comments_from_sql(statement: str) -> str:
@@ -210,26 +147,7 @@ class ParsedQuery:
     def is_select(self) -> bool:
         # make sure we strip comments; prevents a bug with coments in the CTE
         parsed = sqlparse.parse(self.strip_comments())
-        if parsed[0].get_type() == "SELECT":
-            return True
-
-        if parsed[0].get_type() != "UNKNOWN":
-            return False
-
-        # for `UNKNOWN`, check all DDL/DML explicitly: only `SELECT` DML is allowed,
-        # and no DDL is allowed
-        if any(token.ttype == DDL for token in parsed[0]) or any(
-            token.ttype == DML and token.value != "SELECT" for token in parsed[0]
-        ):
-            return False
-
-        # return false on `EXPLAIN`, `SET`, `SHOW`, etc.
-        if parsed[0][0].ttype == Keyword:
-            return False
-
-        return any(
-            token.ttype == DML and token.value == "SELECT" for token in parsed[0]
-        )
+        return parsed[0].get_type() == "SELECT"
 
     def is_valid_ctas(self) -> bool:
         parsed = sqlparse.parse(self.strip_comments())
@@ -246,7 +164,7 @@ class ParsedQuery:
         )
 
         # Explain statements will only be the first statement
-        return statements_without_comments.upper().startswith("EXPLAIN")
+        return statements_without_comments.startswith("EXPLAIN")
 
     def is_show(self) -> bool:
         # Remove comments
@@ -284,7 +202,7 @@ class ParsedQuery:
         return statements
 
     @staticmethod
-    def get_table(tlist: TokenList) -> Optional[Table]:
+    def _get_table(tlist: TokenList) -> Optional[Table]:
         """
         Return the table if valid, i.e., conforms to the [[catalog.]schema.]table
         construct.
@@ -325,7 +243,7 @@ class ParsedQuery:
         """
         # exclude subselects
         if "(" not in str(token_list):
-            table = self.get_table(token_list)
+            table = self._get_table(token_list)
             if table and not table.table.startswith(CTE_PREFIX):
                 self._tables.add(table)
             return
@@ -471,231 +389,3 @@ def sanitize_clause(clause: str) -> str:
             clause = f"{clause}\n"
 
     return clause
-
-
-class InsertRLSState(str, Enum):
-    """
-    State machine that scans for WHERE and ON clauses referencing tables.
-    """
-
-    SCANNING = "SCANNING"
-    SEEN_SOURCE = "SEEN_SOURCE"
-    FOUND_TABLE = "FOUND_TABLE"
-
-
-def has_table_query(token_list: TokenList) -> bool:
-    """
-    Return if a stament has a query reading from a table.
-
-        >>> has_table_query(sqlparse.parse("COUNT(*)")[0])
-        False
-        >>> has_table_query(sqlparse.parse("SELECT * FROM table")[0])
-        True
-
-    Note that queries reading from constant values return false:
-
-        >>> has_table_query(sqlparse.parse("SELECT * FROM (SELECT 1)")[0])
-        False
-
-    """
-    state = InsertRLSState.SCANNING
-    for token in token_list.tokens:
-
-        # Recurse into child token list
-        if isinstance(token, TokenList) and has_table_query(token):
-            return True
-
-        # Found a source keyword (FROM/JOIN)
-        if imt(token, m=[(Keyword, "FROM"), (Keyword, "JOIN")]):
-            state = InsertRLSState.SEEN_SOURCE
-
-        # Found identifier/keyword after FROM/JOIN
-        elif state == InsertRLSState.SEEN_SOURCE and (
-            isinstance(token, sqlparse.sql.Identifier) or token.ttype == Keyword
-        ):
-            return True
-
-        # Found nothing, leaving source
-        elif state == InsertRLSState.SEEN_SOURCE and token.ttype != Whitespace:
-            state = InsertRLSState.SCANNING
-
-    return False
-
-
-def add_table_name(rls: TokenList, table: str) -> None:
-    """
-    Modify a RLS expression inplace ensuring columns are fully qualified.
-    """
-    tokens = rls.tokens[:]
-    while tokens:
-        token = tokens.pop(0)
-
-        if isinstance(token, Identifier) and token.get_parent_name() is None:
-            token.tokens = [
-                Token(Name, table),
-                Token(Punctuation, "."),
-                Token(Name, token.get_name()),
-            ]
-        elif isinstance(token, TokenList):
-            tokens.extend(token.tokens)
-
-
-def get_rls_for_table(
-    candidate: Token,
-    database_id: int,
-    default_schema: Optional[str],
-) -> Optional[TokenList]:
-    """
-    Given a table name, return any associated RLS predicates.
-    """
-    # pylint: disable=import-outside-toplevel
-    from superset import db
-    from superset.connectors.sqla.models import SqlaTable
-
-    if not isinstance(candidate, Identifier):
-        candidate = Identifier([Token(Name, candidate.value)])
-
-    table = ParsedQuery.get_table(candidate)
-    if not table:
-        return None
-
-    dataset = (
-        db.session.query(SqlaTable)
-        .filter(
-            and_(
-                SqlaTable.database_id == database_id,
-                SqlaTable.schema == (table.schema or default_schema),
-                SqlaTable.table_name == table.table,
-            )
-        )
-        .one_or_none()
-    )
-    if not dataset:
-        return None
-
-    template_processor = dataset.get_template_processor()
-    # pylint: disable=protected-access
-    predicate = " AND ".join(
-        str(filter_)
-        for filter_ in dataset.get_sqla_row_level_filters(template_processor)
-    )
-    if not predicate:
-        return None
-
-    rls = sqlparse.parse(predicate)[0]
-    add_table_name(rls, str(dataset))
-
-    return rls
-
-
-def insert_rls(
-    token_list: TokenList,
-    database_id: int,
-    default_schema: Optional[str],
-) -> TokenList:
-    """
-    Update a statement inplace applying any associated RLS predicates.
-    """
-    rls: Optional[TokenList] = None
-    state = InsertRLSState.SCANNING
-    for token in token_list.tokens:
-
-        # Recurse into child token list
-        if isinstance(token, TokenList):
-            i = token_list.tokens.index(token)
-            token_list.tokens[i] = insert_rls(token, database_id, default_schema)
-
-        # Found a source keyword (FROM/JOIN)
-        if imt(token, m=[(Keyword, "FROM"), (Keyword, "JOIN")]):
-            state = InsertRLSState.SEEN_SOURCE
-
-        # Found identifier/keyword after FROM/JOIN, test for table
-        elif state == InsertRLSState.SEEN_SOURCE and (
-            isinstance(token, Identifier) or token.ttype == Keyword
-        ):
-            rls = get_rls_for_table(token, database_id, default_schema)
-            if rls:
-                state = InsertRLSState.FOUND_TABLE
-
-        # Found WHERE clause, insert RLS. Note that we insert it even it already exists,
-        # to be on the safe side: it could be present in a clause like `1=1 OR RLS`.
-        elif state == InsertRLSState.FOUND_TABLE and isinstance(token, Where):
-            rls = cast(TokenList, rls)
-            token.tokens[1:1] = [Token(Whitespace, " "), Token(Punctuation, "(")]
-            token.tokens.extend(
-                [
-                    Token(Punctuation, ")"),
-                    Token(Whitespace, " "),
-                    Token(Keyword, "AND"),
-                    Token(Whitespace, " "),
-                ]
-                + rls.tokens
-            )
-            state = InsertRLSState.SCANNING
-
-        # Found ON clause, insert RLS. The logic for ON is more complicated than the logic
-        # for WHERE because in the former the comparisons are siblings, while on the
-        # latter they are children.
-        elif (
-            state == InsertRLSState.FOUND_TABLE
-            and token.ttype == Keyword
-            and token.value.upper() == "ON"
-        ):
-            tokens = [
-                Token(Whitespace, " "),
-                rls,
-                Token(Whitespace, " "),
-                Token(Keyword, "AND"),
-                Token(Whitespace, " "),
-                Token(Punctuation, "("),
-            ]
-            i = token_list.tokens.index(token)
-            token.parent.tokens[i + 1 : i + 1] = tokens
-            i += len(tokens) + 2
-
-            # close parenthesis after last existing comparison
-            j = 0
-            for j, sibling in enumerate(token_list.tokens[i:]):
-                # scan until we hit a non-comparison keyword (like ORDER BY) or a WHERE
-                if (
-                    sibling.ttype == Keyword
-                    and not imt(
-                        sibling, m=[(Keyword, "AND"), (Keyword, "OR"), (Keyword, "NOT")]
-                    )
-                    or isinstance(sibling, Where)
-                ):
-                    j -= 1
-                    break
-            token.parent.tokens[i + j + 1 : i + j + 1] = [
-                Token(Whitespace, " "),
-                Token(Punctuation, ")"),
-                Token(Whitespace, " "),
-            ]
-
-            state = InsertRLSState.SCANNING
-
-        # Found table but no WHERE clause found, insert one
-        elif state == InsertRLSState.FOUND_TABLE and token.ttype != Whitespace:
-            i = token_list.tokens.index(token)
-            token_list.tokens[i:i] = [
-                Token(Whitespace, " "),
-                Where([Token(Keyword, "WHERE"), Token(Whitespace, " "), rls]),
-                Token(Whitespace, " "),
-            ]
-
-            state = InsertRLSState.SCANNING
-
-        # Found nothing, leaving source
-        elif state == InsertRLSState.SEEN_SOURCE and token.ttype != Whitespace:
-            state = InsertRLSState.SCANNING
-
-    # found table at the end of the statement; append a WHERE clause
-    if state == InsertRLSState.FOUND_TABLE:
-        token_list.tokens.extend(
-            [
-                Token(Whitespace, " "),
-                Where([Token(Keyword, "WHERE"), Token(Whitespace, " "), rls]),
-            ]
-        )
-
-    return token_list

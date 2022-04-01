@@ -17,17 +17,12 @@
  * under the License.
  */
 import React, { FC } from 'react';
-import {
-  DataMaskState,
-  FilterSet,
-  isNativeFilter,
-  styled,
-  t,
-  useTheme,
-} from '@superset-ui/core';
-import { Typography, AntdTooltip, AntdCollapse } from 'src/components';
+import { styled, t, useTheme } from '@superset-ui/core';
+import { Collapse, Typography, Tooltip } from 'src/common/components';
+import { DataMaskState } from 'src/dataMask/types';
 import Icons from 'src/components/Icons';
 import { areObjectsEqual } from 'src/reduxUtils';
+import { FilterSet } from 'src/dashboard/reducers/types';
 import { getFilterValueForDisplay } from './utils';
 import { useFilters } from '../state';
 import { getFilterBarTestId } from '../index';
@@ -38,7 +33,7 @@ const FilterHeader = styled.div`
   font-size: ${({ theme }) => theme.typography.sizes.s}px;
 `;
 
-const StyledCollapse = styled(AntdCollapse)`
+const StyledCollapse = styled(Collapse)`
   &.ant-collapse-ghost > .ant-collapse-item {
     & > .ant-collapse-content > .ant-collapse-content-box {
       padding: 0;
@@ -73,13 +68,11 @@ export type FiltersHeaderProps = {
 const FiltersHeader: FC<FiltersHeaderProps> = ({ dataMask, filterSet }) => {
   const theme = useTheme();
   const filters = useFilters();
-  const filterValues = Object.values(filters).filter(isNativeFilter);
+  const filterValues = Object.values(filters);
 
   let resultFilters = filterValues ?? [];
   if (filterSet?.nativeFilters) {
-    resultFilters = Object.values(filterSet?.nativeFilters).filter(
-      isNativeFilter,
-    );
+    resultFilters = Object.values(filterSet?.nativeFilters);
   }
 
   const getFiltersHeader = () => (
@@ -93,17 +86,13 @@ const FiltersHeader: FC<FiltersHeaderProps> = ({ dataMask, filterSet }) => {
   const getFilterRow = ({ id, name }: { id: string; name: string }) => {
     const changedFilter =
       filterSet &&
-      !areObjectsEqual(
-        filters[id]?.controlValues,
-        filterSet?.nativeFilters?.[id]?.controlValues,
-        {
-          ignoreUndefined: true,
-        },
-      );
+      !areObjectsEqual(filters[id], filterSet?.nativeFilters?.[id], {
+        ignoreUndefined: true,
+      });
     const removedFilter = !Object.keys(filters).includes(id);
 
     return (
-      <AntdTooltip
+      <Tooltip
         title={
           (removedFilter &&
             t(
@@ -125,7 +114,7 @@ const FiltersHeader: FC<FiltersHeaderProps> = ({ dataMask, filterSet }) => {
             )}
           </Typography.Text>
         </StyledFilterRow>
-      </AntdTooltip>
+      </Tooltip>
     );
   };
 
@@ -142,13 +131,13 @@ const FiltersHeader: FC<FiltersHeaderProps> = ({ dataMask, filterSet }) => {
       defaultActiveKey={!filterSet ? ['filters'] : undefined}
       expandIcon={getExpandIcon}
     >
-      <AntdCollapse.Panel
+      <Collapse.Panel
         {...getFilterBarTestId('collapse-filter-set-description')}
         header={getFiltersHeader()}
         key="filters"
       >
         {resultFilters.map(getFilterRow)}
-      </AntdCollapse.Panel>
+      </Collapse.Panel>
     </StyledCollapse>
   );
 };

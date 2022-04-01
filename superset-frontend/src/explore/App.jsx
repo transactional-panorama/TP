@@ -22,7 +22,6 @@ import { Provider } from 'react-redux';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { ThemeProvider } from '@superset-ui/core';
-import { GlobalStyles } from 'src/GlobalStyles';
 import { DynamicPluginProvider } from 'src/components/DynamicPlugins';
 import ToastContainer from 'src/components/MessageToasts/ToastContainer';
 import setupApp from 'src/setup/setupApp';
@@ -39,7 +38,6 @@ const App = ({ store }) => (
   <Provider store={store}>
     <DndProvider backend={HTML5Backend}>
       <ThemeProvider theme={theme}>
-        <GlobalStyles />
         <DynamicPluginProvider>
           <ExploreViewContainer />
           <ToastContainer />

@@ -22,12 +22,8 @@ import { connect } from 'react-redux';
 import { fetchAllSlices } from '../actions/sliceEntities';
 import SliceAdder from '../components/SliceAdder';
 
-function mapStateToProps(
-  { sliceEntities, dashboardInfo, dashboardState },
-  ownProps,
-) {
+function mapStateToProps({ sliceEntities, dashboardInfo, dashboardState }) {
   return {
-    height: ownProps.height,
     userId: dashboardInfo.userId,
     selectedSliceIds: dashboardState.sliceIds,
     slices: sliceEntities.slices,
@@ -35,7 +31,6 @@ function mapStateToProps(
     errorMessage: sliceEntities.errorMessage,
     lastUpdated: sliceEntities.lastUpdated,
     editMode: dashboardState.editMode,
-    filterboxMigrationState: dashboardState.filterboxMigrationState,
   };
 }
 

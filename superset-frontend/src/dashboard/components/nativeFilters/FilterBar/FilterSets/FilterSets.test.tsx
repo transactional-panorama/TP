@@ -21,11 +21,10 @@ import { render, screen } from 'spec/helpers/testing-library';
 import { mockStore } from 'spec/fixtures/mockStore';
 import { Provider } from 'react-redux';
 import FilterSets, { FilterSetsProps } from '.';
-import { TabIds } from '../utils';
 
 const createProps = () => ({
   disabled: false,
-  tab: TabIds.FilterSets,
+  isFilterSetChanged: false,
   dataMaskSelected: {
     DefaultsID: {
       filterState: {

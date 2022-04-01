@@ -41,10 +41,7 @@ const createProps = () => ({
     },
   ],
   adhocMetric: new AdhocMetric({ isNew: true }),
-  datasource: {
-    extra: '{}',
-    type: 'table',
-  },
+  datasourceType: 'table',
   columns: [
     {
       id: 1342,
@@ -65,61 +62,18 @@ test('Should render', () => {
 test('Should render correct elements', () => {
   const props = createProps();
   render(<AdhocMetricEditPopover {...props} />);
-  expect(screen.getByRole('tablist')).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Resize' })).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Save' })).toBeVisible();
-  expect(screen.getByRole('button', { name: 'Close' })).toBeVisible();
-});
 
-test('Should render correct elements for SQL', () => {
-  const props = createProps();
-  render(<AdhocMetricEditPopover {...props} />);
+  expect(screen.getByRole('tablist')).toBeVisible();
+
   expect(screen.getByRole('tab', { name: 'Custom SQL' })).toBeVisible();
   expect(screen.getByRole('tab', { name: 'Simple' })).toBeVisible();
   expect(screen.getByRole('tab', { name: 'Saved' })).toBeVisible();
-  expect(screen.getByRole('tabpanel', { name: 'Saved' })).toBeVisible();
-});
 
-test('Should render correct elements for native Druid', () => {
-  const props = { ...createProps(), datasource: { type: 'druid' } };
-  render(<AdhocMetricEditPopover {...props} />);
-  expect(screen.getByRole('tab', { name: 'Custom SQL' })).toHaveAttribute(
-    'aria-disabled',
-    'true',
-  );
-  expect(screen.getByRole('tab', { name: 'Simple' })).toBeEnabled();
-  expect(screen.getByRole('tab', { name: 'Saved' })).toBeEnabled();
   expect(screen.getByRole('tabpanel', { name: 'Saved' })).toBeVisible();
-});
 
-test('Should render correct elements for allow ad-hoc metrics', () => {
-  const props = {
-    ...createProps(),
-    datasource: { extra: '{"disallow_adhoc_metrics": false}' },
-  };
-  render(<AdhocMetricEditPopover {...props} />);
-  expect(screen.getByRole('tab', { name: 'Custom SQL' })).toBeEnabled();
-  expect(screen.getByRole('tab', { name: 'Simple' })).toBeEnabled();
-  expect(screen.getByRole('tab', { name: 'Saved' })).toBeEnabled();
-  expect(screen.getByRole('tabpanel', { name: 'Saved' })).toBeVisible();
-});
-
-test('Should render correct elements for disallow ad-hoc metrics', () => {
-  const props = {
-    ...createProps(),
-    datasource: { extra: '{"disallow_adhoc_metrics": true}' },
-  };
-  render(<AdhocMetricEditPopover {...props} />);
-  expect(screen.getByRole('tab', { name: 'Custom SQL' })).toHaveAttribute(
-    'aria-disabled',
-    'true',
-  );
-  expect(screen.getByRole('tab', { name: 'Simple' })).toHaveAttribute(
-    'aria-disabled',
-    'true',
-  );
-  expect(screen.getByRole('tab', { name: 'Saved' })).toBeEnabled();
-  expect(screen.getByRole('tabpanel', { name: 'Saved' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Resize' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Save' })).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Close' })).toBeVisible();
 });
 
 test('Clicking on "Close" should call onClose', () => {

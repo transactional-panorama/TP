@@ -22,8 +22,7 @@ import { t, SupersetTheme, css, useTheme } from '@superset-ui/core';
 import Icons from 'src/components/Icons';
 import { Switch } from 'src/components/Switch';
 import { AlertObject } from 'src/views/CRUD/alert/types';
-import { Menu } from 'src/components/Menu';
-import { NoAnimationDropdown } from 'src/components/Dropdown';
+import { Menu, NoAnimationDropdown } from 'src/common/components';
 import { isFeatureEnabled, FeatureFlag } from 'src/featureFlags';
 
 import DeleteModal from 'src/components/DeleteModal';
@@ -44,8 +43,10 @@ export default function HeaderReportActionsDropDown({
   const reports = useSelector<any, AlertObject>(state => state.reports);
   const reportsIds = Object.keys(reports);
   const report = reports[reportsIds[0]];
-  const [currentReportDeleting, setCurrentReportDeleting] =
-    useState<AlertObject | null>(null);
+  const [
+    currentReportDeleting,
+    setCurrentReportDeleting,
+  ] = useState<AlertObject | null>(null);
   const theme = useTheme();
 
   const toggleActiveKey = async (data: AlertObject, checked: boolean) => {

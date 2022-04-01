@@ -16,12 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import {
-  ControlPanelConfig,
-  sections,
-  sharedControls,
-} from '@superset-ui/chart-controls';
+import { ControlPanelConfig, sections } from '@superset-ui/chart-controls';
 import { t } from '@superset-ui/core';
+import { sharedControls } from '@superset-ui/chart-controls/lib';
 import { DEFAULT_FORM_DATA } from './types';
 
 const { multiSelect } = DEFAULT_FORM_DATA;
@@ -56,11 +53,12 @@ const config: ControlPanelConfig = {
             name: 'multiSelect',
             config: {
               type: 'CheckboxControl',
-              label: t('Can select multiple values'),
+              label: t('Multiple select'),
               default: multiSelect,
               affectsDataMask: true,
               resetConfig: true,
               renderTrigger: true,
+              description: t('Allow selecting multiple values'),
             },
           },
         ],
@@ -69,12 +67,10 @@ const config: ControlPanelConfig = {
             name: 'enableEmptyFilter',
             config: {
               type: 'CheckboxControl',
-              label: t('Filter value is required'),
+              label: t('Required'),
               default: false,
               renderTrigger: true,
-              description: t(
-                'User must select a value before applying the filter',
-              ),
+              description: t('User must select a value for this filter.'),
             },
           },
         ],

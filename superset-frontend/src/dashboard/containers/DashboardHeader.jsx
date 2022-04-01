@@ -81,8 +81,7 @@ function mapStateToProps({
     ).text,
     expandedSlices: dashboardState.expandedSlices,
     refreshFrequency: dashboardState.refreshFrequency,
-    shouldPersistRefreshFrequency:
-      !!dashboardState.shouldPersistRefreshFrequency,
+    shouldPersistRefreshFrequency: !!dashboardState.shouldPersistRefreshFrequency,
     customCss: dashboardState.css,
     colorNamespace: dashboardState.colorNamespace,
     colorScheme: dashboardState.colorScheme,
@@ -102,7 +101,6 @@ function mapStateToProps({
     slug: dashboardInfo.slug,
     metadata: dashboardInfo.metadata,
     reports,
-    filterboxMigrationState: dashboardState.filterboxMigrationState,
   };
 }
 

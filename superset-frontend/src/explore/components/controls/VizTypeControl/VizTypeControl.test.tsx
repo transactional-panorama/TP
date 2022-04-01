@@ -17,7 +17,7 @@
  * under the License.
  */
 import { Preset } from '@superset-ui/core';
-import { render, cleanup, screen, waitFor } from 'spec/helpers/testing-library';
+import { render, cleanup, screen, act } from 'spec/helpers/testing-library';
 import { Provider } from 'react-redux';
 import {
   getMockStore,
@@ -31,9 +31,9 @@ import { testWithId } from 'src/utils/testUtils';
 import {
   EchartsMixedTimeseriesChartPlugin,
   EchartsTimeseriesChartPlugin,
-} from '@superset-ui/plugin-chart-echarts';
-import { LineChartPlugin } from '@superset-ui/preset-chart-xy';
-import TimeTableChartPlugin from '../../../../visualizations/TimeTable';
+} from '@superset-ui/plugin-chart-echarts/lib';
+import { LineChartPlugin } from '@superset-ui/preset-chart-xy/lib';
+import TimeTableChartPlugin from '../../../../visualizations/TimeTable/TimeTableChartPlugin';
 import VizTypeControl, { VIZ_TYPE_CONTROL_TEST_ID } from './index';
 
 jest.useFakeTimers();
@@ -64,6 +64,8 @@ const getTestId = testWithId<string>(VIZ_TYPE_CONTROL_TEST_ID, true);
  * wrapped in act(). This sufficiently act-ifies whatever side effects are going
  * on and prevents those warnings.
  */
+const waitForEffects = () =>
+  act(() => new Promise(resolve => setTimeout(resolve, 0)));
 
 describe('VizTypeControl', () => {
   new MainPreset().register();
@@ -77,7 +79,7 @@ describe('VizTypeControl', () => {
     isModalOpenInit: true,
   } as const;
 
-  const renderWrapper = (
+  const renderWrapper = async (
     props = newVizTypeControlProps,
     state: object = stateWithoutNativeFilters,
   ) => {
@@ -90,6 +92,7 @@ describe('VizTypeControl', () => {
         </DynamicPluginProvider>
       </Provider>,
     );
+    await waitForEffects();
   };
 
   afterEach(() => {
@@ -98,26 +101,26 @@ describe('VizTypeControl', () => {
   });
 
   it('Search visualization type', async () => {
-    renderWrapper();
+    await renderWrapper();
 
     const visualizations = screen.getByTestId(getTestId('viz-row'));
 
     userEvent.click(screen.getByRole('button', { name: 'ballot All charts' }));
 
-    await waitFor(() => {
-      expect(visualizations).toHaveTextContent(/Time-series Table/);
-    });
+    expect(visualizations).toHaveTextContent(/Time-series Table/);
+
+    const searchInputText = 'time series';
 
     // search
     userEvent.type(
       screen.getByTestId(getTestId('search-input')),
-      'time series',
+      searchInputText,
     );
-    await waitFor(() => {
-      expect(visualizations).toHaveTextContent(/Time-series Table/);
-      expect(visualizations).toHaveTextContent(/Time-series Chart/);
-      expect(visualizations).toHaveTextContent(/Mixed Time-Series/);
-      expect(visualizations).not.toHaveTextContent(/Line Chart/);
-    });
+    await waitForEffects();
+
+    expect(visualizations).toHaveTextContent(/Time-series Table/);
+    expect(visualizations).toHaveTextContent(/Time-series Chart/);
+    expect(visualizations).toHaveTextContent(/Mixed Time-Series/);
+    expect(visualizations).not.toHaveTextContent(/Line Chart/);
   });
 });

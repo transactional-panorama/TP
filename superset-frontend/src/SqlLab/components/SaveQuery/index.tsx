@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { useState, useEffect } from 'react';
-import { Row, Col } from 'src/components';
-import { Input, TextArea } from 'src/components/Input';
+import React, { useState } from 'react';
+import { Row, Col, Input, TextArea } from 'src/common/components';
 import { t, styled } from '@superset-ui/core';
 import Button from 'src/components/Button';
 import { Form, FormItem } from 'src/components/Form';
@@ -91,11 +90,6 @@ export default function SaveQuery({
     description,
   });
 
-  useEffect(() => {
-    if (!isSaved) {
-      setLabel(defaultLabel);
-    }
-  }, [defaultLabel]);
   const close = () => {
     setShowSave(false);
   };

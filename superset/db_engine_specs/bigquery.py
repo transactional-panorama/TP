@@ -72,8 +72,7 @@ ma_plugin = MarshmallowPlugin()
 
 class BigQueryParametersSchema(Schema):
     credentials_info = EncryptedString(
-        required=False,
-        description="Contents of BigQuery JSON credentials.",
+        required=False, description="Contents of BigQuery JSON credentials.",
     )
     query = fields.Dict(required=False)
 
@@ -99,8 +98,6 @@ class BigQueryEngineSpec(BaseEngineSpec):
     # BigQuery doesn't maintain context when running multiple statements in the
     # same cursor, so we need to run all statements at once
     run_multiple_statements_as_one = True
-
-    allows_hidden_cc_in_orderby = True
 
     """
     https://www.python.org/dev/peps/pep-0249/#arraysize
@@ -187,9 +184,7 @@ class BigQueryEngineSpec(BaseEngineSpec):
     }
 
     @classmethod
-    def convert_dttm(
-        cls, target_type: str, dttm: datetime, db_extra: Optional[Dict[str, Any]] = None
-    ) -> Optional[str]:
+    def convert_dttm(cls, target_type: str, dttm: datetime) -> Optional[str]:
         tt = target_type.upper()
         if tt == utils.TemporalType.DATE:
             return f"CAST('{dttm.date().isoformat()}' AS DATE)"
@@ -387,7 +382,7 @@ class BigQueryEngineSpec(BaseEngineSpec):
 
     @classmethod
     def get_dbapi_exception_mapping(cls) -> Dict[Type[Exception], Type[Exception]]:
-        # pylint: disable=import-outside-toplevel
+        # pylint: disable=import-error,import-outside-toplevel
         from google.auth.exceptions import DefaultCredentialsError
 
         return {DefaultCredentialsError: SupersetDBAPIDisconnectionError}

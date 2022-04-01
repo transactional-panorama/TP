@@ -17,12 +17,13 @@
  * under the License.
  */
 import React, { useRef, useState } from 'react';
-import Layout from '@theme/Layout';
-import Link from '@docusaurus/Link';
+import { theme, useConfig } from 'docz';
+import { Link } from 'gatsby';
+import { ThemeProvider } from 'theme-ui';
 import {
   Button, Col, Row, Carousel,
 } from 'antd';
-import styled from '@emotion/styled';
+import { css } from '@emotion/core';
 import { supersetTheme } from '@superset-ui/style';
 import {
   DeploymentUnitOutlined,
@@ -31,30 +32,35 @@ import {
   DatabaseOutlined,
 } from '@ant-design/icons';
 import GitHubButton from 'react-github-btn';
-import 'antd/dist/antd.css';
-import { mq } from '../utils';
+
 import { Databases } from '../resources/data';
+import Layout from '../components/layout';
+import DbImage from '../components/DbImage';
+import 'antd/dist/antd.css';
+import SEO from '../components/seo';
+import logo from '../images/superset-logo-horiz-apache.svg';
+import { mq } from '../utils';
 
 const { colors } = supersetTheme;
 
-const StyledMain = styled('main')`
+const mainPageStyle = css`
   text-align: center;
-  .alert-color {
+  .alert {
     color: ${colors.alert.base};
   }
-  .error-color {
+  .error {
     color: ${colors.error.base};
   }
-  .warning-color {
+  .warning {
     color: ${colors.warning.base};
   }
-  .info-color {
+  .info {
     color: ${colors.info.base};
   }
-  .success-color {
+  .success {
     color: ${colors.success.base};
   }
-  .secondary-color {
+  .secondary {
     color: ${colors.secondary.base};
   }
   .info-text {
@@ -69,13 +75,13 @@ const StyledMain = styled('main')`
   }
 `;
 
-const StyledTitleContainer = styled('div')`
+const titleContainer = css`
   position: relative;
-  padding-top: 60px;
+  padding-top: 131px;
   padding-bottom: 80px;
   padding-left: 20px;
   padding-right: 20px;
-  background-image: url('img/data-point.jpg');
+  background-image: url('/images/data-point.jpg');
   background-size: cover;
   background-position-x: right;
   .github-section {
@@ -116,12 +122,12 @@ const StyledTitleContainer = styled('div')`
   }
 `;
 
-const StyledHeading = styled('h2')`
+const secondaryHeading = css`
   font-size: 55px;
   text-align: center;
 `;
 
-const StyledFeatures = styled('div')`
+const featureSectionStyle = css`
   background: #fff;
   padding: 5vw 0;
   margin-top: 0px;
@@ -159,7 +165,7 @@ const StyledFeatures = styled('div')`
   }
 `;
 
-const StyledIntegrations = styled('div')`
+const integrationSection = css`
   background: white;
   margin-bottom: 64px;
   .databaseSub {
@@ -185,7 +191,7 @@ const StyledIntegrations = styled('div')`
   }
 `;
 
-const CarouselSection = styled('div')`
+const linkCarousel = css`
   .toggleContainer {
     display: flex;
     flex-direction: column;
@@ -248,11 +254,6 @@ const CarouselSection = styled('div')`
     }
   }
 `;
-
-const StyledDatabaseImg = styled.img`
-  width: ${(props) => props.width};
-  height: ${(props) => props.height};
-`;
 interface featureProps {
   icon: React.ReactNode,
   title: string,
@@ -270,7 +271,8 @@ const Feature = ({ icon, title, descr }: featureProps) => (
   </li>
 );
 
-export default function Home(): JSX.Element {
+const Theme = () => {
+  const config = useConfig();
   const slider = useRef(null);
 
   const [slideIndex, setSlideIndex] = useState(0);
@@ -280,13 +282,12 @@ export default function Home(): JSX.Element {
   };
 
   return (
-    <Layout
-      title="Welcome"
-      description="Community website for Apache Superset, a data visualization and data exploration platform"
-    >
-      <StyledMain>
-        <StyledTitleContainer>
-            <img className="logo-horiz" src="img/superset-logo-horiz-apache.svg" alt="logo-horiz" />
+    <ThemeProvider theme={config}>
+      <SEO title="Superset" />
+      <Layout>
+        <div css={mainPageStyle}>
+          <div css={titleContainer}>
+            <img className="logo-horiz" src={logo} alt="logo-horiz" />
             <div className="info-text">
               Apache Superset is a modern data exploration and visualization
               platform
@@ -325,15 +326,15 @@ export default function Home(): JSX.Element {
             </div>
             <div>
               <Link to="/docs/intro">
-                <Button type="primary">
+                <Button type="primary" size="medium">
                   Get Started
                 </Button>
               </Link>
             </div>
-        </StyledTitleContainer>
+          </div>
 
-        <StyledFeatures>
-            <StyledHeading>Overview</StyledHeading>
+          <div css={featureSectionStyle}>
+            <h2 css={secondaryHeading}>Overview</h2>
             <div className="info-text info-text-smaller">
               Superset is fast, lightweight, intuitive, and loaded with options
               that make it easy for users of all skill sets to explore and
@@ -344,7 +345,7 @@ export default function Home(): JSX.Element {
               <Row>
                 <Col sm={24} md={12}>
                   <Feature
-                    icon={<FireOutlined className="warning-color" />}
+                    icon={<FireOutlined className="warning" />}
                     title="Powerful yet easy to use"
                     descr={`
                     Quickly and easily integrate and explore your data, using
@@ -356,7 +357,7 @@ export default function Home(): JSX.Element {
 
                 <Col sm={24} md={12}>
                   <Feature
-                    icon={<DatabaseOutlined className="info-color" />}
+                    icon={<DatabaseOutlined className="info" />}
                     title="Integrates with modern databases"
                     descr={`
                     Superset can connect to any SQL based datasource
@@ -369,7 +370,7 @@ export default function Home(): JSX.Element {
               <Row>
                 <Col sm={24} md={12}>
                   <Feature
-                    icon={<DeploymentUnitOutlined className="success-color" />}
+                    icon={<DeploymentUnitOutlined className="success" />}
                     title="Modern architecture"
                     descr={`
                     Superset is lightweight and highly scalable, leveraging the
@@ -380,7 +381,7 @@ export default function Home(): JSX.Element {
                 </Col>
                 <Col sm={24} md={12}>
                   <Feature
-                    icon={<DotChartOutlined className="alert-color" />}
+                    icon={<DotChartOutlined className="alert" />}
                     title="Rich visualizations and dashboards"
                     descr={`
                     Superset ships with a wide array of beautiful visualizations.
@@ -391,10 +392,10 @@ export default function Home(): JSX.Element {
                 </Col>
               </Row>
             </ul>
-        </StyledFeatures>
+          </div>
 
-        <CarouselSection>
-            <StyledHeading>Explore</StyledHeading>
+          <div css={linkCarousel}>
+            <h2 css={secondaryHeading}>Explore</h2>
             <div className="toggleContainer">
               <div className="toggleBtns">
                 <div
@@ -427,18 +428,18 @@ export default function Home(): JSX.Element {
               </div>
               <Carousel ref={slider} effect="scrollx" afterChange={onChange}>
                 <div className="imageContainer">
-                  <img src="img/explorer5.jpg" alt="" />
+                  <img src="/images/explorer5.jpg" alt="" />
                 </div>
                 <div className="imageContainer">
-                  <img src="img/dashboard3.png" alt="" />
+                  <img src="/images/dashboard3.png" alt="" />
                 </div>
                 <div className="imageContainer">
-                  <img src="img/sqllab5.jpg" alt="" />
+                  <img src="/images/sqllab5.jpg" alt="" />
                 </div>
               </Carousel>
             </div>
-            <StyledIntegrations>
-              <StyledHeading>Supported Databases</StyledHeading>
+            <div css={integrationSection}>
+              <h2 css={secondaryHeading}>Supported Databases</h2>
 
               <ul className="database-list">
                 {Databases.map(
@@ -446,7 +447,14 @@ export default function Home(): JSX.Element {
                     title, imgName: imageName, width, height,
                   }) => (
                     <li>
-                      <StyledDatabaseImg src={`img/databases/${imageName}`} title={title} width={width || 'auto'} height={height || '50px'}/>
+                      <DbImage
+                        {...{
+                          imageName,
+                          width,
+                          height,
+                          alt: title,
+                        }}
+                      />
                     </li>
                   ),
                 )}
@@ -459,10 +467,13 @@ export default function Home(): JSX.Element {
                   {' '}
                 </a>
               </span>
-            </StyledIntegrations>
-        </CarouselSection>
-
-      </StyledMain>
-    </Layout>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    </ThemeProvider>
   );
-}
+};
+
+// @ts-ignore
+export default theme()(Theme);

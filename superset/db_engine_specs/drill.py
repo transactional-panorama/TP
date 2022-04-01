@@ -15,13 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Optional
 from urllib import parse
 
 from sqlalchemy.engine.url import URL
 
 from superset.db_engine_specs.base import BaseEngineSpec
-from superset.db_engine_specs.exceptions import SupersetDBAPIProgrammingError
 from superset.utils import core as utils
 
 
@@ -56,9 +55,7 @@ class DrillEngineSpec(BaseEngineSpec):
         return "TO_DATE({col})"
 
     @classmethod
-    def convert_dttm(
-        cls, target_type: str, dttm: datetime, db_extra: Optional[Dict[str, Any]] = None
-    ) -> Optional[str]:
+    def convert_dttm(cls, target_type: str, dttm: datetime) -> Optional[str]:
         tt = target_type.upper()
         if tt == utils.TemporalType.DATE:
             return f"TO_DATE('{dttm.date().isoformat()}', 'yyyy-MM-dd')"
@@ -85,9 +82,7 @@ class DrillEngineSpec(BaseEngineSpec):
         if impersonate_user and username is not None:
             if url.drivername == "drill+odbc":
                 url.query["DelegationUID"] = username
-            elif url.drivername in ["drill+sadrill", "drill+jdbc"]:
+            elif url.drivername == "drill+jdbc":
                 url.query["impersonation_target"] = username
             else:
-                raise SupersetDBAPIProgrammingError(
-                    f"impersonation is not supported for {url.drivername}"
-                )
+                url.username = username

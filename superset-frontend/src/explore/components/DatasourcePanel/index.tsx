@@ -17,7 +17,6 @@
  * under the License.
  */
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { css, styled, t } from '@superset-ui/core';
 import {
   ControlConfig,
   DatasourceMeta,
@@ -25,8 +24,9 @@ import {
 } from '@superset-ui/chart-controls';
 import { debounce } from 'lodash';
 import { matchSorter, rankings } from 'match-sorter';
+import { css, styled, t } from '@superset-ui/core';
 import Collapse from 'src/components/Collapse';
-import { Input } from 'src/components/Input';
+import { Input } from 'src/common/components';
 import { FAST_DEBOUNCE } from 'src/constants';
 import { FeatureFlag, isFeatureEnabled } from 'src/featureFlags';
 import { ExploreActions } from 'src/explore/actions/exploreActions';
@@ -45,13 +45,7 @@ export interface Props {
     datasource: DatasourceControl;
   };
   actions: Partial<ExploreActions> & Pick<ExploreActions, 'setControlValue'>;
-  // we use this props control force update when this panel resize
-  shouldForceUpdate?: number;
 }
-
-const enableExploreDnd = isFeatureEnabled(
-  FeatureFlag.ENABLE_EXPLORE_DRAG_AND_DROP,
-);
 
 const Button = styled.button`
   background: none;
@@ -67,7 +61,7 @@ const ButtonContainer = styled.div`
 
 const DatasourceContainer = styled.div`
   ${({ theme }) => css`
-    background-color: ${theme.colors.grayscale.light5};
+    background-color: ${theme.colors.grayscale.light4};
     position: relative;
     height: 100%;
     display: flex;
@@ -91,6 +85,7 @@ const DatasourceContainer = styled.div`
       margin: ${theme.gridUnit * 2}px auto;
     }
     .type-label {
+      font-weight: ${theme.typography.weights.light};
       font-size: ${theme.typography.sizes.s}px;
       color: ${theme.colors.grayscale.base};
     }
@@ -101,55 +96,26 @@ const DatasourceContainer = styled.div`
 `;
 
 const LabelWrapper = styled.div`
-  ${({ theme }) => css`
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: ${theme.typography.sizes.s}px;
-    background-color: ${theme.colors.grayscale.light4};
-    margin: ${theme.gridUnit * 2}px 0;
-    border-radius: 4px;
-    padding: 0 ${theme.gridUnit}px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
-    &:first-of-type {
-      margin-top: 0;
+  & > span {
+    white-space: nowrap;
+  }
+
+  .option-label {
+    display: inline;
+  }
+
+  .metric-option {
+    & > svg {
+      min-width: ${({ theme }) => `${theme.gridUnit * 4}px`};
     }
-    &:last-of-type {
-      margin-bottom: 0;
+    & > .option-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-
-    ${enableExploreDnd &&
-    css`
-      padding: 0;
-      cursor: pointer;
-      &:hover {
-        background-color: ${theme.colors.grayscale.light3};
-      }
-    `}
-
-    & > span {
-      white-space: nowrap;
-    }
-
-    .option-label {
-      display: inline;
-    }
-
-    .metric-option {
-      & > svg {
-        min-width: ${theme.gridUnit * 4}px;
-      }
-      & > .option-label {
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    }
-  `}
-`;
-
-const SectionHeader = styled.span`
-  ${({ theme }) => css`
-    font-size: ${theme.typography.sizes.s}px;
-  `}
+  }
 `;
 
 const LabelContainer = (props: {
@@ -157,21 +123,45 @@ const LabelContainer = (props: {
   className: string;
 }) => {
   const labelRef = useRef<HTMLDivElement>(null);
+  const [showTooltip, setShowTooltip] = useState(true);
+  const isLabelTruncated = () =>
+    !!(
+      labelRef &&
+      labelRef.current &&
+      labelRef.current.scrollWidth > labelRef.current.clientWidth
+    );
+  const handleShowTooltip = () => {
+    const shouldShowTooltip = isLabelTruncated();
+    if (shouldShowTooltip !== showTooltip) {
+      setShowTooltip(shouldShowTooltip);
+    }
+  };
+  const handleResetTooltip = () => {
+    setShowTooltip(true);
+  };
   const extendedProps = {
     labelRef,
+    showTooltip,
   };
   return (
-    <LabelWrapper className={props.className}>
+    <LabelWrapper
+      onMouseEnter={handleShowTooltip}
+      onMouseLeave={handleResetTooltip}
+      className={props.className}
+    >
       {React.cloneElement(props.children, extendedProps)}
     </LabelWrapper>
   );
 };
 
+const enableExploreDnd = isFeatureEnabled(
+  FeatureFlag.ENABLE_EXPLORE_DRAG_AND_DROP,
+);
+
 export default function DataSourcePanel({
   datasource,
   controls: { datasource: datasourceControl },
   actions,
-  shouldForceUpdate,
 }: Props) {
   const { columns: _columns, metrics } = datasource;
 
@@ -302,12 +292,13 @@ export default function DataSourcePanel({
         />
         <div className="field-selections">
           <Collapse
+            bordered
             defaultActiveKey={['metrics', 'column']}
             expandIconPosition="right"
             ghost
           >
             <Collapse.Panel
-              header={<SectionHeader>{t('Metrics')}</SectionHeader>}
+              header={<span className="header">{t('Metrics')}</span>}
               key="metrics"
             >
               <div className="field-length">
@@ -318,10 +309,7 @@ export default function DataSourcePanel({
                 )}
               </div>
               {metricSlice.map(m => (
-                <LabelContainer
-                  key={m.metric_name + String(shouldForceUpdate)}
-                  className="column"
-                >
+                <LabelContainer key={m.metric_name} className="column">
                   {enableExploreDnd ? (
                     <DatasourcePanelDragOption
                       value={m}
@@ -343,7 +331,7 @@ export default function DataSourcePanel({
               )}
             </Collapse.Panel>
             <Collapse.Panel
-              header={<SectionHeader>{t('Columns')}</SectionHeader>}
+              header={<span className="header">{t('Columns')}</span>}
               key="column"
             >
               <div className="field-length">
@@ -354,10 +342,7 @@ export default function DataSourcePanel({
                 )}
               </div>
               {columnSlice.map(col => (
-                <LabelContainer
-                  key={col.column_name + String(shouldForceUpdate)}
-                  className="column"
-                >
+                <LabelContainer key={col.column_name} className="column">
                   {enableExploreDnd ? (
                     <DatasourcePanelDragOption
                       value={col}
@@ -391,7 +376,6 @@ export default function DataSourcePanel({
       search,
       showAllColumns,
       showAllMetrics,
-      shouldForceUpdate,
     ],
   );
 

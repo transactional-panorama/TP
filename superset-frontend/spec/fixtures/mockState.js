@@ -21,7 +21,7 @@ import messageToasts from 'src/components/MessageToasts/mockMessageToasts';
 import {
   nativeFiltersInfo,
   mockDataMaskInfo,
-} from 'src/dashboard/fixtures/mockNativeFilters';
+} from 'spec/javascripts/dashboard/fixtures/mockNativeFilters';
 import { user } from 'src/SqlLab/fixtures';
 import chartQueries from './mockChartQueries';
 import { dashboardLayout } from './mockDashboardLayout';

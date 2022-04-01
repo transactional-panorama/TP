@@ -40,8 +40,6 @@ const V1_PLUGINS = [
   'word_cloud',
   'pie',
   'table',
-  'big_number',
-  'big_number_total',
 ];
 export const DASHBOARD_CHART_ALIAS_PREFIX = 'getChartData_';
 

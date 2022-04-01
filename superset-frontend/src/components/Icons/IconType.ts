@@ -22,7 +22,7 @@ type AntdIconType = IconComponentProps;
 type IconType = AntdIconType & {
   iconColor?: string;
   twoToneColor?: string;
-  iconSize?: 'xs' | 's' | 'm' | 'l' | 'xl' | 'xxl';
+  iconSize?: 's' | 'm' | 'l' | 'xl' | 'xxl';
 };
 
 export default IconType;

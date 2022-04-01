@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { EMPTY_STRING, NULL_STRING } from 'src/utils/common';
 import { getSimpleSQLExpression } from '.';
-import { Operators } from '../constants';
 
 const params = {
   subject: 'subject',
@@ -36,12 +34,6 @@ test('Should return "" if subject is falsy', () => {
   expect(
     getSimpleSQLExpression(undefined, params.operator, params.comparator),
   ).toBe('');
-});
-
-test('Should return null string and empty string', () => {
-  expect(getSimpleSQLExpression(params.subject, Operators.IN, [null, ''])).toBe(
-    `subject ${Operators.IN} (${NULL_STRING}, ${EMPTY_STRING})`,
-  );
 });
 
 test('Should return subject if operator is falsy', () => {

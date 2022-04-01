@@ -65,8 +65,6 @@ from superset.views.base import DatasourceFilter, generate_download_headers
 from superset.views.base_api import (
     BaseSupersetModelRestApi,
     RelatedFieldFilter,
-    requires_form_data,
-    requires_json,
     statsd_metrics,
 )
 from superset.views.filters import FilterRelatedOwners
@@ -163,11 +161,7 @@ class DatasetRestApi(BaseSupersetModelRestApi):
         "url",
         "extra",
     ]
-    show_columns = show_select_columns + [
-        "columns.type_generic",
-        "database.backend",
-        "is_managed_externally",
-    ]
+    show_columns = show_select_columns + ["columns.type_generic", "database.backend"]
     add_model_schema = DatasetPostSchema()
     edit_model_schema = DatasetPutSchema()
     add_columns = ["database", "schema", "table_name", "owners"]
@@ -212,7 +206,6 @@ class DatasetRestApi(BaseSupersetModelRestApi):
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}.post",
         log_to_statsd=False,
     )
-    @requires_json
     def post(self) -> Response:
         """Creates a new Dataset
         ---
@@ -247,6 +240,8 @@ class DatasetRestApi(BaseSupersetModelRestApi):
             500:
               $ref: '#/components/responses/500'
         """
+        if not request.is_json:
+            return self.response_400(message="Request is not JSON")
         try:
             item = self.add_model_schema.load(request.json)
         # This validates custom Schema with custom validations
@@ -275,7 +270,6 @@ class DatasetRestApi(BaseSupersetModelRestApi):
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}.put",
         log_to_statsd=False,
     )
-    @requires_json
     def put(self, pk: int) -> Response:
         """Changes a Dataset
         ---
@@ -328,6 +322,8 @@ class DatasetRestApi(BaseSupersetModelRestApi):
             if "override_columns" in request.args
             else False
         )
+        if not request.is_json:
+            return self.response_400(message="Request is not JSON")
         try:
             item = self.edit_model_schema.load(request.json)
         # This validates custom Schema with custom validations
@@ -684,7 +680,6 @@ class DatasetRestApi(BaseSupersetModelRestApi):
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}.import_",
         log_to_statsd=False,
     )
-    @requires_form_data
     def import_(self) -> Response:
         """Import dataset(s) with associated databases
         ---
@@ -701,12 +696,7 @@ class DatasetRestApi(BaseSupersetModelRestApi):
                       type: string
                       format: binary
                     passwords:
-                      description: >-
-                        JSON map of passwords for each featured database in the
-                        ZIP file. If the ZIP includes a database config in the path
-                        `databases/MyDatabase.yaml`, the password should be provided
-                        in the following format:
-                        `{"databases/MyDatabase.yaml": "my_password"}`.
+                      description: JSON map of passwords for each file
                       type: string
                     overwrite:
                       description: overwrite existing datasets?

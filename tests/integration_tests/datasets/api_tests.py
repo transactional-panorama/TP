@@ -35,17 +35,19 @@ from superset.dao.exceptions import (
 )
 from superset.extensions import db, security_manager
 from superset.models.core import Database
-from superset.utils.core import backend, get_example_default_schema
-from superset.utils.database import get_example_database, get_main_database
+from superset.utils.core import (
+    backend,
+    get_example_database,
+    get_example_default_schema,
+    get_main_database,
+)
 from superset.utils.dict_import_export import export_to_dict
 from tests.integration_tests.base_tests import SupersetTestCase
 from tests.integration_tests.conftest import CTAS_SCHEMA_NAME
 from tests.integration_tests.fixtures.birth_names_dashboard import (
     load_birth_names_dashboard_with_slices,
-    load_birth_names_data,
 )
 from tests.integration_tests.fixtures.energy_dashboard import (
-    load_energy_table_data,
     load_energy_table_with_slice,
 )
 from tests.integration_tests.fixtures.importexport import (
@@ -107,10 +109,7 @@ class TestDatasetApi(SupersetTestCase):
             for table_name in self.fixture_virtual_table_names:
                 datasets.append(
                     self.insert_dataset(
-                        table_name,
-                        [admin.id],
-                        main_db,
-                        "SELECT * from ab_view_menu;",
+                        table_name, [admin.id], main_db, "SELECT * from ab_view_menu;",
                     )
                 )
             yield datasets
@@ -148,7 +147,7 @@ class TestDatasetApi(SupersetTestCase):
             .one()
         )
 
-    def create_dataset_import(self) -> BytesIO:
+    def create_dataset_import(self):
         buf = BytesIO()
         with ZipFile(buf, "w") as bundle:
             with bundle.open("dataset_export/metadata.yaml", "w") as fp:
@@ -222,10 +221,8 @@ class TestDatasetApi(SupersetTestCase):
         rv = self.client.get(uri)
         assert rv.status_code == 200
         response = json.loads(rv.data.decode("utf-8"))
-
-        assert response["count"] == 1
-        main_db = get_main_database()
-        assert filter(lambda x: x.text == main_db, response["result"]) != []
+        assert response["count"] == 0
+        assert response["result"] == []
 
     @pytest.mark.usefixtures("load_energy_table_with_slice")
     def test_get_dataset_item(self):
@@ -289,18 +286,16 @@ class TestDatasetApi(SupersetTestCase):
             )
             datasets.append(
                 self.insert_dataset(
-                    "columns",
-                    [],
-                    get_main_database(),
-                    schema="information_schema",
+                    "columns", [], get_main_database(), schema="information_schema",
                 )
             )
             schema_values = [
+                "admin_database",
                 "information_schema",
                 "public",
             ]
             expected_response = {
-                "count": 2,
+                "count": 3,
                 "result": [{"text": val, "value": val} for val in schema_values],
             }
             self.login(username="admin")
@@ -326,10 +321,8 @@ class TestDatasetApi(SupersetTestCase):
             pg_test_query_parameter(
                 query_parameter,
                 {
-                    "count": 2,
-                    "result": [
-                        {"text": "information_schema", "value": "information_schema"}
-                    ],
+                    "count": 3,
+                    "result": [{"text": "admin_database", "value": "admin_database"}],
                 },
             )
 
@@ -382,7 +375,9 @@ class TestDatasetApi(SupersetTestCase):
         rv = self.get_assert_metric(uri, "info")
         data = json.loads(rv.data.decode("utf-8"))
         assert rv.status_code == 200
-        assert set(data["permissions"]) == {"can_read", "can_write", "can_export"}
+        assert "can_read" in data["permissions"]
+        assert "can_write" in data["permissions"]
+        assert len(data["permissions"]) == 2
 
     def test_create_dataset_item(self):
         """
@@ -439,7 +434,7 @@ class TestDatasetApi(SupersetTestCase):
         }
         uri = "api/v1/dataset/"
         rv = self.client.post(uri, json=table_data)
-        assert rv.status_code == 403
+        assert rv.status_code == 401
 
     def test_create_dataset_item_owner(self):
         """
@@ -507,7 +502,6 @@ class TestDatasetApi(SupersetTestCase):
             "message": {"table_name": ["Dataset energy_usage already exists"]}
         }
 
-    @unittest.skip("test is failing stochastically")
     def test_create_dataset_same_name_different_schema(self):
         if backend() == "sqlite":
             # sqlite doesn't support schemas
@@ -576,12 +570,7 @@ class TestDatasetApi(SupersetTestCase):
         """
 
         mock_get_columns.return_value = [
-            {
-                "name": "col",
-                "type": "VARCHAR",
-                "type_generic": None,
-                "is_dttm": None,
-            }
+            {"name": "col", "type": "VARCHAR", "type_generic": None, "is_dttm": None,}
         ]
 
         mock_has_table_by_name.return_value = False
@@ -680,7 +669,7 @@ class TestDatasetApi(SupersetTestCase):
         db.session.delete(dataset)
         db.session.commit()
 
-    def test_update_dataset_create_column_and_metric(self):
+    def test_update_dataset_create_column(self):
         """
         Dataset API: Test update dataset create column
         """
@@ -691,25 +680,11 @@ class TestDatasetApi(SupersetTestCase):
             "column_name": "new_col",
             "description": "description",
             "expression": "expression",
-            "extra": '{"abc":123}',
             "type": "INTEGER",
             "verbose_name": "New Col",
-            "uuid": "c626b60a-3fb2-4e99-9f01-53aca0b17166",
-        }
-        new_metric_data = {
-            "d3format": None,
-            "description": None,
-            "expression": "COUNT(*)",
-            "extra": '{"abc":123}',
-            "metric_name": "my_count",
-            "metric_type": None,
-            "verbose_name": "My Count",
-            "warning_text": None,
-            "uuid": "051b5e72-4e6e-4860-b12b-4d530009dd2a",
         }
         uri = f"api/v1/dataset/{dataset.id}"
-
-        # Get current cols and metrics and append the new ones
+        # Get current cols and append the new column
         self.login(username="admin")
         rv = self.get_assert_metric(uri, "get")
         data = json.loads(rv.data.decode("utf-8"))
@@ -718,21 +693,9 @@ class TestDatasetApi(SupersetTestCase):
             column.pop("changed_on", None)
             column.pop("created_on", None)
             column.pop("type_generic", None)
+
         data["result"]["columns"].append(new_column_data)
-
-        for metric in data["result"]["metrics"]:
-            metric.pop("changed_on", None)
-            metric.pop("created_on", None)
-            metric.pop("type_generic", None)
-
-        data["result"]["metrics"].append(new_metric_data)
-        rv = self.client.put(
-            uri,
-            json={
-                "columns": data["result"]["columns"],
-                "metrics": data["result"]["metrics"],
-            },
-        )
+        rv = self.client.put(uri, json={"columns": data["result"]["columns"]})
 
         assert rv.status_code == 200
 
@@ -742,33 +705,13 @@ class TestDatasetApi(SupersetTestCase):
             .order_by("column_name")
             .all()
         )
-
         assert columns[0].column_name == "id"
         assert columns[1].column_name == "name"
         assert columns[2].column_name == new_column_data["column_name"]
         assert columns[2].description == new_column_data["description"]
         assert columns[2].expression == new_column_data["expression"]
         assert columns[2].type == new_column_data["type"]
-        assert columns[2].extra == new_column_data["extra"]
         assert columns[2].verbose_name == new_column_data["verbose_name"]
-        assert str(columns[2].uuid) == new_column_data["uuid"]
-
-        metrics = (
-            db.session.query(SqlMetric)
-            .filter_by(table_id=dataset.id)
-            .order_by("metric_name")
-            .all()
-        )
-        assert metrics[0].metric_name == "count"
-        assert metrics[1].metric_name == "my_count"
-        assert metrics[1].d3format == new_metric_data["d3format"]
-        assert metrics[1].description == new_metric_data["description"]
-        assert metrics[1].expression == new_metric_data["expression"]
-        assert metrics[1].extra == new_metric_data["extra"]
-        assert metrics[1].metric_type == new_metric_data["metric_type"]
-        assert metrics[1].verbose_name == new_metric_data["verbose_name"]
-        assert metrics[1].warning_text == new_metric_data["warning_text"]
-        assert str(metrics[1].uuid) == new_metric_data["uuid"]
 
         db.session.delete(dataset)
         db.session.commit()
@@ -999,7 +942,7 @@ class TestDatasetApi(SupersetTestCase):
         table_data = {"description": "changed_description"}
         uri = f"api/v1/dataset/{dataset.id}"
         rv = self.client.put(uri, json=table_data)
-        assert rv.status_code == 403
+        assert rv.status_code == 401
         db.session.delete(dataset)
         db.session.commit()
 
@@ -1107,7 +1050,7 @@ class TestDatasetApi(SupersetTestCase):
         self.login(username="gamma")
         uri = f"api/v1/dataset/{dataset.id}"
         rv = self.client.delete(uri)
-        assert rv.status_code == 403
+        assert rv.status_code == 401
         db.session.delete(dataset)
         db.session.commit()
 
@@ -1326,7 +1269,7 @@ class TestDatasetApi(SupersetTestCase):
         self.login(username="gamma")
         uri = f"api/v1/dataset/?q={prison.dumps(dataset_ids)}"
         rv = self.client.delete(uri)
-        assert rv.status_code == 403
+        assert rv.status_code == 401
 
     @pytest.mark.usefixtures("create_datasets")
     def test_bulk_delete_dataset_item_incorrect(self):
@@ -1439,34 +1382,24 @@ class TestDatasetApi(SupersetTestCase):
         rv = self.get_assert_metric(uri, "export")
         assert rv.status_code == 404
 
-    @pytest.mark.usefixtures("create_datasets")
     def test_export_dataset_gamma(self):
         """
         Dataset API: Test export dataset has gamma
         """
-        dataset = self.get_fixture_datasets()[0]
+        birth_names_dataset = self.get_birth_names_dataset()
 
-        argument = [dataset.id]
+        argument = [birth_names_dataset.id]
         uri = f"api/v1/dataset/export/?q={prison.dumps(argument)}"
 
         self.login(username="gamma")
         rv = self.client.get(uri)
-        assert rv.status_code == 403
+        assert rv.status_code == 404
 
-        perm1 = security_manager.find_permission_view_menu("can_export", "Dataset")
-
-        perm2 = security_manager.find_permission_view_menu(
-            "datasource_access", dataset.perm
-        )
-
-        # add perissions to allow export + access to query this dataset
-        gamma_role = security_manager.find_role("Gamma")
-        security_manager.add_permission_role(gamma_role, perm1)
-        security_manager.add_permission_role(gamma_role, perm2)
-
-        rv = self.client.get(uri)
-        assert rv.status_code == 200
-
+    @patch.dict(
+        "superset.extensions.feature_flag_manager._feature_flags",
+        {"VERSIONED_EXPORT": True},
+        clear=True,
+    )
     @pytest.mark.usefixtures("load_birth_names_dashboard_with_slices")
     def test_export_dataset_bundle(self):
         """
@@ -1489,6 +1422,11 @@ class TestDatasetApi(SupersetTestCase):
         buf = BytesIO(rv.data)
         assert is_zipfile(buf)
 
+    @patch.dict(
+        "superset.extensions.feature_flag_manager._feature_flags",
+        {"VERSIONED_EXPORT": True},
+        clear=True,
+    )
     def test_export_dataset_bundle_not_found(self):
         """
         Dataset API: Test export dataset not found
@@ -1501,20 +1439,24 @@ class TestDatasetApi(SupersetTestCase):
 
         assert rv.status_code == 404
 
-    @pytest.mark.usefixtures("create_datasets")
+    @patch.dict(
+        "superset.extensions.feature_flag_manager._feature_flags",
+        {"VERSIONED_EXPORT": True},
+        clear=True,
+    )
     def test_export_dataset_bundle_gamma(self):
         """
         Dataset API: Test export dataset has gamma
         """
-        dataset = self.get_fixture_datasets()[0]
+        birth_names_dataset = self.get_birth_names_dataset()
 
-        argument = [dataset.id]
+        argument = [birth_names_dataset.id]
         uri = f"api/v1/dataset/export/?q={prison.dumps(argument)}"
 
         self.login(username="gamma")
         rv = self.client.get(uri)
         # gamma users by default do not have access to this dataset
-        assert rv.status_code == 403
+        assert rv.status_code == 404
 
     @unittest.skip("Number of related objects depend on DB")
     @pytest.mark.usefixtures("load_birth_names_dashboard_with_slices")

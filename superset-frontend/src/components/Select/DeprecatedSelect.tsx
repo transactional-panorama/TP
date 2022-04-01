@@ -26,24 +26,26 @@ import BasicSelect, {
   SelectComponentsConfig,
   components as defaultComponents,
   createFilter,
-  Props as SelectProps,
 } from 'react-select';
 import Async from 'react-select/async';
 import Creatable from 'react-select/creatable';
 import AsyncCreatable from 'react-select/async-creatable';
+import { withAsyncPaginate } from 'react-select-async-paginate';
 
-import type { SelectComponents } from 'react-select/src/components';
+import { SelectComponents } from 'react-select/src/components';
 import {
   SortableContainer,
   SortableElement,
   SortableContainerProps,
 } from 'react-sortable-hoc';
 import arrayMove from 'array-move';
+import { Props as SelectProps } from 'react-select/src/Select';
 import { useTheme } from '@superset-ui/core';
 import {
   WindowedSelectComponentType,
   WindowedSelectProps,
   WindowedSelect,
+  WindowedAsyncSelect,
   WindowedCreatableSelect,
   WindowedAsyncCreatableSelect,
 } from './WindowedSelect';
@@ -69,7 +71,7 @@ type AnyReactSelect<OptionType extends OptionTypeBase> =
 
 export type SupersetStyledSelectProps<
   OptionType extends OptionTypeBase,
-  T extends WindowedSelectProps<OptionType> = WindowedSelectProps<OptionType>,
+  T extends WindowedSelectProps<OptionType> = WindowedSelectProps<OptionType>
 > = T & {
   // additional props for easier usage or backward compatibility
   labelKey?: string;
@@ -101,7 +103,7 @@ function styled<
     | WindowedSelectComponentType<OptionType>
     | ComponentType<
         SelectProps<OptionType>
-      > = WindowedSelectComponentType<OptionType>,
+      > = WindowedSelectComponentType<OptionType>
 >(SelectComponent: SelectComponentType) {
   type SelectProps = SupersetStyledSelectProps<OptionType>;
   type Components = SelectComponents<OptionType>;
@@ -111,8 +113,7 @@ function styled<
   });
 
   // default components for the given OptionType
-  const supersetDefaultComponents: SelectComponentsConfig<OptionType> =
-    DEFAULT_COMPONENTS;
+  const supersetDefaultComponents: SelectComponentsConfig<OptionType> = DEFAULT_COMPONENTS;
 
   const getSortableMultiValue = (MultiValue: Components['MultiValue']) =>
     SortableElement((props: MultiValueProps<OptionType>) => {
@@ -317,6 +318,12 @@ function styled<
 }
 
 export const Select = styled(WindowedSelect);
+export const AsyncSelect = styled(WindowedAsyncSelect);
 export const CreatableSelect = styled(WindowedCreatableSelect);
 export const AsyncCreatableSelect = styled(WindowedAsyncCreatableSelect);
+export const PaginatedSelect = withAsyncPaginate(
+  styled<OptionTypeBase, ComponentType<SelectProps<OptionTypeBase>>>(
+    BasicSelect,
+  ),
+);
 export default Select;

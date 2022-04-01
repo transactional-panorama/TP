@@ -28,7 +28,7 @@ import {
   DndFilterSelectProps,
 } from 'src/explore/components/controls/DndColumnSelectControl/DndFilterSelect';
 import { PLACEHOLDER_DATASOURCE } from 'src/dashboard/constants';
-import { TimeseriesDefaultFormData } from '@superset-ui/plugin-chart-echarts';
+import { DEFAULT_FORM_DATA } from '@superset-ui/plugin-chart-echarts/lib/Timeseries/types';
 
 const defaultProps: DndFilterSelectProps = {
   type: 'DndFilterSelect',
@@ -70,7 +70,7 @@ test('renders options with saved metric', () => {
       {...defaultProps}
       formData={{
         ...baseFormData,
-        ...TimeseriesDefaultFormData,
+        ...DEFAULT_FORM_DATA,
         metrics: ['saved_metric'],
       }}
     />,
@@ -111,7 +111,7 @@ test('renders options with adhoc metric', () => {
       {...defaultProps}
       formData={{
         ...baseFormData,
-        ...TimeseriesDefaultFormData,
+        ...DEFAULT_FORM_DATA,
         metrics: [adhocMetric],
       }}
     />,

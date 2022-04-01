@@ -41,28 +41,26 @@ class DruidEngineSpec(BaseEngineSpec):
 
     _time_grain_expressions = {
         None: "{col}",
-        "PT1S": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'PT1S')",
-        "PT5S": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'PT5S')",
-        "PT30S": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'PT30S')",
-        "PT1M": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'PT1M')",
-        "PT5M": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'PT5M')",
-        "PT10M": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'PT10M')",
-        "PT15M": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'PT15M')",
-        "PT30M": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'PT30M')",
-        "PT1H": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'PT1H')",
-        "PT6H": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'PT6H')",
-        "P1D": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'P1D')",
-        "P1W": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'P1W')",
-        "P1M": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'P1M')",
-        "P3M": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'P3M')",
-        "P1Y": "TIME_FLOOR(CAST({col} AS TIMESTAMP), 'P1Y')",
+        "PT1S": "FLOOR({col} TO SECOND)",
+        "PT5S": "TIME_FLOOR({col}, 'PT5S')",
+        "PT30S": "TIME_FLOOR({col}, 'PT30S')",
+        "PT1M": "FLOOR({col} TO MINUTE)",
+        "PT5M": "TIME_FLOOR({col}, 'PT5M')",
+        "PT10M": "TIME_FLOOR({col}, 'PT10M')",
+        "PT15M": "TIME_FLOOR({col}, 'PT15M')",
+        "PT30M": "TIME_FLOOR({col}, 'PT30M')",
+        "PT1H": "TIME_FLOOR({col}, 'PT1H')",
+        "PT6H": "TIME_FLOOR({col}, 'PT6H')",
+        "P1D": "TIME_FLOOR({col}, 'P1D')",
+        "P1W": "TIME_FLOOR({col}, 'P1W')",
+        "P1M": "TIME_FLOOR({col}, 'P1M')",
+        "P3M": "TIME_FLOOR({col}, 'P3M')",
+        "P1Y": "TIME_FLOOR({col}, 'P1Y')",
         "P1W/1970-01-03T00:00:00Z": (
-            "TIME_SHIFT(TIME_FLOOR(TIME_SHIFT(CAST({col} AS TIMESTAMP), "
-            "'P1D', 1), 'P1W'), 'P1D', 5)"
+            "TIMESTAMPADD(DAY, 5, FLOOR(TIMESTAMPADD(DAY, 1, {col}) TO WEEK))"
         ),
         "1969-12-28T00:00:00Z/P1W": (
-            "TIME_SHIFT(TIME_FLOOR(TIME_SHIFT(CAST({col} AS TIMESTAMP), "
-            "'P1D', 1), 'P1W'), 'P1D', -1)"
+            "TIMESTAMPADD(DAY, -1, FLOOR(TIMESTAMPADD(DAY, 1, {col}) TO WEEK))"
         ),
     }
 
@@ -96,9 +94,7 @@ class DruidEngineSpec(BaseEngineSpec):
         return extra
 
     @classmethod
-    def convert_dttm(
-        cls, target_type: str, dttm: datetime, db_extra: Optional[Dict[str, Any]] = None
-    ) -> Optional[str]:
+    def convert_dttm(cls, target_type: str, dttm: datetime) -> Optional[str]:
         tt = target_type.upper()
         if tt == utils.TemporalType.DATE:
             return f"CAST(TIME_PARSE('{dttm.date().isoformat()}') AS DATE)"

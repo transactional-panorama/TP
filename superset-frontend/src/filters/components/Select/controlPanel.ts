@@ -17,11 +17,8 @@
  * under the License.
  */
 import { t, validateNonEmpty } from '@superset-ui/core';
-import {
-  ControlPanelConfig,
-  sections,
-  sharedControls,
-} from '@superset-ui/chart-controls';
+import { ControlPanelConfig, sections } from '@superset-ui/chart-controls';
+import { sharedControls } from '@superset-ui/chart-controls/lib';
 import { DEFAULT_FORM_DATA } from './types';
 
 const {
@@ -74,11 +71,12 @@ const config: ControlPanelConfig = {
             name: 'multiSelect',
             config: {
               type: 'CheckboxControl',
-              label: t('Can select multiple values'),
+              label: t('Multiple select'),
               default: multiSelect,
               resetConfig: true,
               affectsDataMask: true,
               renderTrigger: true,
+              description: t('Allow selecting multiple values'),
             },
           },
         ],
@@ -87,7 +85,7 @@ const config: ControlPanelConfig = {
             name: 'enableEmptyFilter',
             config: {
               type: 'CheckboxControl',
-              label: t('Filter value is required'),
+              label: t('Required'),
               default: enableEmptyFilter,
               renderTrigger: true,
               description: t(
@@ -101,14 +99,14 @@ const config: ControlPanelConfig = {
             name: 'defaultToFirstItem',
             config: {
               type: 'CheckboxControl',
-              label: t('Select first filter value by default'),
+              label: t('Default to first item'),
               default: defaultToFirstItem,
               resetConfig: true,
               affectsDataMask: true,
               renderTrigger: true,
               requiredFirst: true,
               description: t(
-                'When using this option, default value can’t be set',
+                'Select first item by default (when using this option, default value can’t be set)',
               ),
             },
           },
@@ -133,7 +131,7 @@ const config: ControlPanelConfig = {
               type: 'CheckboxControl',
               renderTrigger: true,
               affectsDataMask: true,
-              label: t('Dynamically search all filter values'),
+              label: t('Search all filter options'),
               default: searchAllOptions,
               description: t(
                 'By default, each filter loads at most 1000 choices at the initial page load. ' +

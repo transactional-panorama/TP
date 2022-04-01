@@ -38,7 +38,6 @@ from superset.db_engine_specs import BaseEngineSpec
 from superset.errors import ErrorLevel, SupersetError, SupersetErrorType
 from superset.exceptions import SupersetErrorException, SupersetErrorsException
 from superset.extensions import celery_app
-from superset.models.core import Database
 from superset.models.sql_lab import Query
 from superset.result_set import SupersetResultSet
 from superset.sql_parse import CtasMethod, ParsedQuery
@@ -176,7 +175,7 @@ def get_sql_results(  # pylint: disable=too-many-arguments
             return handle_query_error(ex, query, session)
 
 
-def execute_sql_statement(  # pylint: disable=too-many-arguments,too-many-locals
+def execute_sql_statement(  # pylint: disable=too-many-arguments,too-many-locals,too-many-statements
     sql_statement: str,
     query: Query,
     user_name: Optional[str],
@@ -222,12 +221,15 @@ def execute_sql_statement(  # pylint: disable=too-many-arguments,too-many-locals
     ):
         if SQL_MAX_ROW and (not query.limit or query.limit > SQL_MAX_ROW):
             query.limit = SQL_MAX_ROW
-        sql = apply_limit_if_exists(database, increased_limit, query, sql)
+        if query.limit:
+            # We are fetching one more than the requested limit in order
+            # to test whether there are more rows than the limit.
+            # Later, the extra row will be dropped before sending
+            # the results back to the user.
+            sql = database.apply_limit_to_sql(sql, increased_limit, force=True)
 
     # Hook to allow environment-specific mutation (usually comments) to the SQL
-    sql = SQL_QUERY_MUTATOR(
-        sql, user_name=user_name, security_manager=security_manager, database=database
-    )
+    sql = SQL_QUERY_MUTATOR(sql, user_name, security_manager, database)
     try:
         query.executed_sql = sql
         if log_query:
@@ -287,19 +289,6 @@ def execute_sql_statement(  # pylint: disable=too-many-arguments,too-many-locals
     logger.debug("Query %d: Fetching cursor description", query.id)
     cursor_description = cursor.description
     return SupersetResultSet(data, cursor_description, db_engine_spec)
-
-
-def apply_limit_if_exists(
-    database: Database, increased_limit: Optional[int], query: Query, sql: str
-) -> str:
-    if query.limit and increased_limit:
-        # We are fetching one more than the requested limit in order
-        # to test whether there are more rows than the limit. According to the DB
-        # Engine support it will choose top or limit parse
-        # Later, the extra row will be dropped before sending
-        # the results back to the user.
-        sql = database.apply_limit_to_sql(sql, increased_limit, force=True)
-    return sql
 
 
 def _serialize_payload(

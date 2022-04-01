@@ -53,11 +53,7 @@ from superset.queries.saved_queries.schemas import (
     get_export_ids_schema,
     openapi_spec_methods_override,
 )
-from superset.views.base_api import (
-    BaseSupersetModelRestApi,
-    requires_form_data,
-    statsd_metrics,
-)
+from superset.views.base_api import BaseSupersetModelRestApi, statsd_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -276,7 +272,6 @@ class SavedQueryRestApi(BaseSupersetModelRestApi):
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}.import_",
         log_to_statsd=False,
     )
-    @requires_form_data
     def import_(self) -> Response:
         """Import Saved Queries with associated databases
         ---
@@ -293,12 +288,7 @@ class SavedQueryRestApi(BaseSupersetModelRestApi):
                       type: string
                       format: binary
                     passwords:
-                      description: >-
-                        JSON map of passwords for each featured database in the
-                        ZIP file. If the ZIP includes a database config in the path
-                        `databases/MyDatabase.yaml`, the password should be provided
-                        in the following format:
-                        `{"databases/MyDatabase.yaml": "my_password"}`.
+                      description: JSON map of passwords for each file
                       type: string
                     overwrite:
                       description: overwrite existing saved queries?

@@ -22,7 +22,7 @@ import { styled, t } from '@superset-ui/core';
 
 import Button from 'src/components/Button';
 import Modal from 'src/components/Modal';
-import { Upload } from 'src/components';
+import { Upload } from 'src/common/components';
 import { useImportResource } from 'src/views/CRUD/hooks';
 import { ImportResourceName } from 'src/views/CRUD/types';
 
@@ -117,6 +117,7 @@ const ImportModelsModal: FunctionComponent<ImportModelsModalProps> = ({
   passwordsNeededMessage,
   confirmOverwriteMessage,
   addDangerToast,
+  addSuccessToast,
   onModelImport,
   show,
   onHide,
@@ -125,8 +126,9 @@ const ImportModelsModal: FunctionComponent<ImportModelsModalProps> = ({
 }) => {
   const [isHidden, setIsHidden] = useState<boolean>(true);
   const [passwords, setPasswords] = useState<Record<string, string>>({});
-  const [needsOverwriteConfirm, setNeedsOverwriteConfirm] =
-    useState<boolean>(false);
+  const [needsOverwriteConfirm, setNeedsOverwriteConfirm] = useState<boolean>(
+    false,
+  );
   const [confirmedOverwrite, setConfirmedOverwrite] = useState<boolean>(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [importingModel, setImportingModel] = useState<boolean>(false);
@@ -183,6 +185,7 @@ const ImportModelsModal: FunctionComponent<ImportModelsModalProps> = ({
       confirmedOverwrite,
     ).then(result => {
       if (result) {
+        addSuccessToast(t('The import was successful'));
         clearModal();
         onModelImport();
       }

@@ -25,7 +25,6 @@ import unittest.mock as mock
 from typing import Optional
 from tests.integration_tests.fixtures.birth_names_dashboard import (
     load_birth_names_dashboard_with_slices,
-    load_birth_names_data,
 )
 
 import pytest
@@ -44,8 +43,7 @@ from superset.errors import ErrorLevel, SupersetErrorType
 from superset.extensions import celery_app
 from superset.models.sql_lab import Query
 from superset.sql_parse import ParsedQuery, CtasMethod
-from superset.utils.core import backend
-from superset.utils.database import get_example_database
+from superset.utils.core import get_example_database, backend
 
 CELERY_SLEEP_TIME = 6
 QUERY = "SELECT name FROM birth_names LIMIT 1"
@@ -251,16 +249,12 @@ def test_run_sync_query_cta_config(setup_sqllab, ctas_method):
     lambda d, u, s, sql: CTAS_SCHEMA_NAME,
 )
 def test_run_async_query_cta_config(setup_sqllab, ctas_method):
-    if backend() in {"sqlite", "mysql"}:
-        # sqlite doesn't support schemas, mysql is flaky
+    if backend() == "sqlite":
+        # sqlite doesn't support schemas
         return
     tmp_table_name = f"{TEST_ASYNC_CTA_CONFIG}_{ctas_method.lower()}"
     result = run_sql(
-        QUERY,
-        cta=True,
-        ctas_method=ctas_method,
-        async_=True,
-        tmp_table=tmp_table_name,
+        QUERY, cta=True, ctas_method=ctas_method, async_=True, tmp_table=tmp_table_name,
     )
 
     query = wait_for_success(result)
@@ -278,10 +272,6 @@ def test_run_async_query_cta_config(setup_sqllab, ctas_method):
 @pytest.mark.usefixtures("load_birth_names_dashboard_with_slices")
 @pytest.mark.parametrize("ctas_method", [CtasMethod.TABLE, CtasMethod.VIEW])
 def test_run_async_cta_query(setup_sqllab, ctas_method):
-    if backend() == "mysql":
-        # failing
-        return
-
     table_name = f"{TEST_ASYNC_CTA}_{ctas_method.lower()}"
     result = run_sql(
         QUERY, cta=True, ctas_method=ctas_method, async_=True, tmp_table=table_name
@@ -304,10 +294,6 @@ def test_run_async_cta_query(setup_sqllab, ctas_method):
 @pytest.mark.usefixtures("load_birth_names_dashboard_with_slices")
 @pytest.mark.parametrize("ctas_method", [CtasMethod.TABLE, CtasMethod.VIEW])
 def test_run_async_cta_query_with_lower_limit(setup_sqllab, ctas_method):
-    if backend() == "mysql":
-        # failing
-        return
-
     tmp_table = f"{TEST_ASYNC_LOWER_LIMIT}_{ctas_method.lower()}"
     result = run_sql(
         QUERY, cta=True, ctas_method=ctas_method, async_=True, tmp_table=tmp_table

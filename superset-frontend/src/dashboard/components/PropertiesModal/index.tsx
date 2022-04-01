@@ -17,11 +17,11 @@
  * under the License.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Input } from 'src/components/Input';
+import { Form, Row, Col, Input } from 'src/common/components';
 import { FormItem } from 'src/components/Form';
 import jsonStringify from 'json-stringify-pretty-compact';
 import Button from 'src/components/Button';
-import { Select, Row, Col, AntdForm } from 'src/components';
+import { Select } from 'src/components';
 import rison from 'rison';
 import {
   styled,
@@ -29,7 +29,6 @@ import {
   SupersetClient,
   getCategoricalSchemeRegistry,
   ensureIsArray,
-  getSharedLabelColor,
 } from '@superset-ui/core';
 
 import Modal from 'src/components/Modal';
@@ -75,7 +74,6 @@ type DashboardInfo = {
   slug: string;
   certifiedBy: string;
   certificationDetails: string;
-  isManagedExternally: boolean;
 };
 
 const PropertiesModal = ({
@@ -89,7 +87,7 @@ const PropertiesModal = ({
   onSubmit = () => {},
   show = false,
 }: PropertiesModalProps) => {
-  const [form] = AntdForm.useForm();
+  const [form] = Form.useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [colorScheme, setColorScheme] = useState(currentColorScheme);
@@ -152,7 +150,6 @@ const PropertiesModal = ({
         owners,
         roles,
         metadata,
-        is_managed_externally,
       } = dashboardData;
       const dashboardInfo = {
         id,
@@ -160,7 +157,6 @@ const PropertiesModal = ({
         slug: slug || '',
         certifiedBy: certified_by || '',
         certificationDetails: certification_details || '',
-        isManagedExternally: is_managed_externally || false,
       };
 
       form.setFieldsValue(dashboardInfo);
@@ -173,11 +169,7 @@ const PropertiesModal = ({
       if (metadata?.positions) {
         delete metadata.positions;
       }
-      const metaDataCopy = { ...metadata };
-      if (metaDataCopy?.shared_label_colors) {
-        delete metaDataCopy.shared_label_colors;
-      }
-      setJsonMetadata(metaDataCopy ? jsonStringify(metaDataCopy) : '');
+      setJsonMetadata(metadata ? jsonStringify(metadata) : '');
     },
     [form],
   );
@@ -286,29 +278,20 @@ const PropertiesModal = ({
   };
 
   const onFinish = () => {
-    const { title, slug, certifiedBy, certificationDetails } =
-      form.getFieldsValue();
+    const {
+      title,
+      slug,
+      certifiedBy,
+      certificationDetails,
+    } = form.getFieldsValue();
     let currentColorScheme = colorScheme;
     let colorNamespace = '';
-    let currentJsonMetadata = jsonMetadata;
 
     // color scheme in json metadata has precedence over selection
-    if (currentJsonMetadata?.length) {
-      const metadata = JSON.parse(currentJsonMetadata);
+    if (jsonMetadata?.length) {
+      const metadata = JSON.parse(jsonMetadata);
       currentColorScheme = metadata?.color_scheme || colorScheme;
       colorNamespace = metadata?.color_namespace || '';
-
-      // filter shared_label_color from user input
-      if (metadata?.shared_label_colors) {
-        delete metadata.shared_label_colors;
-      }
-      const colorMap = getSharedLabelColor().getColorMap(
-        colorNamespace,
-        currentColorScheme,
-        true,
-      );
-      metadata.shared_label_colors = colorMap;
-      currentJsonMetadata = jsonStringify(metadata);
     }
 
     onColorSchemeChange(currentColorScheme, {
@@ -325,7 +308,7 @@ const PropertiesModal = ({
       id: dashboardId,
       title,
       slug,
-      jsonMetadata: currentJsonMetadata,
+      jsonMetadata,
       owners,
       colorScheme: currentColorScheme,
       colorNamespace,
@@ -334,7 +317,6 @@ const PropertiesModal = ({
       ...moreOnSubmitProps,
     };
     if (onlyApply) {
-      addSuccessToast(t('Dashboard properties updated'));
       onSubmit(onSubmitProps);
       onHide();
     } else {
@@ -344,7 +326,7 @@ const PropertiesModal = ({
         body: JSON.stringify({
           dashboard_title: title,
           slug: slug || null,
-          json_metadata: currentJsonMetadata || null,
+          json_metadata: jsonMetadata || null,
           owners: (owners || []).map(o => o.id),
           certified_by: certifiedBy || null,
           certification_details:
@@ -518,14 +500,6 @@ const PropertiesModal = ({
             buttonStyle="primary"
             className="m-r-5"
             cta
-            disabled={dashboardInfo?.isManagedExternally}
-            tooltip={
-              dashboardInfo?.isManagedExternally
-                ? t(
-                    "This dashboard is managed externally, and can't be edited in Superset",
-                  )
-                : ''
-            }
           >
             {saveLabel}
           </Button>
@@ -533,7 +507,7 @@ const PropertiesModal = ({
       }
       responsive
     >
-      <AntdForm
+      <Form
         form={form}
         onFinish={onFinish}
         data-test="dashboard-edit-properties-form"
@@ -630,7 +604,7 @@ const PropertiesModal = ({
             )}
           </Col>
         </Row>
-      </AntdForm>
+      </Form>
     </Modal>
   );
 };

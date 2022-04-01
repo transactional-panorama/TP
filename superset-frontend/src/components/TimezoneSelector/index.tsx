@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import moment from 'moment-timezone';
 import { t } from '@superset-ui/core';
 import { Select } from 'src/components';
@@ -62,6 +62,11 @@ const getTimezoneName = (name: string) => {
   );
 };
 
+export interface TimezoneProps {
+  onTimezoneChange: (value: string) => void;
+  timezone?: string | null;
+}
+
 const ALL_ZONES = moment.tz
   .countries()
   .map(country => moment.tz.zonesForCountry(country, true))
@@ -78,58 +83,51 @@ ALL_ZONES.forEach(zone => {
   }
 });
 
-const TIMEZONE_OPTIONS = TIMEZONES.map(zone => ({
+const TIMEZONE_OPTIONS = TIMEZONES.sort(
+  // sort by offset
+  (a, b) =>
+    moment.tz(currentDate, a.name).utcOffset() -
+    moment.tz(currentDate, b.name).utcOffset(),
+).map(zone => ({
   label: `GMT ${moment
     .tz(currentDate, zone.name)
     .format('Z')} (${getTimezoneName(zone.name)})`,
   value: zone.name,
   offsets: getOffsetKey(zone.name),
-  timezoneName: zone.name,
 }));
 
-const TIMEZONE_OPTIONS_SORT_COMPARATOR = (
-  a: typeof TIMEZONE_OPTIONS[number],
-  b: typeof TIMEZONE_OPTIONS[number],
-) =>
-  moment.tz(currentDate, a.timezoneName).utcOffset() -
-  moment.tz(currentDate, b.timezoneName).utcOffset();
+const TimezoneSelector = ({ onTimezoneChange, timezone }: TimezoneProps) => {
+  const prevTimezone = useRef(timezone);
+  const matchTimezoneToOptions = (timezone: string) =>
+    TIMEZONE_OPTIONS.find(option => option.offsets === getOffsetKey(timezone))
+      ?.value || DEFAULT_TIMEZONE.value;
 
-// pre-sort timezone options by time offset
-TIMEZONE_OPTIONS.sort(TIMEZONE_OPTIONS_SORT_COMPARATOR);
-
-const matchTimezoneToOptions = (timezone: string) =>
-  TIMEZONE_OPTIONS.find(option => option.offsets === getOffsetKey(timezone))
-    ?.value || DEFAULT_TIMEZONE.value;
-
-export type TimezoneSelectorProps = {
-  onTimezoneChange: (value: string) => void;
-  timezone?: string | null;
-};
-
-export default function TimezoneSelector({
-  onTimezoneChange,
-  timezone,
-}: TimezoneSelectorProps) {
-  const validTimezone = useMemo(
-    () => matchTimezoneToOptions(timezone || moment.tz.guess()),
-    [timezone],
+  const updateTimezone = useCallback(
+    (tz: string) => {
+      // update the ref to track changes
+      prevTimezone.current = tz;
+      // the parent component contains the state for the value
+      onTimezoneChange(tz);
+    },
+    [onTimezoneChange],
   );
 
-  // force trigger a timezone update if provided `timezone` is not invalid
   useEffect(() => {
-    if (timezone !== validTimezone) {
-      onTimezoneChange(validTimezone);
+    const updatedTz = matchTimezoneToOptions(timezone || moment.tz.guess());
+    if (prevTimezone.current !== updatedTz) {
+      updateTimezone(updatedTz);
     }
-  }, [validTimezone, onTimezoneChange, timezone]);
+  }, [timezone, updateTimezone]);
 
   return (
     <Select
       ariaLabel={t('Timezone selector')}
       css={{ minWidth: MIN_SELECT_WIDTH }} // smallest size for current values
-      onChange={tz => onTimezoneChange(tz as string)}
-      value={validTimezone}
+      onChange={onTimezoneChange}
+      value={timezone || DEFAULT_TIMEZONE.value}
       options={TIMEZONE_OPTIONS}
-      sortComparator={TIMEZONE_OPTIONS_SORT_COMPARATOR}
     />
   );
-}
+};
+
+export default TimezoneSelector;

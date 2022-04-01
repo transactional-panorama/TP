@@ -35,9 +35,8 @@ apache_superset.egg-info
 .*csv
 # Generated doc files
 env/*
+docs/README.md
 docs/.htaccess*
-docs-v2/.htaccess*
-.nojekyll
 _build/*
 _static/*
 .buildinfo
@@ -49,16 +48,3 @@ vendor/*
 # github configuration
 .github/*
 .*mdx
-
-# skip license check in superset-ui
-tmp/*
-lib/*
-esm/*
-tsconfig.tsbuildinfo
-.*ipynb
-.*yml
-.*iml
-.esprintrc
-.prettierignore
-generator-superset/*
-temporary_superset_ui/*

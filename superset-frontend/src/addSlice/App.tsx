@@ -19,7 +19,6 @@
 import React from 'react';
 import { hot } from 'react-hot-loader/root';
 import { ThemeProvider } from '@superset-ui/core';
-import { GlobalStyles } from 'src/GlobalStyles';
 import setupApp from '../setup/setupApp';
 import setupPlugins from '../setup/setupPlugins';
 import { DynamicPluginProvider } from '../components/DynamicPlugins';
@@ -39,7 +38,6 @@ initFeatureFlags(bootstrapData.common.feature_flags);
 
 const App = () => (
   <ThemeProvider theme={theme}>
-    <GlobalStyles />
     <DynamicPluginProvider>
       <AddSliceContainer />
     </DynamicPluginProvider>

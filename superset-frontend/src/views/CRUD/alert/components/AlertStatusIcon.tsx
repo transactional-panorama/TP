@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { t, SupersetTheme, useTheme } from '@superset-ui/core';
+import { t, supersetTheme, useTheme } from '@superset-ui/core';
 import React from 'react';
 import { Tooltip } from 'src/components/Tooltip';
 import Icons from 'src/components/Icons';
@@ -25,20 +25,20 @@ import { AlertState } from '../types';
 function getStatusColor(
   status: string,
   isReportEnabled: boolean,
-  theme: SupersetTheme,
+  theme: typeof supersetTheme,
 ) {
   switch (status) {
-    case AlertState.Working:
+    case AlertState.working:
       return theme.colors.primary.base;
-    case AlertState.Error:
+    case AlertState.error:
       return theme.colors.error.base;
-    case AlertState.Success:
+    case AlertState.success:
       return isReportEnabled
         ? theme.colors.success.base
         : theme.colors.alert.base;
-    case AlertState.Noop:
+    case AlertState.noop:
       return theme.colors.success.base;
-    case AlertState.Grace:
+    case AlertState.grace:
       return theme.colors.alert.base;
     default:
       return theme.colors.grayscale.base;
@@ -59,43 +59,43 @@ export default function AlertStatusIcon({
     status: '',
   };
   switch (state) {
-    case AlertState.Success:
+    case AlertState.success:
       lastStateConfig.icon = isReportEnabled
         ? Icons.Check
         : Icons.AlertSolidSmall;
       lastStateConfig.label = isReportEnabled
         ? t('Report sent')
         : t('Alert triggered, notification sent');
-      lastStateConfig.status = AlertState.Success;
+      lastStateConfig.status = AlertState.success;
       break;
-    case AlertState.Working:
+    case AlertState.working:
       lastStateConfig.icon = Icons.Running;
       lastStateConfig.label = isReportEnabled
         ? t('Report sending')
         : t('Alert running');
-      lastStateConfig.status = AlertState.Working;
+      lastStateConfig.status = AlertState.working;
       break;
-    case AlertState.Error:
+    case AlertState.error:
       lastStateConfig.icon = Icons.XSmall;
       lastStateConfig.label = isReportEnabled
         ? t('Report failed')
         : t('Alert failed');
-      lastStateConfig.status = AlertState.Error;
+      lastStateConfig.status = AlertState.error;
       break;
-    case AlertState.Noop:
+    case AlertState.noop:
       lastStateConfig.icon = Icons.Check;
       lastStateConfig.label = t('Nothing triggered');
-      lastStateConfig.status = AlertState.Noop;
+      lastStateConfig.status = AlertState.noop;
       break;
-    case AlertState.Grace:
+    case AlertState.grace:
       lastStateConfig.icon = Icons.AlertSolidSmall;
       lastStateConfig.label = t('Alert Triggered, In Grace Period');
-      lastStateConfig.status = AlertState.Grace;
+      lastStateConfig.status = AlertState.grace;
       break;
     default:
       lastStateConfig.icon = Icons.Check;
       lastStateConfig.label = t('Nothing triggered');
-      lastStateConfig.status = AlertState.Noop;
+      lastStateConfig.status = AlertState.noop;
   }
   const Icon = lastStateConfig.icon;
   return (

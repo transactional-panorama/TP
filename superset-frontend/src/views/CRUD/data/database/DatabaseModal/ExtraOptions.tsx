@@ -182,7 +182,7 @@ const ExtraOptions = ({
                 />
               </div>
             </StyledInputContainer>
-            <StyledInputContainer css={no_margin_bottom}>
+            <StyledInputContainer>
               <div className="input-container">
                 <IndeterminateCheckbox
                   id="allows_virtual_table_explore"
@@ -194,24 +194,6 @@ const ExtraOptions = ({
                 <InfoTooltip
                   tooltip={t(
                     'When enabled, users are able to visualize SQL Lab results in Explore.',
-                  )}
-                />
-              </div>
-            </StyledInputContainer>
-            <StyledInputContainer>
-              <div className="input-container">
-                <IndeterminateCheckbox
-                  id="disable_data_preview"
-                  indeterminate={false}
-                  checked={!!db?.extra_json?.disable_data_preview}
-                  onChange={onExtraInputChange}
-                  labelText={t('Disable SQL Lab data preview queries')}
-                />
-                <InfoTooltip
-                  tooltip={t(
-                    'Disable data preview when fetching table metadata in SQL Lab. ' +
-                      ' Useful to avoid browser performance issues when using ' +
-                      ' databases with very wide tables.',
                   )}
                 />
               </div>
@@ -389,9 +371,9 @@ const ExtraOptions = ({
           <div className="input-container">
             <input
               type="text"
-              name="schemas_allowed_for_file_upload"
+              name="schemas_allowed_for_csv_upload"
               value={(
-                db?.extra_json?.schemas_allowed_for_file_upload || []
+                db?.extra_json?.schemas_allowed_for_csv_upload || []
               ).join(',')}
               placeholder="schema1,schema2"
               onChange={onExtraInputChange}
@@ -428,9 +410,9 @@ const ExtraOptions = ({
         <StyledInputContainer css={{ ...no_margin_bottom }}>
           <div className="input-container">
             <IndeterminateCheckbox
-              id="allow_file_upload"
+              id="allow_csv_upload"
               indeterminate={false}
-              checked={!!db?.allow_file_upload}
+              checked={!!db?.allow_csv_upload}
               onChange={onInputChange}
               labelText={t('Allow data upload')}
             />

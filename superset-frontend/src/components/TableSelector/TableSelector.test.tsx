@@ -20,13 +20,12 @@
 import React from 'react';
 import { render, screen, waitFor } from 'spec/helpers/testing-library';
 import { SupersetClient } from '@superset-ui/core';
-import { act } from 'react-dom/test-utils';
 import userEvent from '@testing-library/user-event';
 import TableSelector from '.';
 
 const SupersetClientGet = jest.spyOn(SupersetClient, 'get');
 
-const createProps = (props = {}) => ({
+const createProps = () => ({
   database: {
     id: 1,
     database_name: 'main',
@@ -35,35 +34,25 @@ const createProps = (props = {}) => ({
   },
   schema: 'test_schema',
   handleError: jest.fn(),
-  ...props,
 });
 
-afterEach(() => {
-  jest.clearAllMocks();
+beforeAll(() => {
+  SupersetClientGet.mockImplementation(
+    async () =>
+      ({
+        json: {
+          options: [
+            { label: 'table_a', value: 'table_a' },
+            { label: 'table_b', value: 'table_b' },
+          ],
+        },
+      } as any),
+  );
 });
-
-const getSchemaMockFunction = async () =>
-  ({
-    json: {
-      result: ['schema_a', 'schema_b'],
-    },
-  } as any);
-
-const getTableMockFunction = async () =>
-  ({
-    json: {
-      options: [
-        { label: 'table_a', value: 'table_a' },
-        { label: 'table_b', value: 'table_b' },
-      ],
-    },
-  } as any);
 
 test('renders with default props', async () => {
-  SupersetClientGet.mockImplementation(getTableMockFunction);
-
   const props = createProps();
-  render(<TableSelector {...props} />, { useRedux: true });
+  render(<TableSelector {...props} />);
   const databaseSelect = screen.getByRole('combobox', {
     name: 'Select database or type database name',
   });
@@ -81,10 +70,8 @@ test('renders with default props', async () => {
 });
 
 test('renders table options', async () => {
-  SupersetClientGet.mockImplementation(getTableMockFunction);
-
   const props = createProps();
-  render(<TableSelector {...props} />, { useRedux: true });
+  render(<TableSelector {...props} />);
   const tableSelect = screen.getByRole('combobox', {
     name: 'Select table or type table name',
   });
@@ -98,53 +85,12 @@ test('renders table options', async () => {
 });
 
 test('renders disabled without schema', async () => {
-  SupersetClientGet.mockImplementation(getTableMockFunction);
-
   const props = createProps();
-  render(<TableSelector {...props} schema={undefined} />, { useRedux: true });
+  render(<TableSelector {...props} schema={undefined} />);
   const tableSelect = screen.getByRole('combobox', {
     name: 'Select table or type table name',
   });
   await waitFor(() => {
     expect(tableSelect).toBeDisabled();
-  });
-});
-
-test('table options are notified after schema selection', async () => {
-  SupersetClientGet.mockImplementation(getSchemaMockFunction);
-
-  const callback = jest.fn();
-  const props = createProps({
-    onTablesLoad: callback,
-    schema: undefined,
-  });
-  render(<TableSelector {...props} />, { useRedux: true });
-
-  const schemaSelect = screen.getByRole('combobox', {
-    name: 'Select schema or type schema name',
-  });
-  expect(schemaSelect).toBeInTheDocument();
-  expect(callback).not.toHaveBeenCalled();
-
-  userEvent.click(schemaSelect);
-
-  expect(
-    await screen.findByRole('option', { name: 'schema_a' }),
-  ).toBeInTheDocument();
-  expect(
-    await screen.findByRole('option', { name: 'schema_b' }),
-  ).toBeInTheDocument();
-
-  SupersetClientGet.mockImplementation(getTableMockFunction);
-
-  act(() => {
-    userEvent.click(screen.getAllByText('schema_a')[1]);
-  });
-
-  await waitFor(() => {
-    expect(callback).toHaveBeenCalledWith([
-      { label: 'table_a', value: 'table_a' },
-      { label: 'table_b', value: 'table_b' },
-    ]);
   });
 });

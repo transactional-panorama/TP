@@ -30,14 +30,14 @@ import { useListViewResource, useFavoriteStatus } from 'src/views/CRUD/hooks';
 import ConfirmStatusChange from 'src/components/ConfirmStatusChange';
 import handleResourceExport from 'src/utils/export';
 import Loading from 'src/components/Loading';
-import SubMenu, { SubMenuProps } from 'src/views/components/SubMenu';
+import SubMenu, { SubMenuProps } from 'src/components/Menu/SubMenu';
 import ListView, {
   ListViewProps,
   Filter,
   Filters,
   FilterOperator,
 } from 'src/components/ListView';
-import { dangerouslyGetItemDoNotUse } from 'src/utils/localStorageHelpers';
+import { getFromLocalStorage } from 'src/utils/localStorageHelpers';
 import Owner from 'src/types/Owner';
 import withToasts from 'src/components/MessageToasts/withToasts';
 import FacePile from 'src/components/FacePile';
@@ -46,9 +46,10 @@ import FaveStar from 'src/components/FaveStar';
 import PropertiesModal from 'src/dashboard/components/PropertiesModal';
 import { Tooltip } from 'src/components/Tooltip';
 import ImportModelsModal from 'src/components/ImportModal/index';
+import OmniContainer from 'src/components/OmniContainer';
 
 import Dashboard from 'src/dashboard/containers/Dashboard';
-import CertifiedBadge from 'src/components/CertifiedBadge';
+import CertifiedIcon from 'src/components/CertifiedIcon';
 import DashboardCard from './DashboardCard';
 import { DashboardStatus } from './types';
 
@@ -140,17 +141,15 @@ function DashboardList(props: DashboardListProps) {
   const handleDashboardImport = () => {
     showImportModal(false);
     refreshData();
-    addSuccessToast(t('Dashboard imported'));
   };
 
   const { userId } = props.user;
-  // TODO: Fix usage of localStorage keying on the user id
-  const userKey = dangerouslyGetItemDoNotUse(userId?.toString(), null);
+  const userKey = getFromLocalStorage(userId?.toString(), null);
 
   const canCreate = hasPerm('can_write');
   const canEdit = hasPerm('can_write');
   const canDelete = hasPerm('can_write');
-  const canExport = hasPerm('can_export');
+  const canExport = hasPerm('can_read');
 
   const initialSort = [{ id: 'changed_on_delta_humanized', desc: true }];
 
@@ -267,7 +266,7 @@ function DashboardList(props: DashboardListProps) {
           <Link to={url}>
             {certifiedBy && (
               <>
-                <CertifiedBadge
+                <CertifiedIcon
                   certifiedBy={certifiedBy}
                   details={certificationDetails}
                 />{' '}
@@ -687,6 +686,8 @@ function DashboardList(props: DashboardListProps) {
         passwordFields={passwordFields}
         setPasswordFields={setPasswordFields}
       />
+
+      <OmniContainer />
 
       {preparingExport && <Loading />}
     </>

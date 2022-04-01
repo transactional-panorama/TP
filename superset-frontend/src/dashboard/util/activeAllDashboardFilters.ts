@@ -16,15 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import {
-  DataMaskStateWithId,
-  Filters,
-  JsonObject,
-  NativeFilterScope,
-} from '@superset-ui/core';
+import { DataMaskStateWithId } from 'src/dataMask/types';
+import { JsonObject } from '@superset-ui/core';
 import { CHART_TYPE } from './componentTypes';
+import { Scope } from '../components/nativeFilters/types';
 import { ActiveFilters, Layout, LayoutItem } from '../types';
-import { ChartConfiguration } from '../reducers/types';
+import { ChartConfiguration, Filters } from '../reducers/types';
 import { DASHBOARD_ROOT_ID } from './constants';
 
 // Looking for affected chart scopes and values
@@ -38,7 +35,7 @@ export const findAffectedCharts = ({
 }: {
   child: string;
   layout: { [key: string]: LayoutItem };
-  scope: NativeFilterScope;
+  scope: Scope;
   activeFilters: ActiveFilters;
   filterId: string;
   extraFormData: any;

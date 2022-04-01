@@ -27,12 +27,10 @@ from superset.connectors.sqla.models import SqlaTable
 from superset.datasets.commands.exceptions import DatasetNotFoundError
 from superset.exceptions import SupersetGenericDBErrorException
 from superset.models.core import Database
-from superset.utils.core import get_example_default_schema
-from superset.utils.database import get_example_database
+from superset.utils.core import get_example_database, get_example_default_schema
 from tests.integration_tests.base_tests import db_insert_temp_object, SupersetTestCase
 from tests.integration_tests.fixtures.birth_names_dashboard import (
     load_birth_names_dashboard_with_slices,
-    load_birth_names_data,
 )
 from tests.integration_tests.fixtures.datasource import get_datasource_post
 
@@ -158,11 +156,7 @@ class TestDatasource(SupersetTestCase):
 
         # No databases found
         params = prison.dumps(
-            {
-                "datasource_type": "table",
-                "database_name": "foo",
-                "table_name": "bar",
-            }
+            {"datasource_type": "table", "database_name": "foo", "table_name": "bar",}
         )
         url = f"/datasource/external_metadata_by_name/?q={params}"
         resp = self.client.get(url)
@@ -189,11 +183,7 @@ class TestDatasource(SupersetTestCase):
         )
 
         # invalid query params
-        params = prison.dumps(
-            {
-                "datasource_type": "table",
-            }
-        )
+        params = prison.dumps({"datasource_type": "table",})
         url = f"/datasource/external_metadata_by_name/?q={params}"
         resp = self.get_json_resp(url)
         self.assertIn("error", resp)

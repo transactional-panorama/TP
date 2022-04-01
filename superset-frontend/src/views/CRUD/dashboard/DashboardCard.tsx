@@ -21,8 +21,7 @@ import { Link, useHistory } from 'react-router-dom';
 import { t, useTheme } from '@superset-ui/core';
 import { handleDashboardDelete, CardStyles } from 'src/views/CRUD/utils';
 import { isFeatureEnabled, FeatureFlag } from 'src/featureFlags';
-import { AntdDropdown } from 'src/components';
-import { Menu } from 'src/components/Menu';
+import { Dropdown, Menu } from 'src/common/components';
 import ConfirmStatusChange from 'src/components/ConfirmStatusChange';
 import ListViewCard from 'src/components/ListViewCard';
 import Icons from 'src/components/Icons';
@@ -67,7 +66,7 @@ function DashboardCard({
   const history = useHistory();
   const canEdit = hasPerm('can_write');
   const canDelete = hasPerm('can_write');
-  const canExport = hasPerm('can_export');
+  const canExport = hasPerm('can_read');
 
   const theme = useTheme();
   const menu = (
@@ -176,9 +175,9 @@ function DashboardCard({
               saveFaveStar={saveFavoriteStatus}
               isStarred={favoriteStatus}
             />
-            <AntdDropdown overlay={menu}>
+            <Dropdown overlay={menu}>
               <Icons.MoreVert iconColor={theme.colors.grayscale.base} />
-            </AntdDropdown>
+            </Dropdown>
           </ListViewCard.Actions>
         }
       />

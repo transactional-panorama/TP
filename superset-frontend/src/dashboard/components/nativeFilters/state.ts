@@ -18,14 +18,10 @@
  */
 import { useSelector } from 'react-redux';
 import { useMemo } from 'react';
-import {
-  Filter,
-  FilterConfiguration,
-  Divider,
-  isFilterDivider,
-} from '@superset-ui/core';
+import { Filter, FilterConfiguration } from './types';
 import { ActiveTabs, DashboardLayout, RootState } from '../../types';
 import { TAB_TYPE } from '../../util/componentTypes';
+import { CascadeFilter } from './FilterBar/CascadeFilters/types';
 
 const defaultFilterConfiguration: Filter[] = [];
 
@@ -45,13 +41,10 @@ export function useFilterConfigMap() {
   const filterConfig = useFilterConfiguration();
   return useMemo(
     () =>
-      filterConfig.reduce(
-        (acc: Record<string, Filter | Divider>, filter: Filter) => {
-          acc[filter.id] = filter;
-          return acc;
-        },
-        {} as Record<string, Filter | Divider>,
-      ),
+      filterConfig.reduce((acc: Record<string, Filter>, filter: Filter) => {
+        acc[filter.id] = filter;
+        return acc;
+      }, {} as Record<string, Filter>),
     [filterConfig],
   );
 }
@@ -96,32 +89,29 @@ function useIsFilterInScope() {
   // Filter is in scope if any of it's charts is visible.
   // Chart is visible if it's placed in an active tab tree or if it's not attached to any tab.
   // Chart is in an active tab tree if all of it's ancestors of type TAB are active
-  // Dividers are always in scope
-  return (filter: Filter | Divider) =>
-    isFilterDivider(filter) ||
-    ('chartsInScope' in filter &&
-      filter.chartsInScope?.some((chartId: number) => {
-        const tabParents = selectChartTabParents(chartId);
-        return (
-          tabParents?.length === 0 ||
-          tabParents?.every(tab => activeTabs.includes(tab))
-        );
-      }));
+  return (filter: CascadeFilter) =>
+    filter.chartsInScope?.some((chartId: number) => {
+      const tabParents = selectChartTabParents(chartId);
+      return (
+        tabParents?.length === 0 ||
+        tabParents?.every(tab => activeTabs.includes(tab))
+      );
+    });
 }
 
-export function useSelectFiltersInScope(filters: (Filter | Divider)[]) {
+export function useSelectFiltersInScope(cascadeFilters: CascadeFilter[]) {
   const dashboardHasTabs = useDashboardHasTabs();
   const isFilterInScope = useIsFilterInScope();
 
   return useMemo(() => {
-    let filtersInScope: (Filter | Divider)[] = [];
-    const filtersOutOfScope: (Filter | Divider)[] = [];
+    let filtersInScope: CascadeFilter[] = [];
+    const filtersOutOfScope: CascadeFilter[] = [];
 
     // we check native filters scopes only on dashboards with tabs
     if (!dashboardHasTabs) {
-      filtersInScope = filters;
+      filtersInScope = cascadeFilters;
     } else {
-      filters.forEach(filter => {
+      cascadeFilters.forEach((filter: CascadeFilter) => {
         const filterInScope = isFilterInScope(filter);
 
         if (filterInScope) {
@@ -132,5 +122,5 @@ export function useSelectFiltersInScope(filters: (Filter | Divider)[]) {
       });
     }
     return [filtersInScope, filtersOutOfScope];
-  }, [filters, dashboardHasTabs, isFilterInScope]);
+  }, [cascadeFilters, dashboardHasTabs, isFilterInScope]);
 }

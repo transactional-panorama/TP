@@ -40,11 +40,9 @@ export default function PluginFilterTimeColumn(
     setDataMask,
     setFocusedFilter,
     unsetFocusedFilter,
-    setFilterActive,
     filterState,
-    inputRef,
   } = props;
-  const { defaultValue } = formData;
+  const { defaultValue, inputRef } = formData;
 
   const [value, setValue] = useState<string[]>(defaultValue ?? []);
 
@@ -118,7 +116,6 @@ export default function PluginFilterTimeColumn(
           onMouseLeave={unsetFocusedFilter}
           ref={inputRef}
           options={options}
-          onDropdownVisibleChange={setFilterActive}
         />
       </StyledFormItem>
     </FilterPluginStyle>

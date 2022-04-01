@@ -32,7 +32,7 @@ import {
 import { ColumnObject } from 'src/views/CRUD/data/dataset/types';
 import { useListViewResource } from 'src/views/CRUD/hooks';
 import ConfirmStatusChange from 'src/components/ConfirmStatusChange';
-import { DatasourceModal } from 'src/components/Datasource';
+import DatasourceModal from 'src/datasource/DatasourceModal';
 import DeleteModal from 'src/components/DeleteModal';
 import handleResourceExport from 'src/utils/export';
 import ListView, {
@@ -44,14 +44,14 @@ import Loading from 'src/components/Loading';
 import SubMenu, {
   SubMenuProps,
   ButtonProps,
-} from 'src/views/components/SubMenu';
+} from 'src/components/Menu/SubMenu';
 import { commonMenuData } from 'src/views/CRUD/data/common';
 import Owner from 'src/types/Owner';
 import withToasts from 'src/components/MessageToasts/withToasts';
 import { Tooltip } from 'src/components/Tooltip';
 import Icons from 'src/components/Icons';
 import FacePile from 'src/components/FacePile';
-import CertifiedBadge from 'src/components/CertifiedBadge';
+import CertifiedIcon from 'src/components/CertifiedIcon';
 import InfoTooltip from 'src/components/InfoTooltip';
 import ImportModelsModal from 'src/components/ImportModal/index';
 import { isFeatureEnabled, FeatureFlag } from 'src/featureFlags';
@@ -122,15 +122,18 @@ const DatasetList: FunctionComponent<DatasetListProps> = ({
     refreshData,
   } = useListViewResource<Dataset>('dataset', t('dataset'), addDangerToast);
 
-  const [datasetAddModalOpen, setDatasetAddModalOpen] =
-    useState<boolean>(false);
+  const [datasetAddModalOpen, setDatasetAddModalOpen] = useState<boolean>(
+    false,
+  );
 
   const [datasetCurrentlyDeleting, setDatasetCurrentlyDeleting] = useState<
     (Dataset & { chart_count: number; dashboard_count: number }) | null
   >(null);
 
-  const [datasetCurrentlyEditing, setDatasetCurrentlyEditing] =
-    useState<Dataset | null>(null);
+  const [
+    datasetCurrentlyEditing,
+    setDatasetCurrentlyEditing,
+  ] = useState<Dataset | null>(null);
 
   const [importingDataset, showImportModal] = useState<boolean>(false);
   const [passwordFields, setPasswordFields] = useState<string[]>([]);
@@ -147,13 +150,12 @@ const DatasetList: FunctionComponent<DatasetListProps> = ({
   const handleDatasetImport = () => {
     showImportModal(false);
     refreshData();
-    addSuccessToast(t('Dataset imported'));
   };
 
   const canEdit = hasPerm('can_write');
   const canDelete = hasPerm('can_write');
   const canCreate = hasPerm('can_write');
-  const canExport = hasPerm('can_export');
+  const canExport = hasPerm('can_read');
 
   const initialSort = SORT_BY;
 
@@ -255,7 +257,7 @@ const DatasetList: FunctionComponent<DatasetListProps> = ({
             return (
               <FlexRowContainer>
                 {parsedExtra?.certification && (
-                  <CertifiedBadge
+                  <CertifiedIcon
                     certifiedBy={parsedExtra.certification.certified_by}
                     details={parsedExtra.certification.details}
                     size="l"

@@ -19,8 +19,8 @@
 describe('AdhocMetrics', () => {
   beforeEach(() => {
     cy.login();
-    cy.intercept('POST', '/superset/explore_json/**').as('postJson');
     cy.intercept('GET', '/superset/explore_json/**').as('getJson');
+    cy.intercept('POST', '/superset/explore_json/**').as('postJson');
     cy.visitChartByName('Num Births Trend');
     cy.verifySliceSuccess({ waitAlias: '@postJson' });
   });
@@ -33,7 +33,7 @@ describe('AdhocMetrics', () => {
       .click();
 
     cy.get('[data-test=metrics]')
-      .contains('Drop columns/metrics here or click')
+      .find('[data-test="add-metric-button"]')
       .click();
 
     // Title edit for saved metrics is disabled - switch to Simple

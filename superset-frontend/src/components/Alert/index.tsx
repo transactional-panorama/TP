@@ -17,7 +17,10 @@
  * under the License.
  */
 import React, { PropsWithChildren } from 'react';
-import AntdAlert, { AlertProps as AntdAlertProps } from 'antd/lib/alert';
+import {
+  Alert as AntdAlert,
+  AlertProps as AntdAlertProps,
+} from 'src/common/components';
 import { useTheme } from '@superset-ui/core';
 import Icons from 'src/components/Icons';
 

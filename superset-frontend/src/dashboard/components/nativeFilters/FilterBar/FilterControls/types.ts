@@ -16,8 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import React, { RefObject } from 'react';
-import { DataMask, DataMaskStateWithId, Filter } from '@superset-ui/core';
+import React from 'react';
+import { DataMask } from '@superset-ui/core';
+import { DataMaskStateWithId } from 'src/dataMask/types';
+import { Filter } from '../../types';
 
 export interface FilterProps {
   dataMaskSelected?: DataMaskStateWithId;
@@ -28,7 +30,4 @@ export interface FilterProps {
   directPathToChild?: string[];
   onFilterSelectionChange: (filter: Filter, dataMask: DataMask) => void;
   inView?: boolean;
-  showOverflow?: boolean;
-  parentRef?: RefObject<any>;
-  setFilterActive?: (isActive: boolean) => void;
 }

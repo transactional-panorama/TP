@@ -18,7 +18,6 @@
  */
 import React, { FC, useMemo } from 'react';
 import { styled, t } from '@superset-ui/core';
-import { useUiConfig } from 'src/components/UiConfigContext';
 import { Tooltip } from 'src/components/Tooltip';
 import { useDispatch, useSelector } from 'react-redux';
 import EditableTitle from 'src/components/EditableTitle';
@@ -45,6 +44,7 @@ type SliceHeaderProps = SliceHeaderControlsProps & {
 
 const annotationsLoading = t('Annotation layers are still loading.');
 const annotationsError = t('One ore more annotation layers failed loading.');
+
 const CrossFilterIcon = styled(Icons.CursorTarget)`
   cursor: pointer;
   color: ${({ theme }) => theme.colors.primary.base};
@@ -58,7 +58,7 @@ const SliceHeader: FC<SliceHeaderProps> = ({
   updateSliceName = () => ({}),
   toggleExpandSlice = () => ({}),
   logExploreChart = () => ({}),
-  onExploreChart,
+  exploreUrl = '#',
   exportCSV = () => ({}),
   editMode = false,
   annotationQuery = {},
@@ -84,7 +84,6 @@ const SliceHeader: FC<SliceHeaderProps> = ({
   formData,
 }) => {
   const dispatch = useDispatch();
-  const uiConfig = useUiConfig();
   // TODO: change to indicator field after it will be implemented
   const crossFilterValue = useSelector<RootState, any>(
     state => state.dataMask[slice?.slice_id]?.filterState?.value,
@@ -158,36 +157,32 @@ const SliceHeader: FC<SliceHeaderProps> = ({
                 />
               </Tooltip>
             )}
-            {!uiConfig.hideChartControls && (
-              <FiltersBadge chartId={slice.slice_id} />
-            )}
-            {!uiConfig.hideChartControls && (
-              <SliceHeaderControls
-                slice={slice}
-                isCached={isCached}
-                isExpanded={isExpanded}
-                cachedDttm={cachedDttm}
-                updatedDttm={updatedDttm}
-                toggleExpandSlice={toggleExpandSlice}
-                forceRefresh={forceRefresh}
-                logExploreChart={logExploreChart}
-                onExploreChart={onExploreChart}
-                exportCSV={exportCSV}
-                exportFullCSV={exportFullCSV}
-                supersetCanExplore={supersetCanExplore}
-                supersetCanShare={supersetCanShare}
-                supersetCanCSV={supersetCanCSV}
-                sliceCanEdit={sliceCanEdit}
-                componentId={componentId}
-                dashboardId={dashboardId}
-                addSuccessToast={addSuccessToast}
-                addDangerToast={addDangerToast}
-                handleToggleFullSize={handleToggleFullSize}
-                isFullSize={isFullSize}
-                chartStatus={chartStatus}
-                formData={formData}
-              />
-            )}
+            <FiltersBadge chartId={slice.slice_id} />
+            <SliceHeaderControls
+              slice={slice}
+              isCached={isCached}
+              isExpanded={isExpanded}
+              cachedDttm={cachedDttm}
+              updatedDttm={updatedDttm}
+              toggleExpandSlice={toggleExpandSlice}
+              forceRefresh={forceRefresh}
+              logExploreChart={logExploreChart}
+              exploreUrl={exploreUrl}
+              exportCSV={exportCSV}
+              exportFullCSV={exportFullCSV}
+              supersetCanExplore={supersetCanExplore}
+              supersetCanShare={supersetCanShare}
+              supersetCanCSV={supersetCanCSV}
+              sliceCanEdit={sliceCanEdit}
+              componentId={componentId}
+              dashboardId={dashboardId}
+              addSuccessToast={addSuccessToast}
+              addDangerToast={addDangerToast}
+              handleToggleFullSize={handleToggleFullSize}
+              isFullSize={isFullSize}
+              chartStatus={chartStatus}
+              formData={formData}
+            />
           </>
         )}
       </div>

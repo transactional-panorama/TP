@@ -30,13 +30,15 @@ def is_port_open(host: str, port: int) -> bool:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(PORT_TIMEOUT)
     try:
-        s.connect((host, port))
+        s.connect((host, int(port)))
         s.shutdown(socket.SHUT_RDWR)
         return True
     except socket.error:
         return False
     finally:
         s.close()
+
+    return False
 
 
 def is_hostname_valid(host: str) -> bool:
@@ -48,6 +50,8 @@ def is_hostname_valid(host: str) -> bool:
         return True
     except socket.gaierror:
         return False
+
+    return False
 
 
 def is_host_up(host: str) -> bool:

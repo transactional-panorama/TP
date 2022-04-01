@@ -19,8 +19,9 @@
 import React, { ReactNode } from 'react';
 import rison from 'rison';
 import { styled, t, SupersetClient, JsonResponse } from '@superset-ui/core';
+import { Steps } from 'src/common/components';
 import Button from 'src/components/Button';
-import { Select, Steps } from 'src/components';
+import { Select } from 'src/components';
 import { FormLabel } from 'src/components/Form';
 import { Tooltip } from 'src/components/Tooltip';
 
@@ -253,15 +254,17 @@ export default class AddSliceContainer extends React.PureComponent<
     }).then((response: JsonResponse) => {
       const list: {
         customLabel: ReactNode;
-        id: number;
         label: string;
         value: string;
-      }[] = response.json.result.map((item: Dataset) => ({
-        id: item.id,
-        value: `${item.id}__${item.datasource_type}`,
-        customLabel: this.newLabel(item),
-        label: item.table_name,
-      }));
+      }[] = response.json.result
+        .map((item: Dataset) => ({
+          value: `${item.id}__${item.datasource_type}`,
+          customLabel: this.newLabel(item),
+          label: item.table_name,
+        }))
+        .sort((a: { label: string }, b: { label: string }) =>
+          a.label.localeCompare(b.label),
+        );
       return {
         data: list,
         totalCount: response.json.count,
@@ -286,7 +289,6 @@ export default class AddSliceContainer extends React.PureComponent<
                   name="select-datasource"
                   onChange={this.changeDatasource}
                   options={this.loadDatasources}
-                  optionFilterProps={['id', 'label']}
                   placeholder={t('Choose a dataset')}
                   showSearch
                   value={this.state.datasource}
@@ -296,7 +298,7 @@ export default class AddSliceContainer extends React.PureComponent<
                     'Instructions to add a dataset are available in the Superset tutorial.',
                   )}{' '}
                   <a
-                    href="https://superset.apache.org/docs/creating-charts-dashboards/creating-your-first-dashboard/#registering-a-new-table"
+                    href="https://superset.apache.org/docs/creating-charts-dashboards/first-dashboard#adding-a-new-table"
                     rel="noopener noreferrer"
                     target="_blank"
                   >
