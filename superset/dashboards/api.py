@@ -61,6 +61,8 @@ from superset.dashboards.filters import (
 from superset.dashboards.schemas import (
     DashboardDatasetSchema,
     DashboardGetResponseSchema,
+    DashboardPostMVCSchema,
+    DashboardPostChartsSchema,
     DashboardPostSchema,
     DashboardPutSchema,
     get_delete_ids_schema,
@@ -84,6 +86,17 @@ from superset.views.base_api import (
 )
 from superset.views.filters import FilterRelatedOwners
 
+# from ACE
+from superset.ace.util_functions import (
+    add_ds_state_manager,
+    set_mvc_properties,
+    read_view_port,
+    submit_one_txn,
+    get_or_create_one_scheduler,
+    shut_down_one_scheduler,
+    remove_ds_state_manager,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -105,6 +118,12 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         "get_charts",
         "get_datasets",
         "thumbnail",
+        "ace_load_dashboard",
+        "ace_load_charts",
+        "ace_close_dashboard",
+        "ace_post_mvc_properties",
+        "ace_post_refresh",
+        "ace_read_refreshed_charts",
     }
     resource_name = "dashboard"
     allow_browser_login = True
@@ -182,6 +201,8 @@ class DashboardRestApi(BaseSupersetModelRestApi):
     }
     base_order = ("changed_on", "desc")
 
+    dashboard_post_charts_schema = DashboardPostChartsSchema()
+    dashboard_post_mvc_schema = DashboardPostMVCSchema()
     add_model_schema = DashboardPostSchema()
     edit_model_schema = DashboardPutSchema()
     chart_entity_response_schema = ChartEntityResponseSchema()
@@ -226,8 +247,97 @@ class DashboardRestApi(BaseSupersetModelRestApi):
             self.appbuilder.app.config["VERSION_SHA"],
         )
 
+    @expose("/ace/<id>", methods=["GET"])
+    @protect()
+    @safe
+    @statsd_metrics
+    @event_logger.log_this_with_context(
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
+                                             f".ace_load_dashboard",
+        log_to_statsd=False,  # pylint: disable=arguments-renamed
+    )
+    def ace_load_dashboard(self, dash_id: str) -> Response:
+        try:
+            dash = DashboardDAO.get_by_id_or_slug(dash_id)
+            add_ds_state_manager(dash)
+            result = self.dashboard_get_response_schema.dump(dash)
+            return self.response(200, result=result)
+        except DashboardNotFoundError:
+            return self.response_404()
+
+    @expose("/ace/<id>/charts", methods=["GET"])
+    def ace_load_charts(self, dash_id: str) -> Response:
+        try:
+            charts = DashboardDAO.get_charts_for_dashboard(dash_id)
+            result = [self.chart_entity_response_schema.dump(chart) for chart in charts]
+            return self.response(200, result=result)
+        except DashboardNotFoundError:
+            return self.response_404()
+
+    @expose("/ace/<pk>/close", methods=["POST"])
+    def ace_close_dashboard(self, pk: int) -> Response:
+        shut_down_one_scheduler(pk)
+        remove_ds_state_manager(pk)
+        response = self.response(
+            200,
+            id=pk)
+        return response
+
+    @expose("ace/<pk>/properties", methods=["POST"])
+    def ace_post_mvc_properties(self, pk: int) -> Response:
+        if not request.is_json:
+            return self.response_400(message="Request is not JSON")
+        try:
+            item = self.dashboard_post_mvc_schema.load(request.json)
+        except ValidationError as error:
+            return self.response_400(message=error.messages)
+        set_mvc_properties(pk, item["mvc_properties"])
+        response = self.response(
+            200,
+            id=pk,
+            result=item,
+        )
+        return response
+
+    @expose("ace/<pk>/refresh", methods=["POST"])
+    def ace_post_refresh(self, pk: int) -> Response:
+        if not request.is_json:
+            return self.response_400(message="Request is not JSON")
+        json_body = request.json
+        try:
+            node_ids_to_refresh = set(json_body["node_ids_to_refresh"])
+            node_ids_in_viewport = set(json_body["node_ids_in_viewport"])
+            charts_form_data = json_body["charts_form_data"]
+        except KeyError:
+            return self.response_400(message="Not follow the refresh format")
+        ts, node_group_list = submit_one_txn(pk, node_ids_to_refresh,
+                                             node_ids_in_viewport)
+        scheduler = get_or_create_one_scheduler()
+        scheduler.submit_one_txn(ts, node_group_list, charts_form_data)
+        result = {"ts": ts}
+        return self.response(200, id=pk, result=result)
+
+    @expose("ace/<pk>/charts", methods=["POST"])
+    def ace_read_refreshed_charts(self, pk: int) -> Response:
+        if not request.is_json:
+            return self.response_400(message="Request is not JSON")
+        try:
+            item = self.dashboard_post_charts_schema.load(request.json)
+        except ValidationError as error:
+            return self.response_400(message=error.messages)
+        node_id_set = set(item["node_ids_to_read"])
+        result = read_view_port(pk, node_id_set)
+        response = self.response(
+            200,
+            id=pk,
+            result=result,
+        )
+        return response
+
     @etag_cache(
-        get_last_modified=lambda _self, id_or_slug: DashboardDAO.get_dashboard_changed_on(  # pylint: disable=line-too-long,useless-suppression
+        get_last_modified=lambda _self,
+                                 id_or_slug: DashboardDAO.get_dashboard_changed_on(
+            # pylint: disable=line-too-long,useless-suppression
             id_or_slug
         ),
         max_age=0,
@@ -284,7 +394,9 @@ class DashboardRestApi(BaseSupersetModelRestApi):
             return self.response_404()
 
     @etag_cache(
-        get_last_modified=lambda _self, id_or_slug: DashboardDAO.get_dashboard_and_datasets_changed_on(  # pylint: disable=line-too-long,useless-suppression
+        get_last_modified=lambda _self,
+                                 id_or_slug: DashboardDAO.get_dashboard_and_datasets_changed_on(
+            # pylint: disable=line-too-long,useless-suppression
             id_or_slug
         ),
         max_age=0,
@@ -345,7 +457,9 @@ class DashboardRestApi(BaseSupersetModelRestApi):
             return self.response_404()
 
     @etag_cache(
-        get_last_modified=lambda _self, id_or_slug: DashboardDAO.get_dashboard_and_slices_changed_on(  # pylint: disable=line-too-long,useless-suppression
+        get_last_modified=lambda _self,
+                                 id_or_slug: DashboardDAO.get_dashboard_and_slices_changed_on(
+            # pylint: disable=line-too-long,useless-suppression
             id_or_slug
         ),
         max_age=0,
@@ -860,7 +974,7 @@ class DashboardRestApi(BaseSupersetModelRestApi):
     @rison(get_fav_star_ids_schema)
     @event_logger.log_this_with_context(
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-        f".favorite_status",
+                                             f".favorite_status",
         log_to_statsd=False,
     )
     def favorite_status(self, **kwargs: Any) -> Response:

@@ -19,10 +19,12 @@ import re
 from typing import Any, Dict, Union
 
 from marshmallow import fields, post_load, Schema
-from marshmallow.validate import Length, ValidationError
+from marshmallow.validate import Length, ValidationError, OneOf
 
 from superset.exceptions import SupersetException
 from superset.utils import core as utils
+
+from superset.ace.util_class import PropertyCombination
 
 get_delete_ids_schema = {"type": "array", "items": {"type": "integer"}}
 get_export_ids_schema = {"type": "array", "items": {"type": "integer"}}
@@ -32,6 +34,8 @@ thumbnail_query_schema = {
     "properties": {"force": {"type": "boolean"}},
 }
 
+mvc_description = "An integer value to decide the mvc properties"
+node_id_list_description = "A list of node ids"
 dashboard_title_description = "A title for the dashboard."
 slug_description = "Unique identifying part for the web address of the dashboard."
 owners_description = (
@@ -72,14 +76,14 @@ openapi_spec_methods_override = {
     "get_list": {
         "get": {
             "description": "Get a list of dashboards, use Rison or JSON query "
-            "parameters for filtering, sorting, pagination and "
-            " for selecting specific columns and metadata.",
+                           "parameters for filtering, sorting, pagination and "
+                           " for selecting specific columns and metadata.",
         }
     },
     "info": {
         "get": {
             "description": "Several metadata information about dashboard API "
-            "endpoints.",
+                           "endpoints.",
         }
     },
     "related": {
@@ -222,6 +226,17 @@ class BaseDashboardSchema(Schema):
             data["slug"] = data["slug"].replace(" ", "-")
             data["slug"] = re.sub(r"[^\w\-]+", "", data["slug"])
         return data
+
+
+class DashboardPostMVCSchema(BaseDashboardSchema):
+    mvc_properties = fields.Integer(description=mvc_description,
+                                    allow_none=False,
+                                    validate=OneOf([pc.value
+                                                    for pc in PropertyCombination]))
+
+
+class DashboardPostChartsSchema(BaseDashboardSchema):
+    node_ids_to_read = fields.List(fields.Integer(description=node_id_list_description))
 
 
 class DashboardPostSchema(BaseDashboardSchema):

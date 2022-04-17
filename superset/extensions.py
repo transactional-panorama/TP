@@ -122,3 +122,7 @@ profiling = ProfilingExtension()
 results_backend_manager = ResultsBackendManager()
 security_manager = LocalProxy(lambda: appbuilder.sm)
 talisman = Talisman()
+
+# added for ACE
+ace_state_manager = {}
+ace_scheduler_manager = {}
