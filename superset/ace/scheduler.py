@@ -30,7 +30,7 @@ from superset.ace.util_class import (NodeType, START_TS, RESPONSE_CODE, RESPONSE
 
 
 class Scheduler(Thread):
-    def __init__(self, dash_id: int):
+    def __init__(self, dash_id: int, app):
         super().__init__()
         self.dash_id = dash_id
         self.ds_state_manager = ace_state_manager[dash_id]
@@ -41,6 +41,7 @@ class Scheduler(Thread):
         self.dependent_ts_set = set()
         self.scheduler_lock = Lock()
         self.finish = False
+        self.app = app
 
     def submit_one_txn(self, ts: int, node_groups: list,
                        input_charts_form_data: dict):
@@ -84,29 +85,31 @@ class Scheduler(Thread):
             time.sleep(0.01)
 
     def refresh_one_chart(self, ts: int, chart_id: int, charts_form_data: dict):
-        try:
-            form_data = charts_form_data[chart_id]
-            command = ChartDataCommand()
-            command.set_query_context(form_data)
-            command.validate()
-            result = command.run(force_cached=False)
-            code = 200
-        except QueryObjectValidationError as error:
-            code = 400
-            result = error.message
-        except ValidationError as error:
-            code = 400
-            result = "Request is incorrect: {error}".format(
-                error=error.normalized_messages())
-        except ChartDataCacheLoadError as exc:
-            code = 400
-            result = exc.message
-        except ChartDataQueryFailedError as exc:
-            code = 400
-            result = exc.message
-        except KeyError:
-            code = 400
-            result = "Message not follow the refresh format"
+        with self.app.app_context():
+            try:
+                form_data = charts_form_data[chart_id]
+                command = ChartDataCommand()
+                command.set_query_context(form_data)
+                # TODO: validate does not work here due to missing user attribute
+                # command.validate()
+                result = command.run(force_cached=False)["queries"]
+                code = 200
+            except QueryObjectValidationError as error:
+                code = 400
+                result = error.message
+            except ValidationError as error:
+                code = 400
+                result = "Request is incorrect: {error}".format(
+                    error=error.normalized_messages())
+            except ChartDataCacheLoadError as exc:
+                code = 400
+                result = exc.message
+            except ChartDataQueryFailedError as exc:
+                code = 400
+                result = exc.message
+            except KeyError:
+                code = 400
+                result = "Message not follow the refresh format"
 
         result_dict = {
             RESPONSE_CODE: code,

@@ -3,6 +3,47 @@ import json
 import pprint
 
 
+def gen_request_chart_form_data(form_data) -> dict:
+    data_source_str = form_data["datasource"]
+    data_source_id = int(data_source_str.split("__")[0])
+    data_source_type = data_source_str.split("__")[1]
+    metrics = []
+    if form_data.get("metric", None) is not None:
+        metrics.append(form_data.get("metric"))
+    if form_data.get("metrics", None) is not None:
+        metrics.extend(form_data.get("metrics"))
+    order_by = [[metric, False] for metric in metrics]
+    request_body = {
+        "datasource": {"id": data_source_id, "type": data_source_type},
+        "force": False,
+        "result_format": "json",
+        "result_type": "full",
+        "queries": [{
+            "time_range": form_data["time_range"],
+            "filters": [],
+            "extra": {
+                "time_range_endpoints": ["inclusive", "exclusive"],
+                "having": "",
+                "having_druid": [],
+                "where": "",
+            },
+            "applied_time_extra": {},
+            "columns": form_data['groupby'],
+            "metrics": metrics,
+            "orderby": order_by,
+            "annotation_layers": [],
+            "row_limit": 10000,
+            "timeseries_limit": 0,
+            "order_desc": True,
+            "url_params": {},
+            "custom_params": {},
+            "custom_form_data": {},
+            "group_by": form_data['groupby'],
+        }]
+    }
+    return request_body
+
+
 class TestSuperset:
     def __init__(self):
         self.url_header = "http://localhost:8088/api/v1"
@@ -75,54 +116,66 @@ class TestSuperset:
         refresh_chart_url = "{url_header}/chart/data" \
             .format(url_header=self.url_header)
         form_data = self.chart_id_to_form_data[chart_id]
-        data_source_str = form_data["datasource"]
-        data_source_id = int(data_source_str.split("__")[0])
-        data_source_type = data_source_str.split("__")[1]
-        metrics = []
-        if form_data.get("metric", None) is not None:
-            metrics.append(form_data.get("metric"))
-        if form_data.get("metrics", None) is not None:
-            metrics.extend(form_data.get("metrics"))
-        order_by = [[metric, False] for metric in metrics]
-        request_body = {
-            "datasource": {"id": data_source_id, "type": data_source_type},
-            "force": False,
-            "result_format": "json",
-            "result_type": "full",
-            "queries": [{
-                "time_range": form_data["time_range"],
-                "filters": [],
-                "extra": {
-                    "time_range_endpoints": ["inclusive", "exclusive"],
-                    "having": "",
-                    "having_druid": [],
-                    "where": "",
-                },
-                "applied_time_extra": {},
-                "columns": form_data['groupby'],
-                "metrics": metrics,
-                "orderby": order_by,
-                "annotation_layers": [],
-                "row_limit": 10000,
-                "timeseries_limit": 0,
-                "order_desc": True,
-                "url_params": {},
-                "custom_params": {},
-                "custom_form_data": {},
-                "group_by": form_data['groupby'],
-            }]
-        }
+        request_body = gen_request_chart_form_data(form_data)
         chart_result = requests.post(refresh_chart_url,
                                      headers=self.headers,
                                      json=request_body)
-
         self.chart_result_dict = json.loads(chart_result.text)
         self.print(self.chart_result_dict)
 
-    # The following functions test
-    def load_one_dash_ace(self, dash_id: int):
-        get_one_dash_url = "{url_header}/dashboard/ace/{id_or_slug}" \
+    # The following functions are used to test ACE
+    def ace_create_dash_state(self, dash_id: int) -> None:
+        create_dash_state_url = "{url_header}/dashboard/ace/{dash_id}/create_ds_state" \
+            .format(url_header=self.url_header, dash_id=dash_id)
+        dash_state_result = requests.post(create_dash_state_url,
+                                          headers=self.headers,
+                                          json={})
+        self.print(dash_state_result.text)
+
+    def ace_delete_dash_state(self, dash_id: int) -> None:
+        delete_dash_state_url = "{url_header}/dashboard/ace/{id_or_slug}/delete" \
             .format(url_header=self.url_header, id_or_slug=str(dash_id))
-        one_dash_result = requests.get(get_one_dash_url, headers=self.headers)
-        self.one_dash_dict = json.loads(one_dash_result.text)
-        self.print(self.one_dash_dict)
+        dash_state_result = requests.post(delete_dash_state_url, headers=self.headers)
+        self.print(dash_state_result.text)
+
+    def ace_post_mvc_properties(self, dash_id: int, mvc_properties: int) -> None:
+        mvc_properties_url = "{url_header}/dashboard/ace/{dash_id}/properties"\
+            .format(url_header=self.url_header, dash_id=str(dash_id))
+        json_body = {
+            "mvc_properties": mvc_properties,
+        }
+        result = requests.post(mvc_properties_url,
+                               headers=self.headers,
+                               json=json_body)
+        self.print(result.text)
+
+    def ace_post_refresh(self, dash_id: int) -> None:
+        refresh_url = "{url_header}/dashboard/ace/{dash_id}/refresh"\
+            .format(url_header=self.url_header, dash_id=str(dash_id))
+        node_ids_to_refresh = [chart_id for chart_id in self.chart_id_to_form_data]
+        node_ids_in_viewport = node_ids_to_refresh
+        charts_form_data = {}
+        for chart_id in self.chart_id_to_form_data:
+            form_data = self.chart_id_to_form_data[chart_id]
+            charts_form_data[chart_id] = gen_request_chart_form_data(form_data)
+        json_body = {
+            "node_ids_to_refresh": node_ids_to_refresh,
+            "node_ids_in_viewport": node_ids_in_viewport,
+            "charts_form_data": charts_form_data,
+        }
+        result = requests.post(refresh_url,
+                               headers=self.headers,
+                               json=json_body)
+        self.print(result.text)
+
+    def ace_read_refreshed_charts(self, dash_id: int) -> None:
+        read_charts_url = "{url_header}/dashboard/ace/{dash_id}/charts"\
+            .format(url_header=self.url_header, dash_id=str(dash_id))
+        node_ids_to_read = [chart_id for chart_id in self.chart_id_to_form_data]
+        json_body ={
+            "node_ids_to_read": node_ids_to_read
+        }
+        result = requests.post(read_charts_url,
+                               headers=self.headers,
+                               json=json_body)
+        self.print(result.text)

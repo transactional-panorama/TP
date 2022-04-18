@@ -72,7 +72,7 @@ class DashStateManager:
                     self.view_port_time[ts][node_id] = duration * 2
                 else:
                     self.view_port_time[ts][node_id] = duration
-                self.execution_cost[node_id] = 1
+                self.execution_cost[ts][node_id] = 1
         self.meta_data_lock.release()
 
         return ts, ret_list

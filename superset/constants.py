@@ -127,6 +127,11 @@ MODEL_API_RW_METHOD_PERMISSION_MAP = {
     "function_names": "read",
     "available": "read",
     "get_data": "read",
+    "ace_create_dashboard_state": "write",
+    "ace_delete_dashboard_state": "write",
+    "ace_post_mvc_properties": "write",
+    "ace_post_refresh": "write",
+    "ace_read_refreshed_charts": "write",
 }
 
 EXTRA_FORM_DATA_APPEND_KEYS = {

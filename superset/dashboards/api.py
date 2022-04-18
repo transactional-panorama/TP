@@ -97,6 +97,8 @@ from superset.ace.util_functions import (
     remove_ds_state_manager,
 )
 
+from superset import appbuilder
+
 logger = logging.getLogger(__name__)
 
 
@@ -118,9 +120,8 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         "get_charts",
         "get_datasets",
         "thumbnail",
-        "ace_load_dashboard",
-        "ace_load_charts",
-        "ace_close_dashboard",
+        "ace_create_dashboard_state",
+        "ace_delete_dashboard_state",
         "ace_post_mvc_properties",
         "ace_post_refresh",
         "ace_read_refreshed_charts",
@@ -247,51 +248,57 @@ class DashboardRestApi(BaseSupersetModelRestApi):
             self.appbuilder.app.config["VERSION_SHA"],
         )
 
-    @expose("/ace/<id>", methods=["GET"])
+    @expose("/ace/<dash_id>/create_ds_state", methods=["POST"])
     @protect()
     @safe
     @statsd_metrics
     @event_logger.log_this_with_context(
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-                                             f".ace_load_dashboard",
+                                             f".ace_create_dashboard_state",
         log_to_statsd=False,  # pylint: disable=arguments-renamed
     )
-    def ace_load_dashboard(self, dash_id: str) -> Response:
+    def ace_create_dashboard_state(self, dash_id: str) -> Response:
         try:
             dash = DashboardDAO.get_by_id_or_slug(dash_id)
             add_ds_state_manager(dash)
-            result = self.dashboard_get_response_schema.dump(dash)
-            return self.response(200, result=result)
+            return self.response(200)
         except DashboardNotFoundError:
             return self.response_404()
 
-    @expose("/ace/<id>/charts", methods=["GET"])
-    def ace_load_charts(self, dash_id: str) -> Response:
-        try:
-            charts = DashboardDAO.get_charts_for_dashboard(dash_id)
-            result = [self.chart_entity_response_schema.dump(chart) for chart in charts]
-            return self.response(200, result=result)
-        except DashboardNotFoundError:
-            return self.response_404()
-
-    @expose("/ace/<pk>/close", methods=["POST"])
-    def ace_close_dashboard(self, pk: int) -> Response:
-        shut_down_one_scheduler(pk)
-        remove_ds_state_manager(pk)
-        response = self.response(
-            200,
-            id=pk)
+    @expose("/ace/<pk>/delete", methods=["POST"])
+    @protect()
+    @safe
+    @statsd_metrics
+    @event_logger.log_this_with_context(
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
+                                             f".ace_delete_dashboard_state",
+        log_to_statsd=False,  # pylint: disable=arguments-renamed
+    )
+    def ace_delete_dashboard_state(self, pk: str) -> Response:
+        dash_id = int(pk)
+        shut_down_one_scheduler(dash_id)
+        remove_ds_state_manager(dash_id)
+        response = self.response(200)
         return response
 
     @expose("ace/<pk>/properties", methods=["POST"])
-    def ace_post_mvc_properties(self, pk: int) -> Response:
+    @protect()
+    @safe
+    @statsd_metrics
+    @event_logger.log_this_with_context(
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
+                                             f".ace_post_mvc_properties",
+        log_to_statsd=False,  # pylint: disable=arguments-renamed
+    )
+    def ace_post_mvc_properties(self, pk: str) -> Response:
+        dash_id = int(pk)
         if not request.is_json:
             return self.response_400(message="Request is not JSON")
         try:
             item = self.dashboard_post_mvc_schema.load(request.json)
         except ValidationError as error:
             return self.response_400(message=error.messages)
-        set_mvc_properties(pk, item["mvc_properties"])
+        set_mvc_properties(dash_id, item["mvc_properties"])
         response = self.response(
             200,
             id=pk,
@@ -300,7 +307,16 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         return response
 
     @expose("ace/<pk>/refresh", methods=["POST"])
-    def ace_post_refresh(self, pk: int) -> Response:
+    @protect()
+    @safe
+    @statsd_metrics
+    @event_logger.log_this_with_context(
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
+                                             f".ace_post_refresh",
+        log_to_statsd=False,  # pylint: disable=arguments-renamed
+    )
+    def ace_post_refresh(self, pk: str) -> Response:
+        dash_id = int(pk)
         if not request.is_json:
             return self.response_400(message="Request is not JSON")
         json_body = request.json
@@ -310,15 +326,24 @@ class DashboardRestApi(BaseSupersetModelRestApi):
             charts_form_data = json_body["charts_form_data"]
         except KeyError:
             return self.response_400(message="Not follow the refresh format")
-        ts, node_group_list = submit_one_txn(pk, node_ids_to_refresh,
+        ts, node_group_list = submit_one_txn(dash_id, node_ids_to_refresh,
                                              node_ids_in_viewport)
-        scheduler = get_or_create_one_scheduler()
+        scheduler = get_or_create_one_scheduler(dash_id, appbuilder.get_app)
         scheduler.submit_one_txn(ts, node_group_list, charts_form_data)
         result = {"ts": ts}
         return self.response(200, id=pk, result=result)
 
     @expose("ace/<pk>/charts", methods=["POST"])
-    def ace_read_refreshed_charts(self, pk: int) -> Response:
+    @protect()
+    @safe
+    @statsd_metrics
+    @event_logger.log_this_with_context(
+        action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
+                                             f".ace_read_refreshed_charts",
+        log_to_statsd=False,  # pylint: disable=arguments-renamed
+    )
+    def ace_read_refreshed_charts(self, pk: str) -> Response:
+        dash_id = int(pk)
         if not request.is_json:
             return self.response_400(message="Request is not JSON")
         try:
@@ -326,7 +351,7 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         except ValidationError as error:
             return self.response_400(message=error.messages)
         node_id_set = set(item["node_ids_to_read"])
-        result = read_view_port(pk, node_id_set)
+        result = read_view_port(dash_id, node_id_set)
         response = self.response(
             200,
             id=pk,

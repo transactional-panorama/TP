@@ -85,7 +85,7 @@ class Node:
             if isinstance(basic_version, IV) and basic_version.ts == version.ts:
                 break
         if iv_index < len(self.versions):
-            self.versions.remove(iv_index)
+            del self.versions[iv_index]
             self.versions.insert(iv_index, version)
         else:
             self.versions.append(version)

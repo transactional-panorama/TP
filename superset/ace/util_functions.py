@@ -44,11 +44,14 @@ def add_ds_state_manager(dashboard: Dashboard) -> None:
 
 
 def remove_ds_state_manager(dash_id: int) -> None:
-    del ace_state_manager[dash_id]
+    if dash_id in ace_state_manager:
+        del ace_state_manager[dash_id]
 
 
 def set_mvc_properties(dash_id: int, mvc_properties: int) -> None:
-    ace_state_manager[dash_id].set_prob_comb(mvc_properties)
+    if dash_id in ace_state_manager:
+        ds_manager = ace_state_manager[dash_id]
+        ds_manager.set_prob_comb(mvc_properties)
 
 
 def read_view_port(dash_id: int, node_id_set: set) -> dict:
@@ -62,14 +65,15 @@ def submit_one_txn(dash_id: int, node_id_set: set,
         node_ids_in_view_port, DURATION)
 
 
-def get_or_create_one_scheduler(dash_id) -> Scheduler:
+def get_or_create_one_scheduler(dash_id, app) -> Scheduler:
     if dash_id not in ace_scheduler_manager:
-        ace_scheduler_manager[dash_id] = Scheduler(dash_id)
+        ace_scheduler_manager[dash_id] = Scheduler(dash_id, app)
         ace_scheduler_manager[dash_id].start()
     return ace_scheduler_manager[dash_id]
 
 
 def shut_down_one_scheduler(dash_id) -> None:
-    ace_scheduler_manager[dash_id].shut_down()
-    ace_scheduler_manager[dash_id].join(1)
-    del ace_scheduler_manager[dash_id]
+    if dash_id in ace_scheduler_manager:
+        ace_scheduler_manager[dash_id].shut_down()
+        ace_scheduler_manager[dash_id].join(1)
+        del ace_scheduler_manager[dash_id]
