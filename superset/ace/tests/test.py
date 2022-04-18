@@ -82,7 +82,7 @@ class TestSuperset:
                         "Authorization": "Bearer {token}".format(
                             token=self.access_token)}
 
-    def get_dash_info(self) -> None:
+    def load_dash_info(self) -> None:
         get_dash_info_url = "{url_header}/dashboard".format(url_header=self.url_header)
         dash_info_result = requests.get(get_dash_info_url, headers=self.headers)
         self.dash_info_dict = json.loads(dash_info_result.text)
@@ -91,14 +91,14 @@ class TestSuperset:
             dash_title = dash_info["dashboard_title"]
             self.dash_id_to_title[dash_id] = dash_title
 
-    def get_one_dash(self, dash_id: int) -> None:
+    def load_one_dash(self, dash_id: int) -> None:
         get_one_dash_url = "{url_header}/dashboard/{id_or_slug}" \
             .format(url_header=self.url_header, id_or_slug=str(dash_id))
         one_dash_result = requests.get(get_one_dash_url, headers=self.headers)
         self.one_dash_dict = json.loads(one_dash_result.text)
         self.print(self.one_dash_dict)
 
-    def get_charts(self, dash_id: int) -> None:
+    def get_charts_info(self, dash_id: int) -> None:
         get_charts_url = "{url_header}/dashboard/{id_or_slug}/charts" \
             .format(url_header=self.url_header, id_or_slug=str(dash_id))
         charts_result = requests.get(get_charts_url, headers=self.headers)
@@ -123,7 +123,7 @@ class TestSuperset:
         self.chart_result_dict = json.loads(chart_result.text)
         self.print(self.chart_result_dict)
 
-    # The following functions are used to test ACE
+    # The following functions are used to test the new endpoints in ACE
     def ace_create_dash_state(self, dash_id: int) -> None:
         create_dash_state_url = "{url_header}/dashboard/ace/{dash_id}/create_ds_state" \
             .format(url_header=self.url_header, dash_id=dash_id)
