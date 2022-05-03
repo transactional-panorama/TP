@@ -133,7 +133,8 @@ class DashStateManager:
         else:  # M-C_F
             snapshot = self.view_graph.read_snapshot(last_submitted, node_id_set)
 
-        return to_basic_types(self._update_last_read(snapshot))
+        return {"ts": last_committed,
+                "snapshot": to_basic_types(self._update_last_read(snapshot))}
 
     def _ts_from_last_read(self, node_id_set: set) -> int:
         ts_lower_bound = START_TS

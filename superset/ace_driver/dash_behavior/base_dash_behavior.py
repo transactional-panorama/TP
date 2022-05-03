@@ -20,6 +20,47 @@ import json
 from urllib.error import HTTPError
 
 
+def gen_request_chart_form_data(form_data, filters: []) -> dict:
+    data_source_str = form_data["datasource"]
+    data_source_id = int(data_source_str.split("__")[0])
+    data_source_type = data_source_str.split("__")[1]
+    metrics = []
+    if form_data.get("metric", None) is not None:
+        metrics.append(form_data.get("metric"))
+    if form_data.get("metrics", None) is not None:
+        metrics.extend(form_data.get("metrics"))
+    order_by = [[metric, False] for metric in metrics]
+    request_body = {
+        "datasource": {"id": data_source_id, "type": data_source_type},
+        "force": False,
+        "result_format": "json",
+        "result_type": "full",
+        "queries": [{
+            "time_range": form_data["time_range"],
+            "filters": filters,
+            "extra": {
+                "time_range_endpoints": ["inclusive", "exclusive"],
+                "having": "",
+                "having_druid": [],
+                "where": "",
+            },
+            "applied_time_extra": {},
+            "columns": form_data['groupby'],
+            "metrics": metrics,
+            "orderby": order_by,
+            "annotation_layers": [],
+            "row_limit": 10000,
+            "timeseries_limit": 0,
+            "order_desc": True,
+            "url_params": {},
+            "custom_params": {},
+            "custom_form_data": {},
+            "group_by": form_data['groupby'],
+        }]
+    }
+    return request_body
+
+
 class BaseDashBehavior:
 
     def __init__(self, server_addr: str,
@@ -90,11 +131,47 @@ class BaseDashBehavior:
             print("Config Error: " + str(error))
             exit(-1)
 
-    def simulate_next_step(self) -> bool:
-        return False
+    def post_refresh(self, dash_id: str,
+                     node_ids_to_refresh: list,
+                     node_ids_in_viewport: list,
+                     chart_id_to_form_data: dict,
+                     cur_filter: []) -> int:
+        refresh_url = f"{self.url_header}/dashboard/ace/{dash_id}/refresh"
+        charts_form_data = {}
+        for chart_id in chart_id_to_form_data:
+            form_data = chart_id_to_form_data[chart_id]
+            charts_form_data[chart_id] = gen_request_chart_form_data(form_data,
+                                                                     cur_filter)
+        json_body = {
+            "node_ids_to_refresh": node_ids_to_refresh,
+            "node_ids_in_viewport": node_ids_in_viewport,
+            "charts_form_data": charts_form_data,
+        }
+        result = requests.post(refresh_url,
+                               headers=self.headers,
+                               json=json_body)
+        try:
+            result.raise_for_status()
+        except HTTPError as error:
+            print("Refresh Error: " + str(error))
+            exit(-1)
+        return int(json.loads(result.text)["ts"])
 
-    def write_report_results(self) -> None:
-        pass
+    def read_refreshed_charts(self, dash_id: int,
+                              node_ids_to_read: list) -> dict:
+        read_charts_url = f"{self.url_header}/dashboard/ace/{dash_id}/charts"
+        json_body ={
+            "node_ids_to_read": node_ids_to_read
+        }
+        result = requests.post(read_charts_url,
+                               headers=self.headers,
+                               json=json_body)
+        try:
+            result.raise_for_status()
+        except HTTPError as error:
+            print("Read Charts Error: " + str(error))
+            exit(-1)
+        return json.loads(result.text)["ts"]
 
     def clean_up(self, dash_id: str) -> None:
         try:
