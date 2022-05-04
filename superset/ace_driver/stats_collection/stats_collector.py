@@ -94,7 +94,7 @@ class StatsCollector:
     def write_stats(self):
         log_file_path = os.path.join(self.stat_dir, self.log_file)
         with open(log_file_path, 'a') as f:
-            f.write(f"=================Begin Test================={os.linesep}")
+            f.write(f"=================Begin of Test================={os.linesep}")
             f.write(json.dumps(self.configs, indent=4))
             for one_log in self.behavior_logs:
                 f.write(json.dumps(one_log, indent=4))

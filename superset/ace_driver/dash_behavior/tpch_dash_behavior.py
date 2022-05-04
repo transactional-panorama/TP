@@ -62,10 +62,27 @@ class TPCHDashBehavior(BaseDashBehavior):
 
         self.txn_interval = 0.1
         self.viewport_interval_ms = 1000
-        self.predefined_filters = []
         self.viewport_range = 4
         self.viewport_shift = 2
         self.viewport = {"start": 0, "end": self.viewport_range}
+
+        self.predefined_filters = [[{'col': 'l_linestatus',
+                                     'op': 'IN',
+                                     'val': ['F']
+                                     }],
+                                   [{'col': 'l_linestatus',
+                                     'op': 'IN',
+                                     'val': ['O']
+                                     }],
+                                   []
+                                   ]
+        self.filter_impacted_charts = ['tpch_q1', 'tpch_q3', 'tpch_q4',
+                                       'tpch_q5', 'tpch_q6', 'tpch_q7',
+                                       'tpch_q8', 'tpch_q9', 'tpch_q10',
+                                       'tpch_q12', 'tpch_q14', 'tpch_q15',
+                                       'tpch_q17', 'tpch_q18', 'tpch_q19',
+                                       'tpch_q20', 'tpch_q21']
+        self.chart_title_to_id = {}
 
         self.test_start_ts = get_cur_time()
         self.stat_collector = StatsCollector(
@@ -87,6 +104,7 @@ class TPCHDashBehavior(BaseDashBehavior):
             self.chart_id_to_form_data[slice_id] = form_data
             self.chart_id_to_ts[slice_id] = -1
             self.chart_ids.append(slice_id)
+            self.chart_title_to_id[chart_data["slice_name"]] = slice_id
         self.chart_ids.sort()
 
     def setup(self) -> None:
@@ -105,6 +123,9 @@ class TPCHDashBehavior(BaseDashBehavior):
         submit_ts = 0
         commit_ts = 0
         viewport_up_to_date = True
+        self.stat_collector.collect_viewport_change(
+            cur_time,
+            get_ids_in_viewport(self.chart_ids, self.viewport))
         while self.num_refresh != refresh_counter or submit_ts != commit_ts:
             # simulate a refresh when necessary
             ts_temp = self.simulate_next_refresh(last_refresh_time, next_filter_idx,
@@ -147,11 +168,11 @@ class TPCHDashBehavior(BaseDashBehavior):
             return -1
         if self.write_behavior == "filter_change":
             # Build a filter
-            data_source_id = self.predefined_filters[next_filter_idx][0]
-            cur_filter = self.predefined_filters[next_filter_idx][1]
+            cur_filter = self.predefined_filters[next_filter_idx]
 
             # Build other info required for a refresh
-            node_ids_to_refresh = self.data_source_to_node_ids[data_source_id]
+            node_ids_to_refresh = [self.chart_title_to_id[chart_title]
+                                   for chart_title in self.filter_impacted_charts]
         else:  # source_data_change
             cur_filter = []
             node_ids_to_refresh = list(self.chart_id_to_form_data.keys())

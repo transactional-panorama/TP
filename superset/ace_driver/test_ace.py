@@ -15,9 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import requests
-import json
-import pprint
+from superset.ace_driver.dash_behavior.tpch_dash_behavior import TPCHDashBehavior
 
 
 class TestACE:
@@ -34,22 +32,17 @@ class TestACE:
                  opt_exec_time: bool,
                  opt_skip_write: bool,
                  stat_dir: str):
-        self.server_addr = server_addr
-        self.username = username
-        self.password = password
-        self.dashboard = dashboard
-        self.read_behavior = read_behavior
-        self.write_behavior = write_behavior
-        self.refresh_interval = refresh_interval
-        self.num_refresh = num_refresh
-        self.mvc_property = mvc_property
-        self.opt_viewport = opt_viewport
-        self.opt_exec_time = opt_exec_time
-        self.opt_skip_write = opt_skip_write
-        self.stat_dir = stat_dir
+        self.tpch_behavior = TPCHDashBehavior(server_addr, username,
+                                              password, read_behavior,
+                                              write_behavior, refresh_interval,
+                                              num_refresh, mvc_property,
+                                              opt_viewport, opt_exec_time,
+                                              opt_skip_write, stat_dir)
+        self.tpch_behavior.setup()
 
     def start_test(self):
-        pass
+        self.tpch_behavior.run_test()
 
     def report_results(self):
-        pass
+        self.tpch_behavior.write_report_results()
+        self.tpch_behavior.clean_up_dashboard()

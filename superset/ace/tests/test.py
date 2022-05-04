@@ -29,7 +29,11 @@ def gen_request_chart_form_data(form_data) -> dict:
         metrics.append(form_data.get("metric"))
     if form_data.get("metrics", None) is not None:
         metrics.extend(form_data.get("metrics"))
-    order_by = [[metric, False] for metric in metrics]
+    if len(form_data['groupby']) == 0:
+        columns = form_data.get('all_columns', [])
+    else:
+        columns = form_data.get('groupby', [])
+    order_by = [[metric, True] for metric in metrics]
     request_body = {
         "datasource": {"id": data_source_id, "type": data_source_type},
         "force": False,
@@ -45,17 +49,17 @@ def gen_request_chart_form_data(form_data) -> dict:
                 "where": "",
             },
             "applied_time_extra": {},
-            "columns": form_data['groupby'],
+            "columns": columns,
             "metrics": metrics,
             "orderby": order_by,
             "annotation_layers": [],
-            "row_limit": 10000,
+            "row_limit": 100,
             "timeseries_limit": 0,
             "order_desc": True,
             "url_params": {},
             "custom_params": {},
             "custom_form_data": {},
-            "group_by": form_data['groupby'],
+            "group_by": form_data.get('group_by', []),
         }]
     }
     return request_body
