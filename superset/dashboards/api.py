@@ -89,7 +89,7 @@ from superset.views.filters import FilterRelatedOwners
 # from ACE
 from superset.ace.util_functions import (
     add_ds_state_manager,
-    set_mvc_properties,
+    config_ace,
     read_view_port,
     submit_one_txn,
     get_or_create_one_scheduler,
@@ -122,7 +122,7 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         "thumbnail",
         "ace_create_dashboard_state",
         "ace_delete_dashboard_state",
-        "ace_post_mvc_properties",
+        "ace_post_config",
         "ace_post_refresh",
         "ace_read_refreshed_charts",
     }
@@ -281,16 +281,16 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         response = self.response(200)
         return response
 
-    @expose("ace/<pk>/properties", methods=["POST"])
+    @expose("ace/<pk>/config", methods=["POST"])
     @protect()
     @safe
     @statsd_metrics
     @event_logger.log_this_with_context(
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-                                             f".ace_post_mvc_properties",
+                                             f".ace_post_config",
         log_to_statsd=False,  # pylint: disable=arguments-renamed
     )
-    def ace_post_mvc_properties(self, pk: str) -> Response:
+    def ace_post_config(self, pk: str) -> Response:
         dash_id = int(pk)
         if not request.is_json:
             return self.response_400(message="Request is not JSON")
@@ -298,7 +298,16 @@ class DashboardRestApi(BaseSupersetModelRestApi):
             item = self.dashboard_post_mvc_schema.load(request.json)
         except ValidationError as error:
             return self.response_400(message=error.messages)
-        set_mvc_properties(dash_id, item["mvc_properties"])
+        config_ace(dash_id,
+                   item.get("mvc_properties", 1),
+                   item.get("opt_viewport", True),
+                   item.get("opt_exec_time", True),
+                   item.get("opt_skip_write", True),
+                   item.get("db_name", ""),
+                   item.get("username", ""),
+                   item.get("password", ""),
+                   item.get("host", ""),
+                   item.get("port", ""))
         response = self.response(
             200,
             id=pk,

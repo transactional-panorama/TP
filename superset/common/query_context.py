@@ -296,6 +296,16 @@ class QueryContext:
 
         return df.to_dict(orient="records")
 
+    def get_query_str(self) -> Dict[str, Any]:
+        query_results = [
+            get_query_results(
+                ChartDataResultType.QUERY, self, query_obj, False
+            )
+            for query_obj in self.queries
+        ]
+        return_value = {"queries": query_results}
+        return return_value
+
     def get_payload(
         self, cache_query_context: Optional[bool] = False, force_cached: bool = False,
     ) -> Dict[str, Any]:

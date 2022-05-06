@@ -111,7 +111,12 @@ class BaseDashBehavior:
             dash_title = dash_info["dashboard_title"]
             self.dash_title_to_id[dash_title] = dash_id
 
-    def config_simulation(self, dash_id: str) -> None:
+    def config_simulation(self, dash_id: str,
+                          db_name: str,
+                          db_username: str,
+                          db_password: str,
+                          db_host: str,
+                          db_port: str) -> None:
         try:
             # create ace state
             create_dash_state_url = f"{self.url_header}/dashboard/ace/" \
@@ -121,13 +126,21 @@ class BaseDashBehavior:
                                               json={})
             dash_state_result.raise_for_status()
 
-            # set mvc properties
-            mvc_properties_url = "{url_header}/dashboard/ace/{dash_id}/properties" \
+            # config ace
+            config_url = "{url_header}/dashboard/ace/{dash_id}/config" \
                 .format(url_header=self.url_header, dash_id=str(dash_id))
             json_body = {
                 "mvc_properties": self.mvc_properties,
+                "opt_viewport": self.opt_viewport,
+                "opt_exec_time": self.opt_exec_time,
+                "opt_skip_write": self.opt_skip_write,
+                "db_name": db_name,
+                "username": db_username,
+                "password": db_password,
+                "host": db_host,
+                "port": db_port,
             }
-            result = requests.post(mvc_properties_url,
+            result = requests.post(config_url,
                                    headers=self.headers,
                                    json=json_body)
             result.raise_for_status()

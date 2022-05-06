@@ -129,7 +129,7 @@ MODEL_API_RW_METHOD_PERMISSION_MAP = {
     "get_data": "read",
     "ace_create_dashboard_state": "write",
     "ace_delete_dashboard_state": "write",
-    "ace_post_mvc_properties": "write",
+    "ace_post_config": "write",
     "ace_post_refresh": "write",
     "ace_read_refreshed_charts": "write",
 }

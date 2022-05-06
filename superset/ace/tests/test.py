@@ -159,13 +159,13 @@ class TestSuperset:
         dash_state_result = requests.post(delete_dash_state_url, headers=self.headers)
         self.print(dash_state_result.text)
 
-    def ace_post_mvc_properties(self, dash_id: int, mvc_properties: int) -> None:
-        mvc_properties_url = "{url_header}/dashboard/ace/{dash_id}/properties"\
+    def ace_post_config(self, dash_id: int, mvc_properties: int) -> None:
+        config_url = "{url_header}/dashboard/ace/{dash_id}/config"\
             .format(url_header=self.url_header, dash_id=str(dash_id))
         json_body = {
             "mvc_properties": mvc_properties,
         }
-        result = requests.post(mvc_properties_url,
+        result = requests.post(config_url,
                                headers=self.headers,
                                json=json_body)
         self.print(result.text)

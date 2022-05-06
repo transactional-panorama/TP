@@ -16,6 +16,7 @@
 # under the License.
 
 import time
+import psycopg2
 from threading import (Thread, Lock)
 
 from marshmallow import ValidationError
@@ -25,6 +26,7 @@ from superset.charts.commands.exceptions import ChartDataCacheLoadError, \
 from superset.exceptions import QueryObjectValidationError
 from superset.extensions import ace_state_manager
 from superset.charts.commands.data import ChartDataCommand
+from superset.charts.schemas import ChartDataQueryContextSchema
 
 from superset.ace.util_class import (NodeType, START_TS, RESPONSE_CODE, RESPONSE)
 
@@ -68,10 +70,13 @@ class Scheduler(Thread):
             self.scheduler_lock.release()
             if cur_ts != START_TS:
                 cur_chart_ids = cur_node_groups[NodeType.VIZ.value - 1]
+                chart_id_to_cost = self.estimate_refresh_cost(
+                    cur_chart_ids, cur_charts_form_data)
                 while len(cur_chart_ids) != 0:
                     cur_chart_ids = self.skip_chart_refresh(cur_chart_ids)
                     chart_id_to_schedule = self.schedule_one_chart(cur_ts,
-                                                                   cur_chart_ids)
+                                                                   cur_chart_ids,
+                                                                   chart_id_to_cost)
                     self.refresh_one_chart(cur_ts, chart_id_to_schedule,
                                            cur_charts_form_data)
                     cur_chart_ids.remove(chart_id_to_schedule)
@@ -83,6 +88,50 @@ class Scheduler(Thread):
                     self.finished_ts_set = set()
                     self.dependent_ts_set = set()
             time.sleep(0.01)
+
+    def build_db_conn(self):
+        conn = psycopg2.connect(dbname=self.ds_state_manager.db_name,
+                                user=self.ds_state_manager.username,
+                                password=self.ds_state_manager.password,
+                                host=self.ds_state_manager.host,
+                                port=self.ds_state_manager.port)
+        return conn
+
+    def estimate_refresh_cost(self, chart_ids: set,
+                              charts_form_data: dict) -> dict:
+        if not self.ds_state_manager.opt_exec_time:
+            return {}
+        chart_id_to_cost = {}
+        conn = None
+        try:
+            conn = self.build_db_conn()
+            cur = conn.conn.cursor()
+            for chart_id in chart_ids:
+                form_data = charts_form_data[chart_id]
+                chart_id_to_cost[chart_id] = self.estimate_refresh_cost(cur, form_data)
+        except psycopg2.Error as e:
+            print("psycopg2 error : " + e.pgerror)
+            chart_id_to_cost = {}
+        except KeyError as ex:
+            print(ex)
+            chart_id_to_cost = {}
+        except ValidationError as error:
+            print(error)
+            chart_id_to_cost = {}
+        if conn:
+            conn.close()
+        return chart_id_to_cost
+
+    def estimate_one_refresh_cost(self, cur, form_data: dict) -> int:
+        with self.app.app_context():
+            query_context = ChartDataQueryContextSchema.load(form_data)
+            query_str = query_context.get_query_str()[0]['query']
+            cur.execute("Explain " + query_str)
+            cost_str: str = cur.fetchall()[0][0]
+            start_idx = cost_str.find("..") + 2
+            end_idx = cost_str.find(" ", start_idx)
+            cost = int(float(cost_str[start_idx:end_idx]))
+        return cost
 
     def refresh_one_chart(self, ts: int, chart_id: int, charts_form_data: dict):
         with self.app.app_context():
@@ -118,10 +167,14 @@ class Scheduler(Thread):
 
         self.ds_state_manager.finish_one_update(chart_id, ts, result_dict)
 
-    def schedule_one_chart(self, ts: int, cur_chart_ids: set) -> int:
-        return self.ds_state_manager.get_top_priority_node(ts, cur_chart_ids)
+    def schedule_one_chart(self, ts: int, cur_chart_ids: set,
+                           chart_id_to_cost: dict) -> int:
+        return self.ds_state_manager.get_top_priority_node(ts, cur_chart_ids,
+                                                           chart_id_to_cost)
 
     def skip_chart_refresh(self, cur_chart_ids: set) -> set:
+        if not self.ds_state_manager.opt_skip_write:
+            return cur_chart_ids
         new_chart_ids = set(cur_chart_ids)
         self.scheduler_lock.acquire()
         for i in range(len(self.node_groups_list)):

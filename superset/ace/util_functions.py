@@ -48,10 +48,27 @@ def remove_ds_state_manager(dash_id: int) -> None:
         del ace_state_manager[dash_id]
 
 
-def set_mvc_properties(dash_id: int, mvc_properties: int) -> None:
+def config_ace(dash_id: int,
+               mvc_properties: int,
+               opt_viewport: bool,
+               opt_exec_time: bool,
+               opt_skip_write: bool,
+               db_name: str,
+               username: str,
+               password: str,
+               host: str,
+               port: str) -> None:
     if dash_id in ace_state_manager:
         ds_manager = ace_state_manager[dash_id]
-        ds_manager.set_prob_comb(mvc_properties)
+        ds_manager.config_state_manager(mvc_properties,
+                                        opt_viewport,
+                                        opt_exec_time,
+                                        opt_skip_write,
+                                        db_name,
+                                        username,
+                                        password,
+                                        host,
+                                        port)
 
 
 def read_view_port(dash_id: int, node_id_set: set) -> dict:

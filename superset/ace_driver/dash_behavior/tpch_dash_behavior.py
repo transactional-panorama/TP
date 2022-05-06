@@ -18,6 +18,7 @@
 import requests
 import json
 import time
+import psycopg2
 
 from superset.ace_driver.dash_behavior.base_dash_behavior import BaseDashBehavior
 from superset.ace_driver.stats_collection.stats_collector import StatsCollector
@@ -35,6 +36,7 @@ class TPCHDashBehavior(BaseDashBehavior):
     def __init__(self, server_addr: str,
                  username: str,
                  password: str,
+                 dashboard_title: str,
                  read_behavior: str,
                  write_behavior: str,
                  refresh_interval: int,
@@ -43,7 +45,12 @@ class TPCHDashBehavior(BaseDashBehavior):
                  opt_viewport: bool,
                  opt_exec_time: bool,
                  opt_skip_write: bool,
-                 stat_dir: str):
+                 stat_dir: str,
+                 db_name: str,
+                 db_username: str,
+                 db_password: str,
+                 db_host: str,
+                 db_port):
         super().__init__(server_addr, username, password, mvc_properties, opt_viewport,
                          opt_exec_time, opt_skip_write)
         self.read_behavior = read_behavior
@@ -52,8 +59,26 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.num_refresh = num_refresh
         self.stat_dir = stat_dir
 
+        self.db_name = db_name
+        self.db_username = db_username
+        self.db_password = db_password
+        self.db_host = db_host
+        self.db_port = db_port
+        self.conn = None
+        if self.write_behavior != "filter_change":
+            try:
+                self.conn = psycopg2.connect(dbname=db_name,
+                                             user=db_username,
+                                             password=db_password,
+                                             host=db_host,
+                                             port=db_port)
+                self.delete_tuples_from_base_tables()
+            except psycopg2.Error as e:
+                print("Creating connection error: " + e.pgerror)
+                exit(-1)
+
         # Workload-specific data
-        self.dash_title = "TPCH"
+        self.dash_title = dashboard_title
         self.dash_id = None
         self.data_source_to_node_ids = {}
         self.chart_id_to_form_data = {}
@@ -65,6 +90,9 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.viewport_range = 4
         self.viewport_shift = 2
         self.viewport = {"start": 0, "end": self.viewport_range}
+        self.sf = 1
+        self.order_card = 1500000
+        self.new_data_percentage = 0.01
 
         self.predefined_filters = [[{'col': 'l_linestatus',
                                      'op': 'IN',
@@ -91,6 +119,26 @@ class TPCHDashBehavior(BaseDashBehavior):
             num_refresh, mvc_properties, opt_viewport,
             opt_exec_time, opt_skip_write)
 
+    def delete_tuples_from_base_tables(self):
+        rows_to_delete = self.sf * self.order_card * \
+                         self.new_data_percentage * self.num_refresh
+        with self.conn.cursor() as cur:
+            cur.execute(f"delete from lineitem where l_orderkey <= {rows_to_delete};")
+            cur.execute(f"delete from orders where o_orderkey <= {rows_to_delete};")
+
+    def insert_tuples_to_base_tables(self, num_refresh_done: int):
+        rows_to_insert_start = self.sf * self.order_card * \
+                               self.new_data_percentage * num_refresh_done
+        rows_to_insert_end = self.sf * self.order_card * \
+                             self.new_data_percentage * (num_refresh_done + 1)
+        with self.conn.cursor() as cur:
+            cur.execute(f"insert into lineitem select * from lineitem_full "
+                        f"where l_orderkey > {rows_to_insert_start}"
+                        f"and l_orderkey <= {rows_to_insert_end}")
+            cur.execute(f"insert into orders select * from orders_full "
+                        f"where o_orderkey > {rows_to_insert_start}"
+                        f"and o_orderkey <= {rows_to_insert_end}")
+
     def get_charts_info(self) -> None:
         get_charts_url = f"{self.url_header}/dashboard/{self.dash_id}/charts"
         charts_result = requests.get(get_charts_url, headers=self.headers)
@@ -112,11 +160,13 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.load_all_dashboards()
 
         self.dash_id = self.dash_title_to_id[self.dash_title]
-        super().config_simulation(self.dash_id)
+        super().config_simulation(self.dash_id, self.db_name,
+                                  self.db_username, self.db_password,
+                                  self.db_host, self.db_port)
 
     def run_test(self) -> None:
         refresh_counter = 0
-        next_filter_idx = 0
+        cur_filter_idx = 0
         cur_time = get_cur_time()
         last_refresh_time = cur_time - self.refresh_interval_ms
         last_viewport_change = cur_time
@@ -128,13 +178,13 @@ class TPCHDashBehavior(BaseDashBehavior):
             get_ids_in_viewport(self.chart_ids, self.viewport))
         while self.num_refresh != refresh_counter or submit_ts != commit_ts:
             # simulate a refresh when necessary
-            ts_temp = self.simulate_next_refresh(last_refresh_time, next_filter_idx,
-                                                 cur_time, self.viewport)
+            ts_temp = self.simulate_next_refresh(last_refresh_time, refresh_counter,
+                                                 cur_filter_idx, cur_time, self.viewport)
             if ts_temp != -1:
                 submit_ts = ts_temp
                 last_refresh_time = cur_time
                 refresh_counter += 1
-                next_filter_idx = (next_filter_idx + 1) % len(self.predefined_filters)
+                cur_filter_idx = (cur_filter_idx + 1) % len(self.predefined_filters)
 
             # simulate a read when necessary
             if submit_ts != commit_ts:
@@ -161,14 +211,15 @@ class TPCHDashBehavior(BaseDashBehavior):
             cur_time = get_cur_time()
 
     def simulate_next_refresh(self, last_refresh_time: int,
-                              next_filter_idx: int,
+                              cur_filter_idx: int,
+                              num_refresh_done: int,
                               cur_time: int,
                               viewport: dict) -> int:
         if cur_time - last_refresh_time < self.refresh_interval_ms:
             return -1
         if self.write_behavior == "filter_change":
             # Build a filter
-            cur_filter = self.predefined_filters[next_filter_idx]
+            cur_filter = self.predefined_filters[cur_filter_idx]
 
             # Build other info required for a refresh
             node_ids_to_refresh = [self.chart_title_to_id[chart_title]
@@ -176,6 +227,11 @@ class TPCHDashBehavior(BaseDashBehavior):
         else:  # source_data_change
             cur_filter = []
             node_ids_to_refresh = list(self.chart_id_to_form_data.keys())
+            try:
+                self.insert_tuples_to_base_tables(num_refresh_done)
+            except psycopg2.Error as e:
+                print("Inserting new data error: " + e.pgerror)
+                exit(-1)
         node_id_to_form_data = {node_id: self.chart_id_to_form_data[node_id]
                                 for node_id in node_ids_to_refresh}
         node_ids_in_viewport = get_ids_in_viewport(self.chart_ids, viewport)
@@ -230,3 +286,5 @@ class TPCHDashBehavior(BaseDashBehavior):
 
     def clean_up_dashboard(self) -> None:
         super().clean_up(self.dash_id)
+        if self.conn:
+            self.conn.close()

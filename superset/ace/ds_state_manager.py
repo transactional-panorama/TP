@@ -16,6 +16,7 @@
 # under the License.
 
 import sys
+import random
 from typing import Tuple
 
 from superset.ace.view_graph import *
@@ -37,11 +38,19 @@ def to_basic_types(snapshot: dict) -> dict:
 class DashStateManager:
     def __init__(self, dependency_list: list) -> None:
         self.prop = PropertyCombination(1)
+        self.opt_viewport = True
+        self.opt_exec_time = True
+        self.opt_skip_write = True
+        self.db_name = ""
+        self.username = ""
+        self.password = ""
+        self.host = ""
+        self.port = ""
+
         self.last_read = {}
         self.last_submitted = START_TS
         self.last_committed = START_TS
         self.view_port_time = {}
-        self.execution_cost = {}
         self.view_graph = ViewGraph()
         for dependency in dependency_list:
             self.view_graph.insert(dependency)
@@ -63,16 +72,14 @@ class DashStateManager:
         self.global_lock.release()
 
         self.meta_data_lock.acquire()
-        # initialize the view_port_time and execution_cost
+        # initialize the view_port_time
         self.view_port_time[ts] = {}
-        self.execution_cost[ts] = {}
         for node_group in ret_list:
             for node_id in node_group:
                 if node_id in node_ids_in_view_port:
                     self.view_port_time[ts][node_id] = duration * 2
                 else:
                     self.view_port_time[ts][node_id] = duration
-                self.execution_cost[ts][node_id] = 1
         self.meta_data_lock.release()
 
         return ts, ret_list
@@ -83,13 +90,22 @@ class DashStateManager:
     def commit_one_txn(self, ts: int) -> None:
         self.last_committed = ts
 
-    def get_top_priority_node(self, ts: int, node_ids: set) -> int:
+    def get_top_priority_node(self, ts: int, node_ids: set,
+                              chart_id_to_cost: dict) -> int:
+        if not self.opt_viewport and self.opt_exec_time:
+            return random.choice(tuple(node_ids))
         self.meta_data_lock.acquire()
         max_priority = 0.0
         ret_node_id = -1
         for node_id in node_ids:
-            cur_view_time = self.view_port_time[ts][node_id]
-            cur_execute_cost = self.execution_cost[ts][node_id]
+            if not self.opt_viewport:
+                cur_view_time = 1
+            else:
+                cur_view_time = self.view_port_time[ts][node_id]
+            if not self.opt_exec_time:
+                cur_execute_cost = 1
+            else:
+                cur_execute_cost = chart_id_to_cost[node_id]
             cur_priority = float(cur_view_time) / float(cur_execute_cost)
             if cur_priority > max_priority:
                 max_priority = cur_priority
@@ -98,8 +114,27 @@ class DashStateManager:
         return ret_node_id
 
     # The following functions are used by RTxnManager
-    def set_prob_comb(self, prop_comb: int) -> None:
+    def config_state_manager(self, prop_comb: int,
+                             opt_viewport: bool,
+                             opt_exec_time: bool,
+                             opt_skip_write: bool,
+                             db_name: str,
+                             username: str,
+                             password: str,
+                             host: str,
+                             port: str) -> None:
         self.prop = PropertyCombination(prop_comb)
+        self.opt_viewport = opt_viewport
+        self.opt_exec_time = opt_exec_time
+        self.opt_skip_write = opt_skip_write
+
+        if db_name == "":
+            self.opt_exec_time = False
+        self.db_name = db_name
+        self.username = username
+        self.password = password
+        self.host = host
+        self.port = port
 
     def read_view_port(self, node_id_set: set, duration: int) -> dict:
         last_committed = self.last_committed

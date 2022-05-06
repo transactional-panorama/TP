@@ -22,7 +22,7 @@ class TestACE:
     def __init__(self, server_addr: str,
                  username: str,
                  password: str,
-                 dashboard: str,
+                 dashboard_title: str,
                  read_behavior: str,
                  write_behavior: str,
                  refresh_interval: int,
@@ -31,13 +31,19 @@ class TestACE:
                  opt_viewport: bool,
                  opt_exec_time: bool,
                  opt_skip_write: bool,
-                 stat_dir: str):
+                 stat_dir: str,
+                 db_name: str,
+                 db_username: str,
+                 db_password: str,
+                 db_host: str,
+                 db_port):
         self.tpch_behavior = TPCHDashBehavior(server_addr, username,
-                                              password, read_behavior,
+                                              password, dashboard_title, read_behavior,
                                               write_behavior, refresh_interval,
                                               num_refresh, mvc_property,
                                               opt_viewport, opt_exec_time,
-                                              opt_skip_write, stat_dir)
+                                              opt_skip_write, stat_dir, db_name,
+                                              db_username, db_password, db_host, db_port)
         self.tpch_behavior.setup()
 
     def start_test(self):
