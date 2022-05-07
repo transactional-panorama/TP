@@ -17,7 +17,7 @@
 
 import requests
 import json
-from urllib.error import HTTPError
+from requests import HTTPError
 
 
 def gen_request_chart_form_data(form_data, filters: []) -> dict:
@@ -104,12 +104,17 @@ class BaseDashBehavior:
                         "Authorization": f"Bearer {self.access_token}"}
 
     def load_all_dashboards(self) -> None:
-        get_dash_info_url = f"{self.url_header}/dashboard"
-        dash_info_result = requests.get(get_dash_info_url, headers=self.headers)
-        for dash_info in json.loads(dash_info_result.text)["result"]:
-            dash_id = dash_info["id"]
-            dash_title = dash_info["dashboard_title"]
-            self.dash_title_to_id[dash_title] = dash_id
+        try:
+            get_dash_info_url = f"{self.url_header}/dashboard"
+            dash_info_result = requests.get(get_dash_info_url, headers=self.headers)
+            dash_info_result.raise_for_status()
+            for dash_info in json.loads(dash_info_result.text)["result"]:
+                dash_id = dash_info["id"]
+                dash_title = dash_info["dashboard_title"]
+                self.dash_title_to_id[dash_title] = dash_id
+        except HTTPError as error:
+            print("Loading Dashboards Error: " + str(error.response))
+            exit(-1)
 
     def config_simulation(self, dash_id: str,
                           db_name: str,
@@ -127,8 +132,7 @@ class BaseDashBehavior:
             dash_state_result.raise_for_status()
 
             # config ace
-            config_url = "{url_header}/dashboard/ace/{dash_id}/config" \
-                .format(url_header=self.url_header, dash_id=str(dash_id))
+            config_url = f"{self.url_header}/dashboard/ace/{dash_id}/config"
             json_body = {
                 "mvc_properties": self.mvc_properties,
                 "opt_viewport": self.opt_viewport,
@@ -145,24 +149,24 @@ class BaseDashBehavior:
                                    json=json_body)
             result.raise_for_status()
         except HTTPError as error:
-            print("Config Error: " + str(error))
+            print("Config Error: " + str(error.response))
             exit(-1)
 
     def post_refresh(self, dash_id: str,
                      node_ids_to_refresh: list,
                      node_ids_in_viewport: list,
                      chart_id_to_form_data: dict,
-                     cur_filter: []) -> int:
+                     cur_filter: list) -> int:
         refresh_url = f"{self.url_header}/dashboard/ace/{dash_id}/refresh"
-        charts_form_data = {}
+        processed_chart_id_to_form_data = {}
         for chart_id in chart_id_to_form_data:
             form_data = chart_id_to_form_data[chart_id]
-            charts_form_data[chart_id] = gen_request_chart_form_data(form_data,
-                                                                     cur_filter)
+            processed_chart_id_to_form_data[chart_id] =\
+                gen_request_chart_form_data(form_data, cur_filter)
         json_body = {
             "node_ids_to_refresh": node_ids_to_refresh,
             "node_ids_in_viewport": node_ids_in_viewport,
-            "charts_form_data": charts_form_data,
+            "charts_form_data": processed_chart_id_to_form_data,
         }
         result = requests.post(refresh_url,
                                headers=self.headers,
@@ -170,7 +174,7 @@ class BaseDashBehavior:
         try:
             result.raise_for_status()
         except HTTPError as error:
-            print("Refresh Error: " + str(error))
+            print("Refresh Error: " + str(error.response))
             exit(-1)
         return int(json.loads(result.text)["ts"])
 
@@ -186,9 +190,9 @@ class BaseDashBehavior:
         try:
             result.raise_for_status()
         except HTTPError as error:
-            print("Read Charts Error: " + str(error))
+            print("Read Charts Error: " + str(error.response))
             exit(-1)
-        return json.loads(result.text)["ts"]
+        return json.loads(result.text)
 
     def clean_up(self, dash_id: str) -> None:
         try:
@@ -197,5 +201,5 @@ class BaseDashBehavior:
                                               headers=self.headers)
             dash_state_result.raise_for_status()
         except HTTPError as error:
-            print("Cleanup Error: " + str(error))
+            print("Cleanup Error: " + str(error.response))
             exit(-1)

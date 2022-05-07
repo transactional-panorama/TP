@@ -34,9 +34,15 @@ class StatsCollector:
                  opt_skip_write: bool):
         self.stat_dir = stat_dir
         self.behavior_logs = []
+        self.refresh_logs = []
+        self.viewport_change_logs = []
+        self.read_views_logs = []
         self.invisibility = 0.0
         self.staleness = 0.0
         self.log_file = "behavior.log"
+        self.refresh_log_file = "refresh.log"
+        self.viewport_log_file = "viewport.log"
+        self.read_log_file = "read.log"
         self.stat_file = "stat.out"
         self.configs: Dict[str, Union[int, float, str, bool]] = \
             {"test_ts": test_ts,
@@ -58,6 +64,7 @@ class StatsCollector:
                     "node_ids": node_ids_to_refresh,
                     "txn_id": txn_id}
         self.behavior_logs.append(log_dict)
+        self.refresh_logs.append(log_dict)
 
     def collect_viewport_change(self, log_time: int,
                                 node_ids_in_viewport: list):
@@ -65,25 +72,26 @@ class StatsCollector:
                     "log_type": "viewport_change",
                     "node_ids": node_ids_in_viewport}
         self.behavior_logs.append(log_dict)
+        self.viewport_change_logs.append(log_dict)
 
     def collect_read_views(self, log_time: int,
                            recent_refresh_id: int,
                            node_id_to_ts: dict,
-                           snapshot: dict,
+                           read_snapshot: dict,
                            txn_duration: int):
         log_dict = {"log_time": log_time,
                     "log_type": "read_views",
                     "recent_refresh_id": recent_refresh_id,
-                    "snapshot": snapshot}
+                    "snapshot": read_snapshot}
         self.behavior_logs.append(log_dict)
-        self.update_stats(node_id_to_ts, snapshot, txn_duration)
+        self.read_views_logs.append(log_dict)
+        self.update_stats(node_id_to_ts, read_snapshot, txn_duration)
 
     def update_stats(self, node_id_to_ts: dict,
-                     snapshot: dict,
+                     read_snapshot: dict,
                      txn_duration: int):
-        for node_id_str in snapshot:
-            node_result = snapshot[node_id_str]
-            node_id = int(node_id_str)
+        for node_id in read_snapshot:
+            node_result = read_snapshot[node_id]
             ts = int(node_result["ts"])
             version_result = node_result["version_result"]
             if version_result == "IV":
@@ -91,14 +99,18 @@ class StatsCollector:
             else:
                 self.staleness += (node_id_to_ts[node_id] - ts) * txn_duration
 
-    def write_stats(self):
-        log_file_path = os.path.join(self.stat_dir, self.log_file)
+    def flush_logs(self, logs: list, log_file_name: str):
+        log_file_path = os.path.join(self.stat_dir, log_file_name)
         with open(log_file_path, 'a') as f:
-            f.write(f"=================Begin of Test================={os.linesep}")
             f.write(json.dumps(self.configs, indent=4))
-            for one_log in self.behavior_logs:
+            for one_log in logs:
                 f.write(json.dumps(one_log, indent=4))
-            f.write(f"=================End of Test================={os.linesep}")
+
+    def write_stats(self):
+        self.flush_logs(self.behavior_logs, self.log_file)
+        self.flush_logs(self.refresh_logs, self.refresh_log_file)
+        self.flush_logs(self.viewport_change_logs, self.viewport_log_file)
+        self.flush_logs(self.read_views_logs, self.read_log_file)
 
         stat_file_path = os.path.join(self.stat_dir, self.stat_file)
         stat_dict = self.configs.copy()

@@ -70,7 +70,7 @@ if __name__ == '__main__':
                              'by later writes',
                         action='store_true',
                         default=False)
-    parser.add_argument('--stat-dir',
+    parser.add_argument('--stat_dir',
                         help='the dir for reporting the test results',
                         required=True)
     parser.add_argument('--db_name',
@@ -82,10 +82,10 @@ if __name__ == '__main__':
     parser.add_argument('--db_password',
                         help='the password for the database user',
                         required=True)
-    parser.add_argument('--host',
+    parser.add_argument('--db_host',
                         help='the database host address',
                         required=True)
-    parser.add_argument('--port',
+    parser.add_argument('--db_port',
                         help='the database host port',
                         required=True)
 
@@ -106,8 +106,8 @@ if __name__ == '__main__':
                       db_name=args.db_name,
                       db_username=args.db_username,
                       db_password=args.db_password,
-                      db_host=args.host,
-                      db_port=args.port
+                      db_host=args.db_host,
+                      db_port=args.db_port
                       )
     testACE.start_test()
     testACE.report_results()
