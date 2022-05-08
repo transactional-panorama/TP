@@ -66,6 +66,14 @@ class StatsCollector:
         self.behavior_logs.append(log_dict)
         self.refresh_logs.append(log_dict)
 
+    def collect_commit(self, log_time: int,
+                       txn_id: int):
+        log_dict = {"log_time": log_time,
+                    "log_type": "commit",
+                    "txn_id": txn_id}
+        self.behavior_logs.append(log_dict)
+        self.refresh_logs.append(log_dict)
+
     def collect_viewport_change(self, log_time: int,
                                 node_ids_in_viewport: list):
         log_dict = {"log_time": log_time,
@@ -77,14 +85,16 @@ class StatsCollector:
     def collect_read_views(self, log_time: int,
                            recent_refresh_id: int,
                            node_id_to_ts: dict,
+                           new_read: dict,
                            read_snapshot: dict,
                            txn_duration: int):
-        log_dict = {"log_time": log_time,
-                    "log_type": "read_views",
-                    "recent_refresh_id": recent_refresh_id,
-                    "snapshot": read_snapshot}
-        self.behavior_logs.append(log_dict)
-        self.read_views_logs.append(log_dict)
+        if new_read:
+            log_dict = {"log_time": log_time,
+                        "log_type": "read_views",
+                        "recent_refresh_id": recent_refresh_id,
+                        "snapshot": new_read}
+            self.behavior_logs.append(log_dict)
+            self.read_views_logs.append(log_dict)
         self.update_stats(node_id_to_ts, read_snapshot, txn_duration)
 
     def update_stats(self, node_id_to_ts: dict,

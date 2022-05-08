@@ -21,6 +21,8 @@ from threading import (Thread, Lock)
 
 from marshmallow import ValidationError
 
+import traceback
+
 from superset.charts.commands.exceptions import ChartDataCacheLoadError, \
     ChartDataQueryFailedError
 from superset.exceptions import QueryObjectValidationError
@@ -44,6 +46,7 @@ class Scheduler(Thread):
         self.scheduler_lock = Lock()
         self.finish = False
         self.app = app
+        self.chart_data_query_context_schema = ChartDataQueryContextSchema()
 
     def submit_one_txn(self, ts: int, node_groups: list,
                        input_charts_form_data: dict):
@@ -105,10 +108,11 @@ class Scheduler(Thread):
         conn = None
         try:
             conn = self.build_db_conn()
-            cur = conn.conn.cursor()
+            cur = conn.cursor()
             for chart_id in chart_ids:
                 form_data = charts_form_data[chart_id]
-                chart_id_to_cost[chart_id] = self.estimate_refresh_cost(cur, form_data)
+                chart_id_to_cost[chart_id] = \
+                    self.estimate_one_refresh_cost(cur, form_data)
         except psycopg2.Error as e:
             print("psycopg2 error : " + e.pgerror)
             chart_id_to_cost = {}
@@ -124,8 +128,9 @@ class Scheduler(Thread):
 
     def estimate_one_refresh_cost(self, cur, form_data: dict) -> int:
         with self.app.app_context():
-            query_context = ChartDataQueryContextSchema.load(form_data)
-            query_str = query_context.get_query_str()[0]['query']
+            query_context = self.chart_data_query_context_schema.load(form_data)
+            query_result = query_context.get_query_str()['queries']
+            query_str = query_result[0]['query']
             cur.execute("Explain " + query_str)
             cost_str: str = cur.fetchall()[0][0]
             start_idx = cost_str.find("..") + 2
@@ -182,7 +187,8 @@ class Scheduler(Thread):
             pending_ts = self.ts_list[i]
             for chart_id in cur_chart_ids:
                 if chart_id in pending_chart_ids:
-                    new_chart_ids.remove(chart_id)
+                    if chart_id in new_chart_ids:
+                        new_chart_ids.remove(chart_id)
                     self.dependent_ts_set.add(pending_ts)
         self.scheduler_lock.release()
         return new_chart_ids

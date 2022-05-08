@@ -15,9 +15,18 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import pprint
 import requests
 import json
 from requests import HTTPError
+
+
+def clean_read_results(read_results: dict) -> dict:
+    snapshot = read_results["snapshot"]
+    for node_id_str in snapshot:
+        result = snapshot[node_id_str]
+        result["version_result"] = "response"
+    return read_results
 
 
 def gen_request_chart_form_data(form_data, filters: []) -> dict:
@@ -88,6 +97,11 @@ class BaseDashBehavior:
         self.opt_exec_time = opt_exec_time
         self.opt_skip_write = opt_skip_write
 
+        self.pp = pprint.PrettyPrinter(indent=4)
+
+    def print(self, to_print: str) -> None:
+        self.pp.pprint(to_print)
+
     def login(self) -> None:
         login_url = f"{self.url_header}/security/login"
         login_request_body = {
@@ -125,7 +139,7 @@ class BaseDashBehavior:
         try:
             # create ace state
             create_dash_state_url = f"{self.url_header}/dashboard/ace/" \
-                                    f"{dash_id}/create_ds_state "
+                                    f"{dash_id}/create_ds_state"
             dash_state_result = requests.post(create_dash_state_url,
                                               headers=self.headers,
                                               json={})
@@ -176,7 +190,7 @@ class BaseDashBehavior:
         except HTTPError as error:
             print("Refresh Error: " + str(error.response))
             exit(-1)
-        return int(json.loads(result.text)["ts"])
+        return int(json.loads(result.text)["result"]["ts"])
 
     def read_refreshed_charts(self, dash_id: int,
                               node_ids_to_read: list) -> dict:
@@ -192,11 +206,12 @@ class BaseDashBehavior:
         except HTTPError as error:
             print("Read Charts Error: " + str(error.response))
             exit(-1)
-        return json.loads(result.text)
+        return clean_read_results(json.loads(result.text)["result"])
 
     def clean_up(self, dash_id: str) -> None:
         try:
-            delete_dash_state_url = f"{self.url_header}/dashboard/ace/{dash_id}/delete"
+            delete_dash_state_url = f"{self.url_header}/dashboard/" \
+                                    f"ace/{dash_id}/delete_ds_state"
             dash_state_result = requests.post(delete_dash_state_url,
                                               headers=self.headers)
             dash_state_result.raise_for_status()

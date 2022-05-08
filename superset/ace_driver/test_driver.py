@@ -18,6 +18,11 @@
 import argparse
 from superset.ace_driver.test_ace import TestACE
 
+
+def is_true(true_false_str: str) -> bool:
+    return true_false_str.lower() == "true"
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Test Driver for ACE")
     parser.add_argument('--server_addr',
@@ -42,34 +47,31 @@ if __name__ == '__main__':
     parser.add_argument('--refresh_interval',
                         help='the number of seconds for'
                              'refreshing the dashboard',
-                        action="store_const",
+                        type=int,
                         default=30)
     parser.add_argument('--num_refresh',
                         help='the number of refreshes a test involves',
-                        action='store_const',
+                        type=int,
                         default=1)
     parser.add_argument('--mvc_property',
                         help='the mvc property we need to set',
-                        action='store_const',
+                        type=int,
                         default=1)
     parser.add_argument('--opt_viewport',
                         help='whether we turn on the optimization that the scheduling'
                              'considers the different amount of time a user spends on'
                              'different views',
-                        action='store_true',
-                        default=False)
+                        default="True")
     parser.add_argument('--opt_exec_time',
                         help='whether we turn on the optimization that the scheduling'
                              'considers the different amount of execution time for'
                              'refreshing a view',
-                        action='store_true',
-                        default=False)
+                        default="True")
     parser.add_argument('--opt_skip_write',
                         help='whether we turn on the optimization that the scheduling'
                              'skips refreshing a view that will be refreshed'
                              'by later writes',
-                        action='store_true',
-                        default=False)
+                        default="True")
     parser.add_argument('--stat_dir',
                         help='the dir for reporting the test results',
                         required=True)
@@ -99,9 +101,9 @@ if __name__ == '__main__':
                       refresh_interval=args.refresh_interval,
                       num_refresh=args.num_refresh,
                       mvc_property=args.mvc_property,
-                      opt_viewport=args.opt_viewport,
-                      opt_exec_time=args.opt_exec_time,
-                      opt_skip_write=args.opt_skip_write,
+                      opt_viewport=is_true(args.opt_viewport),
+                      opt_exec_time=is_true(args.opt_exec_time),
+                      opt_skip_write=is_true(args.opt_skip_write),
                       stat_dir=args.stat_dir,
                       db_name=args.db_name,
                       db_username=args.db_username,

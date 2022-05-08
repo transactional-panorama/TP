@@ -144,7 +144,8 @@ class DashStateManager:
         self.meta_data_lock.acquire()
         for ts_active in range(last_committed + 1, last_submitted + 1):
             for node_id in node_id_set:
-                self.view_port_time[ts_active][node_id] += duration
+                if node_id in self.view_port_time[ts_active]:
+                    self.view_port_time[ts_active][node_id] += duration
         self.meta_data_lock.release()
 
         if self.prop == PropertyCombination.MV:

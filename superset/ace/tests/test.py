@@ -154,7 +154,7 @@ class TestSuperset:
         self.print(dash_state_result.text)
 
     def ace_delete_dash_state(self, dash_id: int) -> None:
-        delete_dash_state_url = "{url_header}/dashboard/ace/{id_or_slug}/delete" \
+        delete_dash_state_url = "{url_header}/dashboard/ace/{id_or_slug}/delete_ds_state" \
             .format(url_header=self.url_header, id_or_slug=str(dash_id))
         dash_state_result = requests.post(delete_dash_state_url, headers=self.headers)
         self.print(dash_state_result.text)

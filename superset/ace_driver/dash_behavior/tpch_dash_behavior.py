@@ -114,6 +114,7 @@ class TPCHDashBehavior(BaseDashBehavior):
                                        'tpch_q17', 'tpch_q18', 'tpch_q19',
                                        'tpch_q20', 'tpch_q21']
         self.chart_title_to_id = {}
+        self.chart_id_to_title = {}
 
         self.test_start_ts = get_cur_time()
         self.stat_collector = StatsCollector(
@@ -121,6 +122,16 @@ class TPCHDashBehavior(BaseDashBehavior):
             read_behavior, write_behavior, refresh_interval,
             num_refresh, mvc_properties, opt_viewport,
             opt_exec_time, opt_skip_write)
+
+        # Global states during the test
+        self.refresh_counter = 0
+        self.cur_filter_idx = 0
+        self.cur_time = 0
+        self.last_refresh_time = 0
+        self.last_viewport_change = 0
+        self.submit_ts = -1
+        self.commit_ts = -1
+        self.viewport_up_to_date = False
 
     def delete_tuples_from_base_tables(self):
         rows_to_delete = self.sf * self.order_card * \
@@ -158,6 +169,7 @@ class TPCHDashBehavior(BaseDashBehavior):
                 self.chart_id_to_submit_ts[slice_id] = init_submit_ts
                 self.chart_ids.append(slice_id)
                 self.chart_title_to_id[chart_data["slice_name"]] = slice_id
+                self.chart_id_to_title[slice_id] = chart_data["slice_name"]
             self.chart_ids.sort()
         except HTTPError as error:
             print("Getting Charts Error: " + str(error.response))
@@ -171,79 +183,100 @@ class TPCHDashBehavior(BaseDashBehavior):
         super().config_simulation(self.dash_id, self.db_name,
                                   self.db_username, self.db_password,
                                   self.db_host, self.db_port)
-        self.get_charts_info(0)
+        self.get_charts_info(-1)
 
     def run_test(self) -> None:
-        refresh_counter = 0
-        cur_filter_idx = 0
-        cur_time = get_cur_time()
-        last_refresh_time = cur_time - self.refresh_interval_ms
-        last_viewport_change = cur_time
-        submit_ts = 0
-        commit_ts = 0
-        viewport_up_to_date = True
-
-        # initially reading all of the visualizations
-        read_result = super().read_refreshed_charts(self.dash_id, self.chart_ids)
-        self.update_chart_results(read_result["snapshot"])
-        read_snapshot = self.create_read_snapshot(self.chart_ids)
-        self.stat_collector.collect_read_views(
-            cur_time - self.test_start_ts,
-            submit_ts, self.chart_id_to_submit_ts,
-            read_snapshot, int(self.txn_interval * 1000))
+        self.initial_loading()
+        self.cur_time = get_cur_time()
+        new_ids_in_viewport = get_ids_in_viewport(self.chart_ids, self.viewport)
         self.stat_collector.collect_viewport_change(
-            cur_time - self.test_start_ts,
-            get_ids_in_viewport(self.chart_ids, self.viewport))
+            self.cur_time - self.test_start_ts, new_ids_in_viewport)
+        self.last_refresh_time = self.cur_time - self.refresh_interval_ms
+        self.print("Init viewport: " + str(new_ids_in_viewport))
 
-        while refresh_counter != self.num_refresh or submit_ts != commit_ts:
+        while self.refresh_counter != self.num_refresh or \
+            self.submit_ts != self.commit_ts:
+
             # simulate a refresh when necessary
-            ts_temp = self.simulate_next_refresh(
-                last_refresh_time, cur_filter_idx,
-                refresh_counter, cur_time, self.viewport)
-            if ts_temp != -1:
-                submit_ts = ts_temp
-                last_refresh_time = cur_time
-                refresh_counter += 1
-                cur_filter_idx = (cur_filter_idx + 1) % len(self.predefined_filters)
+            self.simulate_one_refresh()
 
             # simulate a read when necessary
-            if submit_ts != commit_ts:
+            if self.submit_ts != self.commit_ts:
                 node_ids_in_viewport = get_ids_in_viewport(self.chart_ids,
                                                            self.viewport)
-                read_result = super().read_refreshed_charts(self.dash_id,
-                                                            node_ids_in_viewport)
-                commit_ts = int(read_result["ts"])
-                self.update_chart_results(read_result["snapshot"])
+                read_result = self.enhance_read_result(
+                    super().read_refreshed_charts(self.dash_id,
+                                                  node_ids_in_viewport))
+                new_commit_ts = int(read_result["ts"])
+                if new_commit_ts != self.commit_ts:
+                    self.print(f"Refresh {new_commit_ts} committed")
+                    self.stat_collector.collect_commit(self.cur_time, new_commit_ts)
+                self.commit_ts = new_commit_ts
+                new_read = read_result["snapshot"]
+                self.update_chart_results(new_read)
                 read_snapshot = self.create_read_snapshot(node_ids_in_viewport)
-                viewport_up_to_date = self.is_up_to_date(read_snapshot)
+                self.viewport_up_to_date = self.is_up_to_date(read_snapshot)
                 self.stat_collector.collect_read_views(
-                    cur_time - self.test_start_ts,
-                    submit_ts, self.chart_id_to_submit_ts,
+                    self.cur_time - self.test_start_ts,
+                    self.submit_ts, self.chart_id_to_submit_ts, new_read,
                     read_snapshot, int(self.txn_interval * 1000))
+                if new_read:
+                    self.print(json.dumps(read_result))
 
             # simulate a viewport change when necessary
-            viewport_change = self.simulate_viewport_change(last_viewport_change,
-                                                            cur_time,
-                                                            viewport_up_to_date)
+            viewport_change = self.simulate_viewport_change()
             if viewport_change:
-                last_viewport_change = cur_time
+                self.last_viewport_change = self.cur_time
+                new_ids_in_viewport = get_ids_in_viewport(self.chart_ids, self.viewport)
                 self.stat_collector.collect_viewport_change(
-                    cur_time - self.test_start_ts,
-                    get_ids_in_viewport(self.chart_ids, self.viewport))
+                    self.cur_time - self.test_start_ts, new_ids_in_viewport)
+                self.print("New viewport: " + str(new_ids_in_viewport))
 
             time.sleep(self.txn_interval)
-            cur_time = get_cur_time()
+            self.cur_time = get_cur_time()
 
-    def simulate_next_refresh(self, last_refresh_time: int,
-                              cur_filter_idx: int,
-                              num_refresh_done: int,
-                              cur_time: int,
-                              viewport: dict) -> int:
-        if cur_time - last_refresh_time < self.refresh_interval_ms:
-            return -1
+    def initial_loading(self):
+        self.print("Loading visualizations")
+        # initially reading all of the visualizations
+        node_ids_to_refresh = self.chart_ids
+        node_id_to_form_data = {node_id: self.chart_id_to_form_data[node_id]
+                                for node_id in node_ids_to_refresh}
+        node_ids_in_viewport = get_ids_in_viewport(self.chart_ids, self.viewport)
+        cur_filter = []
+
+        self.submit_ts = super().post_refresh(
+            self.dash_id, node_ids_to_refresh,
+            node_ids_in_viewport, node_id_to_form_data, cur_filter)
+        for node_id in node_ids_to_refresh:
+            self.chart_id_to_submit_ts[node_id] = self.submit_ts
+
+        while self.submit_ts != self.commit_ts:
+            read_result = self.enhance_read_result(
+                super().read_refreshed_charts(self.dash_id, self.chart_ids))
+            self.commit_ts = read_result["ts"]
+            new_read = read_result["snapshot"]
+            self.update_chart_results(new_read)
+            if new_read:
+                self.print(json.dumps(read_result))
+            time.sleep(self.txn_interval * 10)
+        self.print("Finished initial loading")
+
+    def enhance_read_result(self, read_result: dict) -> dict:
+        for chart_id_str in read_result["snapshot"]:
+            result = read_result["snapshot"][chart_id_str]
+            chart_id = int(chart_id_str)
+            result["title"] = self.chart_id_to_title[chart_id]
+        return read_result
+
+    def simulate_one_refresh(self) -> None:
+        if self.refresh_counter >= self.num_refresh or \
+           self.cur_time - self.last_refresh_time < self.refresh_interval_ms:
+            return
+
+        # Build necessary data structures
         if self.write_behavior == "filter_change":
             # Build a filter
-            cur_filter = self.predefined_filters[cur_filter_idx]
+            cur_filter = self.predefined_filters[self.cur_filter_idx]
 
             # Build other info required for a refresh
             node_ids_to_refresh = [self.chart_title_to_id[chart_title]
@@ -252,21 +285,30 @@ class TPCHDashBehavior(BaseDashBehavior):
             cur_filter = []
             node_ids_to_refresh = list(self.chart_ids)
             try:
-                self.insert_tuples_to_base_tables(num_refresh_done)
+                self.insert_tuples_to_base_tables(self.refresh_counter)
             except psycopg2.Error as e:
                 print("Inserting new data error: " + e.pgerror)
                 exit(-1)
         node_id_to_form_data = {node_id: self.chart_id_to_form_data[node_id]
                                 for node_id in node_ids_to_refresh}
-        node_ids_in_viewport = get_ids_in_viewport(self.chart_ids, viewport)
-        submit_ts = super().post_refresh(
+        node_ids_in_viewport = get_ids_in_viewport(self.chart_ids, self.viewport)
+
+        # Submit a refresh
+        self.submit_ts = super().post_refresh(
             self.dash_id, node_ids_to_refresh,
             node_ids_in_viewport, node_id_to_form_data, cur_filter)
+
+        # Update related statistics and states
         for node_id in node_ids_to_refresh:
-            self.chart_id_to_submit_ts[node_id] = submit_ts
-        self.stat_collector.collect_refresh(cur_time - self.test_start_ts,
-                                            node_ids_to_refresh, submit_ts)
-        return submit_ts
+            self.chart_id_to_submit_ts[node_id] = self.submit_ts
+        self.stat_collector.collect_refresh(self.cur_time - self.test_start_ts,
+                                            node_ids_to_refresh, self.submit_ts)
+        self.last_refresh_time = self.cur_time
+        self.refresh_counter += 1
+        self.cur_filter_idx = (self.cur_filter_idx + 1) % \
+                              len(self.predefined_filters)
+        self.print("Submitted refresh " + str(self.submit_ts))
+        self.print("Charts to refresh " + str(node_ids_to_refresh))
 
     def simulate_next_read(self) -> dict:
         node_ids_in_viewport = get_ids_in_viewport(self.chart_ids, self.viewport)
@@ -284,18 +326,17 @@ class TPCHDashBehavior(BaseDashBehavior):
             read_snapshot[chart_id] = self.chart_id_to_vis_result[chart_id]
         return read_snapshot
 
-    def simulate_viewport_change(self, last_view_port_change: int,
-                                 cur_time: int,
-                                 viewport_up_to_date: bool) -> bool:
+    def simulate_viewport_change(self) -> bool:
         if self.read_behavior == "not_change":
             pass
         elif self.read_behavior == "regular_change":
-            if cur_time - last_view_port_change >= self.viewport_interval_ms:
+            if self.cur_time - self.last_viewport_change >= self.viewport_interval_ms:
                 self.move_view_port()
                 return True
         else:  # see_change
-            if viewport_up_to_date and \
-               cur_time - last_view_port_change >= self.viewport_interval_ms:
+            if self.viewport_up_to_date and \
+                self.cur_time - self.last_viewport_change \
+                >= self.viewport_interval_ms:
                 self.move_view_port()
                 return True
         return False

@@ -19,7 +19,7 @@ from enum import Enum
 from typing import NamedTuple
 from threading import Lock
 
-START_TS = 0
+START_TS = -1
 RESPONSE_CODE = "response_code"
 RESPONSE = "response"
 
@@ -105,7 +105,7 @@ class Node:
     def get_visible_version(self) -> BaseVersion:
         self.local_lock.acquire()
         ret_version = None
-        max_ts = -1
+        max_ts = START_TS - 1
         for version in self.versions:
             if version.ts > max_ts and isinstance(version, Version):
                 ret_version = version

@@ -120,8 +120,8 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         "get_charts",
         "get_datasets",
         "thumbnail",
-        "ace_create_dashboard_state",
-        "ace_delete_dashboard_state",
+        "ace_create_ds_state",
+        "ace_delete_ds_state",
         "ace_post_config",
         "ace_post_refresh",
         "ace_read_refreshed_charts",
@@ -254,10 +254,10 @@ class DashboardRestApi(BaseSupersetModelRestApi):
     @statsd_metrics
     @event_logger.log_this_with_context(
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-                                             f".ace_create_dashboard_state",
+                                             f".ace_create_ds_state",
         log_to_statsd=False,  # pylint: disable=arguments-renamed
     )
-    def ace_create_dashboard_state(self, dash_id: str) -> Response:
+    def ace_create_ds_state(self, dash_id: str) -> Response:
         try:
             dash = DashboardDAO.get_by_id_or_slug(dash_id)
             add_ds_state_manager(dash)
@@ -265,16 +265,16 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         except DashboardNotFoundError:
             return self.response_404()
 
-    @expose("/ace/<pk>/delete", methods=["POST"])
+    @expose("/ace/<pk>/delete_ds_state", methods=["POST"])
     @protect()
     @safe
     @statsd_metrics
     @event_logger.log_this_with_context(
         action=lambda self, *args, **kwargs: f"{self.__class__.__name__}"
-                                             f".ace_delete_dashboard_state",
+                                             f".ace_delete_ds_state",
         log_to_statsd=False,  # pylint: disable=arguments-renamed
     )
-    def ace_delete_dashboard_state(self, pk: str) -> Response:
+    def ace_delete_ds_state(self, pk: str) -> Response:
         dash_id = int(pk)
         shut_down_one_scheduler(dash_id)
         remove_ds_state_manager(dash_id)
@@ -294,10 +294,7 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         dash_id = int(pk)
         if not request.is_json:
             return self.response_400(message="Request is not JSON")
-        try:
-            item = self.dashboard_post_mvc_schema.load(request.json)
-        except ValidationError as error:
-            return self.response_400(message=error.messages)
+        item = request.json
         config_ace(dash_id,
                    item.get("mvc_properties", 1),
                    item.get("opt_viewport", True),

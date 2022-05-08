@@ -1,0 +1,1232 @@
+{
+    "test_ts": 1651971754271,
+    "dash_title": "TPCH",
+    "read_behavior": "not_change",
+    "write_behavior": "filter_change",
+    "refresh_interval": 30,
+    "num_refresh": 1,
+    "mvc_properties": 1,
+    "opt_viewport": true,
+    "opt_exec_time": false,
+    "opt_skip_write": true
+}{
+    "log_time": 70928,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "132": {
+            "ts": 1,
+            "version_result": {
+                "response": [
+                    {
+                        "annotation_data": {},
+                        "applied_filters": [
+                            {
+                                "column": "l_linestatus"
+                            }
+                        ],
+                        "applied_template_filters": [],
+                        "cache_key": "8634dced5833f8463ea700b786d27421",
+                        "cache_timeout": 86400,
+                        "cached_dttm": null,
+                        "colnames": [
+                            "l_orderkey",
+                            "o_orderdate",
+                            "o_shippriority",
+                            "sum(l_extendedprice * (1 - l_discount))"
+                        ],
+                        "coltypes": [
+                            0,
+                            2,
+                            0,
+                            0
+                        ],
+                        "data": [
+                            {
+                                "l_orderkey": 4125991,
+                                "o_orderdate": "Sat, 18 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 885.4285
+                            },
+                            {
+                                "l_orderkey": 3075460,
+                                "o_orderdate": "Thu, 09 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 909.188
+                            },
+                            {
+                                "l_orderkey": 474535,
+                                "o_orderdate": "Mon, 27 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 930.1844
+                            },
+                            {
+                                "l_orderkey": 1097511,
+                                "o_orderdate": "Tue, 10 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 971.926
+                            },
+                            {
+                                "l_orderkey": 2585090,
+                                "o_orderdate": "Tue, 27 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 983.718
+                            },
+                            {
+                                "l_orderkey": 4703521,
+                                "o_orderdate": "Sun, 05 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1005.1475
+                            },
+                            {
+                                "l_orderkey": 1895142,
+                                "o_orderdate": "Fri, 24 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1007.9173
+                            },
+                            {
+                                "l_orderkey": 4535106,
+                                "o_orderdate": "Fri, 03 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1023.9968
+                            },
+                            {
+                                "l_orderkey": 490752,
+                                "o_orderdate": "Fri, 17 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1036.053
+                            },
+                            {
+                                "l_orderkey": 4625765,
+                                "o_orderdate": "Fri, 06 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1039.692
+                            },
+                            {
+                                "l_orderkey": 4443811,
+                                "o_orderdate": "Tue, 20 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1065.1085
+                            },
+                            {
+                                "l_orderkey": 5930112,
+                                "o_orderdate": "Sun, 01 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1088.9185
+                            },
+                            {
+                                "l_orderkey": 4542402,
+                                "o_orderdate": "Tue, 29 Nov 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1101.2911
+                            },
+                            {
+                                "l_orderkey": 3568135,
+                                "o_orderdate": "Mon, 13 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1108.0032
+                            },
+                            {
+                                "l_orderkey": 4915142,
+                                "o_orderdate": "Sat, 17 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1108.4762
+                            },
+                            {
+                                "l_orderkey": 672484,
+                                "o_orderdate": "Thu, 23 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1129.7781
+                            },
+                            {
+                                "l_orderkey": 1026692,
+                                "o_orderdate": "Mon, 12 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1159.2926
+                            },
+                            {
+                                "l_orderkey": 1579745,
+                                "o_orderdate": "Mon, 30 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1163.4854
+                            },
+                            {
+                                "l_orderkey": 2598624,
+                                "o_orderdate": "Wed, 18 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1201.815
+                            },
+                            {
+                                "l_orderkey": 5530403,
+                                "o_orderdate": "Tue, 29 Nov 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1226.15
+                            },
+                            {
+                                "l_orderkey": 2503137,
+                                "o_orderdate": "Sun, 22 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1240.9565
+                            },
+                            {
+                                "l_orderkey": 149831,
+                                "o_orderdate": "Sat, 25 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1261.5174
+                            },
+                            {
+                                "l_orderkey": 2340000,
+                                "o_orderdate": "Wed, 25 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1279.9059
+                            },
+                            {
+                                "l_orderkey": 1051233,
+                                "o_orderdate": "Tue, 17 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1282.8792
+                            },
+                            {
+                                "l_orderkey": 2838722,
+                                "o_orderdate": "Thu, 15 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1328.41
+                            },
+                            {
+                                "l_orderkey": 1731877,
+                                "o_orderdate": "Tue, 07 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1334.28
+                            },
+                            {
+                                "l_orderkey": 1005985,
+                                "o_orderdate": "Fri, 27 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1349.27
+                            },
+                            {
+                                "l_orderkey": 1165479,
+                                "o_orderdate": "Sun, 18 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1351.356
+                            },
+                            {
+                                "l_orderkey": 778951,
+                                "o_orderdate": "Sat, 14 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1362.35
+                            },
+                            {
+                                "l_orderkey": 4307811,
+                                "o_orderdate": "Tue, 20 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1391.922
+                            },
+                            {
+                                "l_orderkey": 5012578,
+                                "o_orderdate": "Sun, 18 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1406.8896
+                            },
+                            {
+                                "l_orderkey": 4557666,
+                                "o_orderdate": "Sun, 08 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1409.3535
+                            },
+                            {
+                                "l_orderkey": 747236,
+                                "o_orderdate": "Tue, 27 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1414.1022
+                            },
+                            {
+                                "l_orderkey": 2630018,
+                                "o_orderdate": "Mon, 19 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1428.96
+                            },
+                            {
+                                "l_orderkey": 5210887,
+                                "o_orderdate": "Mon, 16 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1484.8101
+                            },
+                            {
+                                "l_orderkey": 2563969,
+                                "o_orderdate": "Sun, 26 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1489.4976
+                            },
+                            {
+                                "l_orderkey": 2200581,
+                                "o_orderdate": "Sun, 08 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1493.9795
+                            },
+                            {
+                                "l_orderkey": 4072257,
+                                "o_orderdate": "Fri, 13 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1500.2624
+                            },
+                            {
+                                "l_orderkey": 2061860,
+                                "o_orderdate": "Mon, 02 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1513.1086
+                            },
+                            {
+                                "l_orderkey": 4419687,
+                                "o_orderdate": "Tue, 24 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1514.2941
+                            },
+                            {
+                                "l_orderkey": 1033538,
+                                "o_orderdate": "Fri, 20 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1519.794
+                            },
+                            {
+                                "l_orderkey": 5213287,
+                                "o_orderdate": "Sat, 31 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1532.51
+                            },
+                            {
+                                "l_orderkey": 1081829,
+                                "o_orderdate": "Sun, 01 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1539.4568
+                            },
+                            {
+                                "l_orderkey": 4883553,
+                                "o_orderdate": "Sun, 05 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1545.6
+                            },
+                            {
+                                "l_orderkey": 1975552,
+                                "o_orderdate": "Mon, 20 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1553.8743
+                            },
+                            {
+                                "l_orderkey": 5275783,
+                                "o_orderdate": "Tue, 07 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1560.8934
+                            },
+                            {
+                                "l_orderkey": 2833604,
+                                "o_orderdate": "Sun, 01 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1575.936
+                            },
+                            {
+                                "l_orderkey": 571488,
+                                "o_orderdate": "Mon, 16 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1596.3096
+                            },
+                            {
+                                "l_orderkey": 4586149,
+                                "o_orderdate": "Sat, 24 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1615.6745
+                            },
+                            {
+                                "l_orderkey": 4191330,
+                                "o_orderdate": "Wed, 01 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1618.2837
+                            },
+                            {
+                                "l_orderkey": 264195,
+                                "o_orderdate": "Thu, 29 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1623.468
+                            },
+                            {
+                                "l_orderkey": 519170,
+                                "o_orderdate": "Fri, 23 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1626.2631
+                            },
+                            {
+                                "l_orderkey": 5216705,
+                                "o_orderdate": "Sat, 17 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1651.4289
+                            },
+                            {
+                                "l_orderkey": 5045217,
+                                "o_orderdate": "Sun, 05 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1681.3174
+                            },
+                            {
+                                "l_orderkey": 952645,
+                                "o_orderdate": "Sun, 05 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1696.1061
+                            },
+                            {
+                                "l_orderkey": 5193060,
+                                "o_orderdate": "Tue, 24 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1724.0898
+                            },
+                            {
+                                "l_orderkey": 3252035,
+                                "o_orderdate": "Thu, 12 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1731.4554
+                            },
+                            {
+                                "l_orderkey": 1615779,
+                                "o_orderdate": "Sat, 03 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1743.0885
+                            },
+                            {
+                                "l_orderkey": 2338085,
+                                "o_orderdate": "Fri, 16 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1759.0308
+                            },
+                            {
+                                "l_orderkey": 5361575,
+                                "o_orderdate": "Mon, 06 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1784.5344
+                            },
+                            {
+                                "l_orderkey": 5091462,
+                                "o_orderdate": "Sun, 18 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1824.5836
+                            },
+                            {
+                                "l_orderkey": 884837,
+                                "o_orderdate": "Thu, 23 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1832.531
+                            },
+                            {
+                                "l_orderkey": 2295015,
+                                "o_orderdate": "Tue, 13 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1848.88
+                            },
+                            {
+                                "l_orderkey": 161698,
+                                "o_orderdate": "Wed, 04 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1867.6368
+                            },
+                            {
+                                "l_orderkey": 2230019,
+                                "o_orderdate": "Fri, 09 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1916.6103
+                            },
+                            {
+                                "l_orderkey": 548161,
+                                "o_orderdate": "Sat, 24 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1922.8032
+                            },
+                            {
+                                "l_orderkey": 1287810,
+                                "o_orderdate": "Sun, 12 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 1988.3958
+                            },
+                            {
+                                "l_orderkey": 4961859,
+                                "o_orderdate": "Sun, 22 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2008.6803
+                            },
+                            {
+                                "l_orderkey": 3848582,
+                                "o_orderdate": "Sat, 21 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2014.8604
+                            },
+                            {
+                                "l_orderkey": 2182694,
+                                "o_orderdate": "Fri, 30 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2017.24
+                            },
+                            {
+                                "l_orderkey": 2168675,
+                                "o_orderdate": "Sun, 01 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2044.3688
+                            },
+                            {
+                                "l_orderkey": 5443586,
+                                "o_orderdate": "Sat, 17 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2067.504
+                            },
+                            {
+                                "l_orderkey": 1194787,
+                                "o_orderdate": "Wed, 28 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2105.542
+                            },
+                            {
+                                "l_orderkey": 1616803,
+                                "o_orderdate": "Wed, 21 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2145.8448
+                            },
+                            {
+                                "l_orderkey": 5133824,
+                                "o_orderdate": "Mon, 16 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2160.49
+                            },
+                            {
+                                "l_orderkey": 2406305,
+                                "o_orderdate": "Sat, 18 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2183.1312
+                            },
+                            {
+                                "l_orderkey": 37184,
+                                "o_orderdate": "Sun, 12 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2189.7512
+                            },
+                            {
+                                "l_orderkey": 623461,
+                                "o_orderdate": "Tue, 21 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2202.5856
+                            },
+                            {
+                                "l_orderkey": 787491,
+                                "o_orderdate": "Thu, 26 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2245.5576
+                            },
+                            {
+                                "l_orderkey": 354694,
+                                "o_orderdate": "Fri, 10 Mar 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2261.6544
+                            },
+                            {
+                                "l_orderkey": 5874788,
+                                "o_orderdate": "Sun, 22 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2286.3932
+                            },
+                            {
+                                "l_orderkey": 2858791,
+                                "o_orderdate": "Tue, 29 Nov 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2298.42
+                            },
+                            {
+                                "l_orderkey": 5474501,
+                                "o_orderdate": "Fri, 09 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2386.752
+                            },
+                            {
+                                "l_orderkey": 4613317,
+                                "o_orderdate": "Sat, 14 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2447.694
+                            },
+                            {
+                                "l_orderkey": 4927682,
+                                "o_orderdate": "Sat, 04 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2474.2278
+                            },
+                            {
+                                "l_orderkey": 4177697,
+                                "o_orderdate": "Sun, 08 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2540.754
+                            },
+                            {
+                                "l_orderkey": 3530208,
+                                "o_orderdate": "Wed, 07 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2619.5626
+                            },
+                            {
+                                "l_orderkey": 5803494,
+                                "o_orderdate": "Tue, 17 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2637.9
+                            },
+                            {
+                                "l_orderkey": 3840388,
+                                "o_orderdate": "Fri, 16 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2654.1888
+                            },
+                            {
+                                "l_orderkey": 3492550,
+                                "o_orderdate": "Fri, 30 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2716.3864
+                            },
+                            {
+                                "l_orderkey": 4500419,
+                                "o_orderdate": "Tue, 28 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2716.443
+                            },
+                            {
+                                "l_orderkey": 1090915,
+                                "o_orderdate": "Mon, 26 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2786.9
+                            },
+                            {
+                                "l_orderkey": 5764896,
+                                "o_orderdate": "Fri, 30 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2821.788
+                            },
+                            {
+                                "l_orderkey": 4453188,
+                                "o_orderdate": "Mon, 19 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2841.298
+                            },
+                            {
+                                "l_orderkey": 1290981,
+                                "o_orderdate": "Sun, 22 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2857.7472
+                            },
+                            {
+                                "l_orderkey": 4903617,
+                                "o_orderdate": "Fri, 30 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2895.0012
+                            },
+                            {
+                                "l_orderkey": 2251718,
+                                "o_orderdate": "Fri, 17 Feb 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2921.1472
+                            },
+                            {
+                                "l_orderkey": 1958276,
+                                "o_orderdate": "Thu, 12 Jan 1995 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2961.8304
+                            },
+                            {
+                                "l_orderkey": 829510,
+                                "o_orderdate": "Fri, 30 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2968.3455
+                            },
+                            {
+                                "l_orderkey": 2684677,
+                                "o_orderdate": "Fri, 09 Dec 1994 00:00:00 GMT",
+                                "o_shippriority": 0,
+                                "sum(l_extendedprice * (1 - l_discount))": 2969.5728
+                            }
+                        ],
+                        "error": null,
+                        "indexnames": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                            7,
+                            8,
+                            9,
+                            10,
+                            11,
+                            12,
+                            13,
+                            14,
+                            15,
+                            16,
+                            17,
+                            18,
+                            19,
+                            20,
+                            21,
+                            22,
+                            23,
+                            24,
+                            25,
+                            26,
+                            27,
+                            28,
+                            29,
+                            30,
+                            31,
+                            32,
+                            33,
+                            34,
+                            35,
+                            36,
+                            37,
+                            38,
+                            39,
+                            40,
+                            41,
+                            42,
+                            43,
+                            44,
+                            45,
+                            46,
+                            47,
+                            48,
+                            49,
+                            50,
+                            51,
+                            52,
+                            53,
+                            54,
+                            55,
+                            56,
+                            57,
+                            58,
+                            59,
+                            60,
+                            61,
+                            62,
+                            63,
+                            64,
+                            65,
+                            66,
+                            67,
+                            68,
+                            69,
+                            70,
+                            71,
+                            72,
+                            73,
+                            74,
+                            75,
+                            76,
+                            77,
+                            78,
+                            79,
+                            80,
+                            81,
+                            82,
+                            83,
+                            84,
+                            85,
+                            86,
+                            87,
+                            88,
+                            89,
+                            90,
+                            91,
+                            92,
+                            93,
+                            94,
+                            95,
+                            96,
+                            97,
+                            98,
+                            99
+                        ],
+                        "is_cached": null,
+                        "query": "SELECT l_orderkey AS l_orderkey,\n       o_orderdate AS o_orderdate,\n       o_shippriority AS o_shippriority,\n       sum(l_extendedprice * (1 - l_discount)) AS \"sum(l_extendedprice * (1 - l_discount))\"\nFROM\n  (select *\n   from customer,\n        orders,\n        lineitem\n   where c_mktsegment = 'MACHINERY'\n     and c_custkey = o_custkey\n     and l_orderkey = o_orderkey\n     and o_orderdate < date '1995-03-25'\n     and l_shipdate > date '1995-03-25') AS virtual_table\nWHERE l_linestatus IN ('F')\nGROUP BY l_orderkey,\n         o_orderdate,\n         o_shippriority\nORDER BY \"sum(l_extendedprice * (1 - l_discount))\" ASC\nLIMIT 100;\n\n",
+                        "rejected_filters": [],
+                        "result_format": "json",
+                        "rowcount": 100,
+                        "stacktrace": null,
+                        "status": "success"
+                    }
+                ],
+                "response_code": 200
+            }
+        }
+    }
+}{
+    "log_time": 73659,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "133": {
+            "ts": 1,
+            "version_result": {
+                "response": [
+                    {
+                        "annotation_data": {},
+                        "applied_filters": [
+                            {
+                                "column": "l_linestatus"
+                            }
+                        ],
+                        "applied_template_filters": [],
+                        "cache_key": "8d1583b2aac669506bb7f930dbf60875",
+                        "cache_timeout": 86400,
+                        "cached_dttm": null,
+                        "colnames": [
+                            "l_returnflag",
+                            "l_linestatus",
+                            "\tsum(l_quantity)",
+                            "\tsum(l_extendedprice)",
+                            "\tsum(l_extendedprice * (1 - l_discount))",
+                            "\tsum(l_extendedprice * (1 - l_discount) ...",
+                            "\tavg(l_quantity)",
+                            "\tavg(l_extendedprice)",
+                            "\tavg(l_discount)",
+                            "\tcount(*)"
+                        ],
+                        "coltypes": [
+                            1,
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+                        "data": [
+                            {
+                                "\tavg(l_discount)": 0.0500934266742163,
+                                "\tavg(l_extendedprice)": 38284.4677608483,
+                                "\tavg(l_quantity)": 25.516471920522985,
+                                "\tcount(*)": 38854,
+                                "\tsum(l_extendedprice * (1 - l_discount) ...": 1469649223.194375,
+                                "\tsum(l_extendedprice * (1 - l_discount))": 1413082168.0541,
+                                "\tsum(l_extendedprice)": 1487504710.38,
+                                "\tsum(l_quantity)": 991417,
+                                "l_linestatus": "F",
+                                "l_returnflag": "N"
+                            },
+                            {
+                                "\tavg(l_discount)": 0.05000940583012706,
+                                "\tavg(l_extendedprice)": 38250.85462609966,
+                                "\tavg(l_quantity)": 25.50579361269077,
+                                "\tcount(*)": 1478870,
+                                "\tsum(l_extendedprice * (1 - l_discount) ...": 55889619119.83193,
+                                "\tsum(l_extendedprice * (1 - l_discount))": 53741292684.604,
+                                "\tsum(l_extendedprice)": 56568041380.9,
+                                "\tsum(l_quantity)": 37719753,
+                                "l_linestatus": "F",
+                                "l_returnflag": "R"
+                            },
+                            {
+                                "\tavg(l_discount)": 0.049985295838397614,
+                                "\tavg(l_extendedprice)": 38273.129734621674,
+                                "\tavg(l_quantity)": 25.522005853257337,
+                                "\tcount(*)": 1478493,
+                                "\tsum(l_extendedprice * (1 - l_discount) ...": 55909065222.82769,
+                                "\tsum(l_extendedprice * (1 - l_discount))": 53758257134.87,
+                                "\tsum(l_extendedprice)": 56586554400.73,
+                                "\tsum(l_quantity)": 37734107,
+                                "l_linestatus": "F",
+                                "l_returnflag": "A"
+                            }
+                        ],
+                        "error": null,
+                        "indexnames": [
+                            0,
+                            1,
+                            2
+                        ],
+                        "is_cached": null,
+                        "query": "SELECT l_returnflag AS l_returnflag,\n       l_linestatus AS l_linestatus,\n       sum(l_quantity) AS \"\tsum(l_quantity)\",\n       sum(l_extendedprice) AS \"\tsum(l_extendedprice)\",\n       sum(l_extendedprice * (1 - l_discount)) AS \"\tsum(l_extendedprice * (1 - l_discount))\",\n       sum(l_extendedprice * (1 - l_discount) * (1 + l_tax)) AS \"\tsum(l_extendedprice * (1 - l_discount) ...\",\n       avg(l_quantity) AS \"\tavg(l_quantity)\",\n       avg(l_extendedprice) AS \"\tavg(l_extendedprice)\",\n       avg(l_discount) AS \"\tavg(l_discount)\",\n       count(*) AS \"\tcount(*)\"\nFROM public.lineitem\nWHERE l_linestatus IN ('F')\nGROUP BY l_returnflag,\n         l_linestatus\nORDER BY \"\tsum(l_quantity)\" ASC,\n         \"\tsum(l_extendedprice)\" ASC,\n         \"\tsum(l_extendedprice * (1 - l_discount))\" ASC,\n         \"\tsum(l_extendedprice * (1 - l_discount) ...\" ASC,\n         \"\tavg(l_quantity)\" ASC,\n         \"\tavg(l_extendedprice)\" ASC,\n         \"\tavg(l_discount)\" ASC,\n         \"\tcount(*)\" ASC\nLIMIT 100;\n\n",
+                        "rejected_filters": [],
+                        "result_format": "json",
+                        "rowcount": 3,
+                        "stacktrace": null,
+                        "status": "success"
+                    }
+                ],
+                "response_code": 200
+            }
+        }
+    }
+}{
+    "log_time": 75063,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "135": {
+            "ts": 1,
+            "version_result": {
+                "response": [
+                    {
+                        "annotation_data": {},
+                        "applied_filters": [
+                            {
+                                "column": "l_linestatus"
+                            }
+                        ],
+                        "applied_template_filters": [],
+                        "cache_key": "4d6d934a8f7033068ab0522bf0678ed3",
+                        "cache_timeout": 86400,
+                        "cached_dttm": null,
+                        "colnames": [],
+                        "coltypes": [],
+                        "data": [],
+                        "error": null,
+                        "indexnames": [],
+                        "is_cached": null,
+                        "query": "SELECT o_orderpriority AS o_orderpriority,\n       count(*) AS count\nFROM\n  (select *\n   from orders,\n        lineitem\n   where o_orderdate >= date '1996-11-01'\n     and o_orderdate < date '1996-11-01' + interval '3' month\n     and l_commitdate < l_receiptdate\n     and l_orderkey = o_orderkey) AS virtual_table\nWHERE l_linestatus IN ('F')\nGROUP BY o_orderpriority\nORDER BY count ASC\nLIMIT 100;\n\n",
+                        "rejected_filters": [],
+                        "result_format": "json",
+                        "rowcount": 0,
+                        "stacktrace": null,
+                        "status": "success"
+                    }
+                ],
+                "response_code": 200
+            }
+        }
+    }
+}{
+    "test_ts": 1651972742899,
+    "dash_title": "TPCH",
+    "read_behavior": "not_change",
+    "write_behavior": "filter_change",
+    "refresh_interval": 30,
+    "num_refresh": 1,
+    "mvc_properties": 1,
+    "opt_viewport": true,
+    "opt_exec_time": false,
+    "opt_skip_write": true
+}{
+    "log_time": 43700,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "132": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 45510,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "133": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 46681,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "135": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "test_ts": 1651978358601,
+    "dash_title": "TPCH",
+    "read_behavior": "not_change",
+    "write_behavior": "filter_change",
+    "refresh_interval": 30,
+    "num_refresh": 1,
+    "mvc_properties": 1,
+    "opt_viewport": true,
+    "opt_exec_time": false,
+    "opt_skip_write": true
+}{
+    "log_time": 40719,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "132": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 42522,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "133": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 43443,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "135": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "test_ts": 1651978656016,
+    "dash_title": "TPCH",
+    "read_behavior": "not_change",
+    "write_behavior": "filter_change",
+    "refresh_interval": 30,
+    "num_refresh": 1,
+    "mvc_properties": 1,
+    "opt_viewport": true,
+    "opt_exec_time": false,
+    "opt_skip_write": true
+}{
+    "log_time": 41534,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "132": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 43345,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "133": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 44048,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "135": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "test_ts": 1651978811533,
+    "dash_title": "TPCH",
+    "read_behavior": "not_change",
+    "write_behavior": "filter_change",
+    "refresh_interval": 30,
+    "num_refresh": 1,
+    "mvc_properties": 1,
+    "opt_viewport": true,
+    "opt_exec_time": false,
+    "opt_skip_write": true
+}{
+    "log_time": 41409,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "132": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 43175,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "133": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 44124,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "135": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "test_ts": 1651980546337,
+    "dash_title": "TPCH",
+    "read_behavior": "not_change",
+    "write_behavior": "filter_change",
+    "refresh_interval": 30,
+    "num_refresh": 1,
+    "mvc_properties": 1,
+    "opt_viewport": true,
+    "opt_exec_time": true,
+    "opt_skip_write": true
+}{
+    "log_time": 89756,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "133": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 90686,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "135": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 91655,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "132": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "test_ts": 1651980781005,
+    "dash_title": "TPCH",
+    "read_behavior": "not_change",
+    "write_behavior": "filter_change",
+    "refresh_interval": 30,
+    "num_refresh": 1,
+    "mvc_properties": 1,
+    "opt_viewport": true,
+    "opt_exec_time": true,
+    "opt_skip_write": true
+}{
+    "log_time": 55463,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "133": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 56307,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "135": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 57386,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "132": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "test_ts": 1651980934142,
+    "dash_title": "TPCH",
+    "read_behavior": "not_change",
+    "write_behavior": "filter_change",
+    "refresh_interval": 30,
+    "num_refresh": 1,
+    "mvc_properties": 1,
+    "opt_viewport": false,
+    "opt_exec_time": true,
+    "opt_skip_write": true
+}{
+    "log_time": 74106,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "135": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 83242,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "133": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "log_time": 85680,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "132": {
+            "ts": 1,
+            "version_result": "response"
+        }
+    }
+}{
+    "test_ts": 1651982456215,
+    "dash_title": "TPCH",
+    "read_behavior": "not_change",
+    "write_behavior": "filter_change",
+    "refresh_interval": 30,
+    "num_refresh": 1,
+    "mvc_properties": 1,
+    "opt_viewport": false,
+    "opt_exec_time": true,
+    "opt_skip_write": true
+}{
+    "log_time": 56740,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "135": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q4"
+        }
+    }
+}{
+    "log_time": 76031,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "132": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q3"
+        }
+    }
+}{
+    "log_time": 79408,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "133": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q1"
+        }
+    }
+}
