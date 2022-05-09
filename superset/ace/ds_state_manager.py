@@ -77,9 +77,9 @@ class DashStateManager:
         for node_group in ret_list:
             for node_id in node_group:
                 if node_id in node_ids_in_view_port:
-                    self.view_port_time[ts][node_id] = duration * 2
-                else:
                     self.view_port_time[ts][node_id] = duration
+                else:
+                    self.view_port_time[ts][node_id] = 0
         self.meta_data_lock.release()
 
         return ts, ret_list
@@ -95,7 +95,7 @@ class DashStateManager:
         if not self.opt_viewport and self.opt_exec_time:
             return random.choice(tuple(node_ids))
         self.meta_data_lock.acquire()
-        max_priority = 0.0
+        max_priority = -1
         ret_node_id = -1
         for node_id in node_ids:
             if not self.opt_viewport:
@@ -155,17 +155,18 @@ class DashStateManager:
         elif self.prop == PropertyCombination.MCM:
             ts_lower_bound = self._ts_from_last_read(node_id_set)
             ts_list = [ts for ts in range(ts_lower_bound, last_submitted + 1)]
-            ss_list = map(lambda ts: self.view_graph.read_snapshot(ts, node_id_set),
-                          ts_list)
+            ss_list = [self.view_graph.read_snapshot(ts, node_id_set) for ts in ts_list]
             ret_ss = {}
+            ret_ts = START_TS
             min_iv = sys.maxsize
-            for ss in ss_list:
-                cur_iv_num = compute_iv_num(ss)
-                if cur_iv_num < min_iv:
-                    ret_ss = ss
+            for idx, cur_ss in enumerate(ss_list):
+                cur_ts = ts_list[idx]
+                cur_iv_num = compute_iv_num(cur_ss)
+                if cur_iv_num < min_iv or (cur_iv_num == min_iv and cur_ts > ret_ts):
+                    ret_ts = cur_ts
+                    ret_ss = cur_ss
                     min_iv = cur_iv_num
             snapshot = ret_ss
-
         else:  # M-C_F
             snapshot = self.view_graph.read_snapshot(last_submitted, node_id_set)
 
@@ -185,7 +186,9 @@ class DashStateManager:
         for node_id in snapshot:
             new_version = snapshot[node_id]
             old_version = self.last_read.get(node_id, None)
-            if old_version is None or not old_version.equal_ts(new_version):
+            if old_version is None or (not old_version.equal_ts(new_version))\
+                or (old_version.equal_ts(new_version) and
+                    isinstance(old_version, IV) and isinstance(new_version, Version)):
                 new_snapshot[node_id] = new_version
             self.last_read[node_id] = new_version
         return new_snapshot

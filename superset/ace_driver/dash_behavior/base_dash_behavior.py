@@ -25,7 +25,8 @@ def clean_read_results(read_results: dict) -> dict:
     snapshot = read_results["snapshot"]
     for node_id_str in snapshot:
         result = snapshot[node_id_str]
-        result["version_result"] = "response"
+        if result["version_result"] != "IV":
+            result["version_result"] = "response"
     return read_results
 
 
@@ -89,6 +90,7 @@ class BaseDashBehavior:
         self.access_token = None
         self.refresh_token = None
         self.headers = None
+        self.refresh_headers = None
 
         self.dash_title_to_id = {}
 
@@ -116,6 +118,8 @@ class BaseDashBehavior:
         self.refresh_token = token_dict["refresh_token"]
         self.headers = {"Content-type": "application/json",
                         "Authorization": f"Bearer {self.access_token}"}
+        self.refresh_headers = {"Content-type": "application/json",
+                                "Authorization": f"Bearer {self.refresh_token}"}
 
     def load_all_dashboards(self) -> None:
         try:
@@ -166,55 +170,82 @@ class BaseDashBehavior:
             print("Config Error: " + str(error.response))
             exit(-1)
 
+    def get_new_token(self):
+        refresh_url = f"{self.url_header}/security/refresh"
+        result = requests.post(refresh_url,
+                               headers=self.refresh_headers)
+        try:
+            result.raise_for_status()
+        except HTTPError as error:
+            print("Refresh Token Error: " + str(error.response))
+            exit(-1)
+        self.access_token = json.loads(result.text)["access_token"]
+        self.headers = {"Content-type": "application/json",
+                        "Authorization": f"Bearer {self.access_token}"}
+        self.print("Refreshed the token")
+
     def post_refresh(self, dash_id: str,
                      node_ids_to_refresh: list,
                      node_ids_in_viewport: list,
                      chart_id_to_form_data: dict,
                      cur_filter: list) -> int:
-        refresh_url = f"{self.url_header}/dashboard/ace/{dash_id}/refresh"
-        processed_chart_id_to_form_data = {}
-        for chart_id in chart_id_to_form_data:
-            form_data = chart_id_to_form_data[chart_id]
-            processed_chart_id_to_form_data[chart_id] =\
-                gen_request_chart_form_data(form_data, cur_filter)
-        json_body = {
-            "node_ids_to_refresh": node_ids_to_refresh,
-            "node_ids_in_viewport": node_ids_in_viewport,
-            "charts_form_data": processed_chart_id_to_form_data,
-        }
-        result = requests.post(refresh_url,
-                               headers=self.headers,
-                               json=json_body)
-        try:
-            result.raise_for_status()
-        except HTTPError as error:
-            print("Refresh Error: " + str(error.response))
-            exit(-1)
-        return int(json.loads(result.text)["result"]["ts"])
+        while True:
+            refresh_url = f"{self.url_header}/dashboard/ace/{dash_id}/refresh"
+            processed_chart_id_to_form_data = {}
+            for chart_id in chart_id_to_form_data:
+                form_data = chart_id_to_form_data[chart_id]
+                processed_chart_id_to_form_data[chart_id] = \
+                    gen_request_chart_form_data(form_data, cur_filter)
+            json_body = {
+                "node_ids_to_refresh": node_ids_to_refresh,
+                "node_ids_in_viewport": node_ids_in_viewport,
+                "charts_form_data": processed_chart_id_to_form_data,
+            }
+            result = requests.post(refresh_url,
+                                   headers=self.headers,
+                                   json=json_body)
+            if int(result.status_code) == 401:
+                self.get_new_token()
+            else:
+                try:
+                    result.raise_for_status()
+                except HTTPError as error:
+                    print("Refresh Error: " + str(error.response))
+                    exit(-1)
+                return int(json.loads(result.text)["result"]["ts"])
 
     def read_refreshed_charts(self, dash_id: int,
                               node_ids_to_read: list) -> dict:
-        read_charts_url = f"{self.url_header}/dashboard/ace/{dash_id}/charts"
-        json_body ={
-            "node_ids_to_read": node_ids_to_read
-        }
-        result = requests.post(read_charts_url,
-                               headers=self.headers,
-                               json=json_body)
-        try:
-            result.raise_for_status()
-        except HTTPError as error:
-            print("Read Charts Error: " + str(error.response))
-            exit(-1)
-        return clean_read_results(json.loads(result.text)["result"])
+        while True:
+            read_charts_url = f"{self.url_header}/dashboard/ace/{dash_id}/charts"
+            json_body = {
+                "node_ids_to_read": node_ids_to_read
+            }
+            result = requests.post(read_charts_url,
+                                   headers=self.headers,
+                                   json=json_body)
+            if int(result.status_code) == 401:
+                self.get_new_token()
+            else:
+                try:
+                    result.raise_for_status()
+                except HTTPError as error:
+                    print("Read Charts Error: " + str(error.response))
+                    exit(-1)
+                return clean_read_results(json.loads(result.text)["result"])
 
     def clean_up(self, dash_id: str) -> None:
-        try:
+        while True:
             delete_dash_state_url = f"{self.url_header}/dashboard/" \
                                     f"ace/{dash_id}/delete_ds_state"
             dash_state_result = requests.post(delete_dash_state_url,
                                               headers=self.headers)
-            dash_state_result.raise_for_status()
-        except HTTPError as error:
-            print("Cleanup Error: " + str(error.response))
-            exit(-1)
+            if int(dash_state_result.status_code) == 401:
+                self.get_new_token()
+            else:
+                try:
+                    dash_state_result.raise_for_status()
+                except HTTPError as error:
+                    print("Cleanup Error: " + str(error.response))
+                    exit(-1)
+                return

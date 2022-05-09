@@ -77,12 +77,13 @@ class Scheduler(Thread):
                     cur_chart_ids, cur_charts_form_data)
                 while len(cur_chart_ids) != 0:
                     cur_chart_ids = self.skip_chart_refresh(cur_chart_ids)
-                    chart_id_to_schedule = self.schedule_one_chart(cur_ts,
-                                                                   cur_chart_ids,
-                                                                   chart_id_to_cost)
-                    self.refresh_one_chart(cur_ts, chart_id_to_schedule,
-                                           cur_charts_form_data)
-                    cur_chart_ids.remove(chart_id_to_schedule)
+                    if len(cur_chart_ids) != 0:
+                        chart_id_to_schedule = self.schedule_one_chart(cur_ts,
+                                                                       cur_chart_ids,
+                                                                       chart_id_to_cost)
+                        self.refresh_one_chart(cur_ts, chart_id_to_schedule,
+                                               cur_charts_form_data)
+                        cur_chart_ids.remove(chart_id_to_schedule)
                 self.finished_ts_set.add(cur_ts)
                 self.dependent_ts_set.add(cur_ts)
                 if self.dependent_ts_set.issubset(self.finished_ts_set):

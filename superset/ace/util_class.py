@@ -94,7 +94,7 @@ class Node:
     def get_version_by_snapshot(self, ts: int) -> BaseVersion:
         self.local_lock.acquire()
         ret_version = None
-        max_ts = -1
+        max_ts = START_TS - 1
         for version in self.versions:
             if max_ts < version.ts <= ts:
                 ret_version = version
@@ -115,7 +115,7 @@ class Node:
 
     def clean_unused_versions(self, ts: int) -> None:
         self.local_lock.acquire()
-        lower_bound = -1
+        lower_bound = START_TS - 1
         for version in self.versions:
             if lower_bound < version.ts <= ts:
                 lower_bound = version.ts

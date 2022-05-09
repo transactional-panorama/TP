@@ -60,24 +60,6 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.num_refresh = num_refresh
         self.stat_dir = stat_dir
 
-        self.db_name = db_name
-        self.db_username = db_username
-        self.db_password = db_password
-        self.db_host = db_host
-        self.db_port = db_port
-        self.conn = None
-        if self.write_behavior != "filter_change":
-            try:
-                self.conn = psycopg2.connect(dbname=db_name,
-                                             user=db_username,
-                                             password=db_password,
-                                             host=db_host,
-                                             port=db_port)
-                self.delete_tuples_from_base_tables()
-            except psycopg2.Error as e:
-                print("Creating connection error: " + e.pgerror)
-                exit(-1)
-
         # Workload-specific data
         self.dash_title = dashboard_title
         self.dash_id = None
@@ -133,6 +115,24 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.commit_ts = -1
         self.viewport_up_to_date = False
 
+        self.db_name = db_name
+        self.db_username = db_username
+        self.db_password = db_password
+        self.db_host = db_host
+        self.db_port = db_port
+        self.conn = None
+        if self.write_behavior != "filter_change":
+            try:
+                self.conn = psycopg2.connect(dbname=db_name,
+                                             user=db_username,
+                                             password=db_password,
+                                             host=db_host,
+                                             port=db_port)
+                self.delete_tuples_from_base_tables()
+            except psycopg2.Error as e:
+                print("Creating connection error: " + e.pgerror)
+                exit(-1)
+
     def delete_tuples_from_base_tables(self):
         rows_to_delete = self.sf * self.order_card * \
                          self.new_data_percentage * self.num_refresh
@@ -146,12 +146,12 @@ class TPCHDashBehavior(BaseDashBehavior):
         rows_to_insert_end = self.sf * self.order_card * \
                              self.new_data_percentage * (num_refresh_done + 1)
         with self.conn.cursor() as cur:
-            cur.execute(f"insert into lineitem select * from lineitem_full "
-                        f"where l_orderkey > {rows_to_insert_start}"
-                        f"and l_orderkey <= {rows_to_insert_end}")
             cur.execute(f"insert into orders select * from orders_full "
                         f"where o_orderkey > {rows_to_insert_start}"
                         f"and o_orderkey <= {rows_to_insert_end}")
+            cur.execute(f"insert into lineitem select * from lineitem_full "
+                        f"where l_orderkey > {rows_to_insert_start}"
+                        f"and l_orderkey <= {rows_to_insert_end}")
 
     def get_charts_info(self, init_submit_ts: int) -> None:
         get_charts_url = f"{self.url_header}/dashboard/{self.dash_id}/charts"
@@ -209,7 +209,8 @@ class TPCHDashBehavior(BaseDashBehavior):
                                                   node_ids_in_viewport))
                 new_commit_ts = int(read_result["ts"])
                 if new_commit_ts != self.commit_ts:
-                    self.print(f"Refresh {new_commit_ts} committed")
+                    self.print(f"Refresh {new_commit_ts} committed;"
+                               f"Submitted ts is {self.submit_ts}")
                     self.stat_collector.collect_commit(self.cur_time, new_commit_ts)
                 self.commit_ts = new_commit_ts
                 new_read = read_result["snapshot"]
@@ -270,7 +271,7 @@ class TPCHDashBehavior(BaseDashBehavior):
 
     def simulate_one_refresh(self) -> None:
         if self.refresh_counter >= self.num_refresh or \
-           self.cur_time - self.last_refresh_time < self.refresh_interval_ms:
+            self.cur_time - self.last_refresh_time < self.refresh_interval_ms:
             return
 
         # Build necessary data structures

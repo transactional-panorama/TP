@@ -39,6 +39,7 @@ class StatsCollector:
         self.read_views_logs = []
         self.invisibility = 0.0
         self.staleness = 0.0
+        self.total_time = 0.0
         self.log_file = "behavior.log"
         self.refresh_log_file = "refresh.log"
         self.viewport_log_file = "viewport.log"
@@ -107,7 +108,9 @@ class StatsCollector:
             if version_result == "IV":
                 self.invisibility += txn_duration
             else:
-                self.staleness += (node_id_to_ts[node_id] - ts) * txn_duration
+                node_staleness = (node_id_to_ts[node_id] - ts) * txn_duration
+                self.staleness += node_staleness
+            self.total_time += txn_duration
 
     def flush_logs(self, logs: list, log_file_name: str):
         log_file_path = os.path.join(self.stat_dir, log_file_name)
@@ -126,5 +129,6 @@ class StatsCollector:
         stat_dict = self.configs.copy()
         stat_dict["invisibility"] = self.invisibility
         stat_dict["staleness"] = self.staleness
+        stat_dict["total_time"] = self.total_time
         with open(stat_file_path, 'a') as f:
             f.write(json.dumps(stat_dict, indent=4))
