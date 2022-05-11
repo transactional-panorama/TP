@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+import random
 import requests
 import json
 import time
@@ -38,7 +39,10 @@ class TPCHDashBehavior(BaseDashBehavior):
                  username: str,
                  password: str,
                  dashboard_title: str,
+                 viewport_range: int,
+                 shift_step: int,
                  read_behavior: str,
+                 random_viewport_start: bool,
                  write_behavior: str,
                  refresh_interval: int,
                  num_refresh: int,
@@ -59,6 +63,8 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.refresh_interval_ms = refresh_interval * 1000
         self.num_refresh = num_refresh
         self.stat_dir = stat_dir
+        self.viewport_range = viewport_range
+        self.viewport_shift_step = shift_step
 
         # Workload-specific data
         self.dash_title = dashboard_title
@@ -72,9 +78,9 @@ class TPCHDashBehavior(BaseDashBehavior):
 
         self.txn_interval = 0.1
         self.viewport_interval_ms = 1000
-        self.viewport_range = 4
-        self.viewport_shift = 2
         self.viewport = {"start": 0, "end": self.viewport_range}
+        self.random_viewport_start = random_viewport_start
+        self.is_up = False
         self.sf = 1
         self.order_card = 1500000
         self.new_data_percentage = 0.01
@@ -121,7 +127,8 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.db_host = db_host
         self.db_port = db_port
         self.conn = None
-        if self.write_behavior != "filter_change":
+        self.filter_change = "filter_change"
+        if self.write_behavior != self.filter_change:
             try:
                 self.conn = psycopg2.connect(dbname=db_name,
                                              user=db_username,
@@ -132,6 +139,12 @@ class TPCHDashBehavior(BaseDashBehavior):
             except psycopg2.Error as e:
                 print("Creating connection error: " + e.pgerror)
                 exit(-1)
+
+    def gen_random_viewport_start(self):
+        if self.random_viewport_start:
+            self.viewport["start"] = random. \
+                randint(0, len(self.chart_ids) - self.viewport_range - 1)
+            self.viewport["end"] = self.viewport["start"] + self.viewport_range
 
     def delete_tuples_from_base_tables(self):
         rows_to_delete = self.sf * self.order_card * \
@@ -187,6 +200,8 @@ class TPCHDashBehavior(BaseDashBehavior):
 
     def run_test(self) -> None:
         self.initial_loading()
+        self.gen_random_viewport_start()
+
         self.cur_time = get_cur_time()
         new_ids_in_viewport = get_ids_in_viewport(self.chart_ids, self.viewport)
         self.stat_collector.collect_viewport_change(
@@ -194,8 +209,18 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.last_refresh_time = self.cur_time - self.refresh_interval_ms
         self.print("Init viewport: " + str(new_ids_in_viewport))
 
-        while self.refresh_counter != self.num_refresh or \
-            self.submit_ts != self.commit_ts:
+        while True:
+
+            if (self.write_behavior == self.filter_change and
+                self.refresh_counter == self.num_refresh and
+                self.submit_ts == self.commit_ts):
+                break
+
+            if (self.write_behavior != self.filter_change and
+                self.refresh_counter == self.num_refresh and
+                self.submit_ts == self.commit_ts and
+                self.cur_time - self.last_refresh_time > self.refresh_interval_ms):
+                break
 
             # simulate a refresh when necessary
             self.simulate_one_refresh()
@@ -275,7 +300,7 @@ class TPCHDashBehavior(BaseDashBehavior):
             return
 
         # Build necessary data structures
-        if self.write_behavior == "filter_change":
+        if self.write_behavior == self.filter_change:
             # Build a filter
             cur_filter = self.predefined_filters[self.cur_filter_idx]
 
@@ -332,22 +357,39 @@ class TPCHDashBehavior(BaseDashBehavior):
             pass
         elif self.read_behavior == "regular_change":
             if self.cur_time - self.last_viewport_change >= self.viewport_interval_ms:
-                self.move_view_port()
+                self.is_up = self.move_viewport(self.is_up)
                 return True
-        else:  # see_change
+        elif self.read_behavior == "see_change":
             if self.viewport_up_to_date and \
                 self.cur_time - self.last_viewport_change \
                 >= self.viewport_interval_ms:
-                self.move_view_port()
+                self.is_up = self.move_viewport(self.is_up)
+                return True
+        else:  # random_regular_change
+            if self.cur_time - self.last_viewport_change >= self.viewport_interval_ms:
+                if random.randint(0, 1) == 0:
+                    self.is_up = not self.is_up
+                self.is_up = self.move_viewport(self.is_up)
                 return True
         return False
 
-    def move_view_port(self) -> None:
-        view_port_start = self.viewport["start"]
-        view_port_start = (view_port_start + self.viewport_shift) % len(self.chart_ids)
-        view_port_end = min(view_port_start + self.viewport_range, len(self.chart_ids))
-        self.viewport["start"] = view_port_start
-        self.viewport["end"] = view_port_end
+    def move_viewport(self, is_up: bool) -> bool:
+        if is_up:
+            new_viewport_start = max(0,
+                                     self.viewport["start"] - self.viewport_shift_step)
+            new_viewport_end = new_viewport_start + self.viewport_range
+        else:
+            new_viewport_end = min(len(self.chart_ids),
+                                   self.viewport["end"] + self.viewport_shift_step)
+            new_viewport_start = new_viewport_end - self.viewport_range
+        self.viewport["start"] = new_viewport_start
+        self.viewport["end"] = new_viewport_end
+        if new_viewport_start == 0:
+            return False
+        elif new_viewport_end == len(self.chart_ids):
+            return True
+        else:
+            return is_up
 
     def is_up_to_date(self, snapshot: dict) -> bool:
         up_to_date = True

@@ -37,8 +37,17 @@ if __name__ == '__main__':
     parser.add_argument('--dashboard',
                         help='the dashboard',
                         required=True)
+    parser.add_argument('--viewport_range',
+                        help='the viewport size',
+                        required=True)
+    parser.add_argument('--shift_step',
+                        help='the number of viz when we shift a viewport',
+                        required=True)
     parser.add_argument('--read_behavior',
                         help='simulated behavior of a user reading the dashboard',
+                        required=True)
+    parser.add_argument('--random_viewport_start',
+                        help='randomized starting viewport',
                         required=True)
     parser.add_argument('--write_behavior',
                         help='simulated behavior of a user or'
@@ -96,7 +105,10 @@ if __name__ == '__main__':
                       username=args.username,
                       password=args.password,
                       dashboard_title=args.dashboard,
+                      viewport_range=args.viewport_range,
+                      shift_step=args.shift_step,
                       read_behavior=args.read_behavior,
+                      random_viewport_start=is_true(args.random_viewport_start),
                       write_behavior=args.write_behavior,
                       refresh_interval=args.refresh_interval,
                       num_refresh=args.num_refresh,
