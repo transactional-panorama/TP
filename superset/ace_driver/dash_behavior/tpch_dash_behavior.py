@@ -42,7 +42,7 @@ class TPCHDashBehavior(BaseDashBehavior):
                  viewport_range: int,
                  shift_step: int,
                  read_behavior: str,
-                 random_viewport_start: bool,
+                 viewport_start: int,
                  write_behavior: str,
                  refresh_interval: int,
                  num_refresh: int,
@@ -78,8 +78,9 @@ class TPCHDashBehavior(BaseDashBehavior):
 
         self.txn_interval = 0.1
         self.viewport_interval_ms = 1000
-        self.viewport = {"start": 0, "end": self.viewport_range}
-        self.random_viewport_start = random_viewport_start
+        self.viewport_start = viewport_start
+        self.viewport = {}
+
         self.is_up = False
         self.sf = 1
         self.order_card = 1500000
@@ -140,11 +141,14 @@ class TPCHDashBehavior(BaseDashBehavior):
                 print("Creating connection error: " + e.pgerror)
                 exit(-1)
 
-    def gen_random_viewport_start(self):
-        if self.random_viewport_start:
-            self.viewport["start"] = random. \
-                randint(0, len(self.chart_ids) - self.viewport_range - 1)
-            self.viewport["end"] = self.viewport["start"] + self.viewport_range
+    def init_viewport(self, viewport_start):
+        if viewport_start > len(self.chart_ids) - self.viewport_range:
+            self.viewport = {"start": len(self.chart_ids) - self.viewport_range,
+                             "end": len(self.chart_ids)}
+        else:
+            self.viewport = {"start": viewport_start,
+                             "end": viewport_start + self.viewport_range}
+
 
     def delete_tuples_from_base_tables(self):
         rows_to_delete = self.sf * self.order_card * \
@@ -197,17 +201,18 @@ class TPCHDashBehavior(BaseDashBehavior):
                                   self.db_username, self.db_password,
                                   self.db_host, self.db_port)
         self.get_charts_info(-1)
+        self.init_viewport(self.viewport_start)
 
     def run_test(self) -> None:
         self.initial_loading()
-        self.gen_random_viewport_start()
+
+        new_ids_in_viewport = get_ids_in_viewport(self.chart_ids, self.viewport)
+        self.print("Init viewport: " + str(new_ids_in_viewport))
 
         self.cur_time = get_cur_time()
-        new_ids_in_viewport = get_ids_in_viewport(self.chart_ids, self.viewport)
         self.stat_collector.collect_viewport_change(
             self.cur_time - self.test_start_ts, new_ids_in_viewport)
         self.last_refresh_time = self.cur_time - self.refresh_interval_ms
-        self.print("Init viewport: " + str(new_ids_in_viewport))
 
         while True:
 

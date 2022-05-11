@@ -1,0 +1,94 @@
+{
+    "test_ts": 1652307000278,
+    "dash_title": "TPCH",
+    "read_behavior": "not_change",
+    "write_behavior": "filter_change",
+    "refresh_interval": 10,
+    "num_refresh": 1,
+    "mvc_properties": 1,
+    "opt_viewport": true,
+    "opt_exec_time": true,
+    "opt_skip_write": true
+}{
+    "log_time": 33074,
+    "log_type": "viewport_change",
+    "node_ids": [
+        147,
+        148,
+        149,
+        150,
+        151,
+        152
+    ]
+}{
+    "log_time": 33074,
+    "log_type": "refresh",
+    "node_ids": [
+        133,
+        132,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        143,
+        145,
+        146,
+        148,
+        149,
+        150,
+        151,
+        153
+    ],
+    "txn_id": 1
+}{
+    "log_time": 34301,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "150": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q19"
+        }
+    }
+}{
+    "log_time": 36039,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "151": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q20"
+        }
+    }
+}{
+    "log_time": 38425,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "148": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q17"
+        }
+    }
+}{
+    "log_time": 42910,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "149": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q18"
+        }
+    }
+}{
+    "log_time": 1652307058737,
+    "log_type": "commit",
+    "txn_id": 1
+}

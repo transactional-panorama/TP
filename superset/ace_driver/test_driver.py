@@ -39,16 +39,19 @@ if __name__ == '__main__':
                         required=True)
     parser.add_argument('--viewport_range',
                         help='the viewport size',
+                        type=int,
                         required=True)
     parser.add_argument('--shift_step',
                         help='the number of viz when we shift a viewport',
+                        type=int,
                         required=True)
     parser.add_argument('--read_behavior',
                         help='simulated behavior of a user reading the dashboard',
                         required=True)
-    parser.add_argument('--random_viewport_start',
-                        help='randomized starting viewport',
-                        required=True)
+    parser.add_argument('--viewport_start',
+                        help='starting viewport',
+                        type=int,
+                        default=0)
     parser.add_argument('--write_behavior',
                         help='simulated behavior of a user or'
                              'an external system modifying the dashboard',
@@ -108,7 +111,7 @@ if __name__ == '__main__':
                       viewport_range=args.viewport_range,
                       shift_step=args.shift_step,
                       read_behavior=args.read_behavior,
-                      random_viewport_start=is_true(args.random_viewport_start),
+                      viewport_start=args.viewport_start,
                       write_behavior=args.write_behavior,
                       refresh_interval=args.refresh_interval,
                       num_refresh=args.num_refresh,
@@ -121,7 +124,6 @@ if __name__ == '__main__':
                       db_username=args.db_username,
                       db_password=args.db_password,
                       db_host=args.db_host,
-                      db_port=args.db_port
-                      )
+                      db_port=args.db_port)
     testACE.start_test()
     testACE.report_results()
