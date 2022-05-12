@@ -108,7 +108,8 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.test_start_ts = get_cur_time()
         self.stat_collector = StatsCollector(
             stat_dir, self.test_start_ts, self.dash_title,
-            read_behavior, write_behavior, refresh_interval,
+            viewport_range, shift_step,
+            read_behavior, viewport_start, write_behavior, refresh_interval,
             num_refresh, mvc_properties, opt_viewport,
             opt_exec_time, opt_skip_write)
 
