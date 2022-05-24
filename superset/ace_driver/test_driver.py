@@ -45,6 +45,10 @@ if __name__ == '__main__':
                         help='the number of viz when we shift a viewport',
                         type=int,
                         required=True)
+    parser.add_argument('--explore_range',
+                        help='the range of dashboard to explore',
+                        type=int,
+                        required=True)
     parser.add_argument('--read_behavior',
                         help='simulated behavior of a user reading the dashboard',
                         required=True)
@@ -84,6 +88,9 @@ if __name__ == '__main__':
                              'skips refreshing a view that will be refreshed'
                              'by later writes',
                         default="True")
+    parser.add_argument('--enable_iv_sl_log',
+                        help="enable iv/sl log",
+                        default="False")
     parser.add_argument('--stat_dir',
                         help='the dir for reporting the test results',
                         required=True)
@@ -110,6 +117,7 @@ if __name__ == '__main__':
                       dashboard_title=args.dashboard,
                       viewport_range=args.viewport_range,
                       shift_step=args.shift_step,
+                      explore_range=args.explore_range,
                       read_behavior=args.read_behavior,
                       viewport_start=args.viewport_start,
                       write_behavior=args.write_behavior,
@@ -119,6 +127,7 @@ if __name__ == '__main__':
                       opt_viewport=is_true(args.opt_viewport),
                       opt_exec_time=is_true(args.opt_exec_time),
                       opt_skip_write=is_true(args.opt_skip_write),
+                      enable_iv_sl_log=is_true(args.enable_iv_sl_log),
                       stat_dir=args.stat_dir,
                       db_name=args.db_name,
                       db_username=args.db_username,

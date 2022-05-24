@@ -5,6 +5,11 @@ TEST_HOME="$(dirname $ABS_PATH)"
 
 export STAT_DIR="$TEST_HOME/stat_dir"
 source $TEST_HOME/config/default.conf
+WRITE_BEHAVIOR="filter_change"
+NUM_REFRESH=3
+REFRESH_INTERVAL=5
+VIEWPORT_START=13
+MVC_PROPERTY=3
 
 python3 $TEST_HOME/../test_driver.py \
 	--server_addr $SERVER_ADDR \
@@ -13,6 +18,7 @@ python3 $TEST_HOME/../test_driver.py \
 	--dashboard $DASHBOARD \
 	--viewport_range $VIEWPORT_RANGE \
 	--shift_step $SHIFT_STEP \
+	--explore_range $EXPLORE_RANGE \
 	--read_behavior $READ_BEHAVIOR \
 	--viewport_start $VIEWPORT_START \
 	--write_behavior $WRITE_BEHAVIOR \

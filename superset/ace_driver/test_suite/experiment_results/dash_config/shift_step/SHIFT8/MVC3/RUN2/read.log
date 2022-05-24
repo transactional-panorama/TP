@@ -1,11 +1,11 @@
 {
-    "test_ts": 1652355672707,
+    "test_ts": 1652415515430,
     "dash_title": "TPCH",
     "viewport_range": 6,
     "shift_step": 8,
     "read_behavior": "regular_change",
     "viewport_start": 0,
-    "write_behavior": "filter_change",
+    "write_behavior": "source_data_change",
     "refresh_interval": 10,
     "num_refresh": 1,
     "mvc_properties": 3,
@@ -13,7 +13,7 @@
     "opt_exec_time": true,
     "opt_skip_write": true
 }{
-    "log_time": 39258,
+    "log_time": 45654,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -27,10 +27,20 @@
             "version_result": "response",
             "title": "tpch_q10"
         },
+        "142": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q11"
+        },
         "143": {
             "ts": 1,
             "version_result": "response",
             "title": "tpch_q12"
+        },
+        "144": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q13"
         },
         "145": {
             "ts": 1,
@@ -39,7 +49,7 @@
         }
     }
 }{
-    "log_time": 45902,
+    "log_time": 65952,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -52,6 +62,11 @@
             "ts": 1,
             "version_result": "response",
             "title": "tpch_q1"
+        },
+        "134": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q2"
         },
         "135": {
             "ts": 1,
@@ -70,7 +85,7 @@
         }
     }
 }{
-    "log_time": 56923,
+    "log_time": 67841,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -93,6 +108,11 @@
             "ts": 1,
             "version_result": "response",
             "title": "tpch_q20"
+        },
+        "152": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q22"
         },
         "153": {
             "ts": 1,

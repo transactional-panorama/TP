@@ -1,11 +1,11 @@
 {
-    "test_ts": 1652355426050,
+    "test_ts": 1652415222204,
     "dash_title": "TPCH",
     "viewport_range": 6,
     "shift_step": 6,
     "read_behavior": "regular_change",
     "viewport_start": 0,
-    "write_behavior": "filter_change",
+    "write_behavior": "source_data_change",
     "refresh_interval": 10,
     "num_refresh": 1,
     "mvc_properties": 3,
@@ -13,7 +13,7 @@
     "opt_exec_time": true,
     "opt_skip_write": true
 }{
-    "log_time": 40742,
+    "log_time": 50619,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -37,6 +37,11 @@
             "version_result": "response",
             "title": "tpch_q10"
         },
+        "142": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q11"
+        },
         "143": {
             "ts": 1,
             "version_result": "response",
@@ -44,10 +49,15 @@
         }
     }
 }{
-    "log_time": 44063,
+    "log_time": 53848,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
+        "144": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q13"
+        },
         "145": {
             "ts": 1,
             "version_result": "response",
@@ -57,10 +67,15 @@
             "ts": 1,
             "version_result": "IV",
             "title": "tpch_q15"
+        },
+        "147": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q16"
         }
     }
 }{
-    "log_time": 45183,
+    "log_time": 54847,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -76,7 +91,7 @@
         }
     }
 }{
-    "log_time": 46272,
+    "log_time": 55926,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -90,6 +105,11 @@
             "version_result": "response",
             "title": "tpch_q1"
         },
+        "134": {
+            "ts": 1,
+            "version_result": "IV",
+            "title": "tpch_q2"
+        },
         "135": {
             "ts": 1,
             "version_result": "response",
@@ -97,7 +117,7 @@
         }
     }
 }{
-    "log_time": 48471,
+    "log_time": 58112,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -113,7 +133,7 @@
         }
     }
 }{
-    "log_time": 49571,
+    "log_time": 59214,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -127,6 +147,11 @@
             "version_result": "IV",
             "title": "tpch_q20"
         },
+        "152": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q22"
+        },
         "153": {
             "ts": 1,
             "version_result": "IV",
@@ -134,7 +159,7 @@
         }
     }
 }{
-    "log_time": 52863,
+    "log_time": 62400,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -145,7 +170,7 @@
         }
     }
 }{
-    "log_time": 55055,
+    "log_time": 64579,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -156,7 +181,7 @@
         }
     }
 }{
-    "log_time": 56080,
+    "log_time": 65681,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -167,7 +192,7 @@
         }
     }
 }{
-    "log_time": 57149,
+    "log_time": 70935,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {

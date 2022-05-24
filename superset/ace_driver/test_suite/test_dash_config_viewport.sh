@@ -6,8 +6,9 @@ TEST_HOME="$(dirname $ABS_PATH)"
 REPORT_HOME="$TEST_HOME/experiment_results/dash_config/viewport_range"
 source $TEST_HOME/config/default.conf
 
+CHART_NUM=22
 declare -a START_RUN=1
-declare -a END_RUN=3
+declare -a END_RUN=10
 declare -a VIEWPORT_RANGE_OPTIONS=(6 10 14 18 22)
 declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4)
 
@@ -15,6 +16,7 @@ for RUN in `seq $START_RUN $END_RUN`
 do
     for VIEWPORT_RANGE in "${VIEWPORT_RANGE_OPTIONS[@]}"
     do
+        VIEWPORT_START=$(( $RANDOM % ($CHART_NUM - $VIEWPORT_RANGE + 1) ))
     	for MVC_PROPERTY in "${MVC_PROPERTY_OPTIONS[@]}"
     	do
     	    STAT_DIR="$REPORT_HOME/VIEWPORT$VIEWPORT_RANGE/MVC$MVC_PROPERTY/RUN$RUN"
@@ -28,6 +30,7 @@ do
 		--dashboard $DASHBOARD \
 		--viewport_range $VIEWPORT_RANGE \
 		--shift_step $SHIFT_STEP \
+		--explore_range $EXPLORE_RANGE \
 		--read_behavior $READ_BEHAVIOR \
 		--viewport_start $VIEWPORT_START \
 		--write_behavior $WRITE_BEHAVIOR \
@@ -45,7 +48,7 @@ do
 		--db_port $DB_PORT
 
 	    now="$(date)"
-            echo "$now: Finished, $STAT_DIR" >> $TEST_HOME/test.log
+            echo "$now: Finished, VIEWPORT_START: $VIEWPORT_START; $STAT_DIR" >> $TEST_HOME/test.log
     	done
     done
 done 

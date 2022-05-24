@@ -25,6 +25,7 @@ class TestACE:
                  dashboard_title: str,
                  viewport_range: int,
                  shift_step: int,
+                 explore_range: int,
                  read_behavior: str,
                  viewport_start: int,
                  write_behavior: str,
@@ -34,6 +35,7 @@ class TestACE:
                  opt_viewport: bool,
                  opt_exec_time: bool,
                  opt_skip_write: bool,
+                 enable_iv_sl_log: bool,
                  stat_dir: str,
                  db_name: str,
                  db_username: str,
@@ -42,11 +44,11 @@ class TestACE:
                  db_port):
         self.tpch_behavior = TPCHDashBehavior(server_addr, username,
                                               password, dashboard_title, viewport_range,
-                                              shift_step, read_behavior,
+                                              shift_step, explore_range, read_behavior,
                                               viewport_start, write_behavior,
                                               refresh_interval, num_refresh,
                                               mvc_property, opt_viewport, opt_exec_time,
-                                              opt_skip_write, stat_dir, db_name,
+                                              opt_skip_write, enable_iv_sl_log, stat_dir, db_name,
                                               db_username, db_password, db_host, db_port)
         self.tpch_behavior.setup()
 

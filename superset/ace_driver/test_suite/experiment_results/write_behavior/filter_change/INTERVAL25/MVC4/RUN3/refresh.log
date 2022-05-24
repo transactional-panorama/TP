@@ -1,10 +1,10 @@
 {
-    "test_ts": 1652341954844,
+    "test_ts": 1652538202982,
     "dash_title": "TPCH",
     "viewport_range": 6,
     "shift_step": 2,
     "read_behavior": "regular_change",
-    "viewport_start": 0,
+    "viewport_start": 12,
     "write_behavior": "filter_change",
     "refresh_interval": 25,
     "num_refresh": 3,
@@ -13,7 +13,7 @@
     "opt_exec_time": true,
     "opt_skip_write": true
 }{
-    "log_time": 33096,
+    "log_time": 28901,
     "log_type": "refresh",
     "node_ids": [
         133,
@@ -36,7 +36,11 @@
     ],
     "txn_id": 1
 }{
-    "log_time": 58109,
+    "log_time": 51426,
+    "log_type": "commit",
+    "txn_id": 1
+}{
+    "log_time": 53949,
     "log_type": "refresh",
     "node_ids": [
         133,
@@ -59,15 +63,11 @@
     ],
     "txn_id": 2
 }{
-    "log_time": 1652342013888,
-    "log_type": "commit",
-    "txn_id": 1
-}{
-    "log_time": 1652342036123,
+    "log_time": 75247,
     "log_type": "commit",
     "txn_id": 2
 }{
-    "log_time": 83125,
+    "log_time": 78986,
     "log_type": "refresh",
     "node_ids": [
         133,
@@ -90,7 +90,7 @@
     ],
     "txn_id": 3
 }{
-    "log_time": 1652342066526,
+    "log_time": 106415,
     "log_type": "commit",
     "txn_id": 3
 }

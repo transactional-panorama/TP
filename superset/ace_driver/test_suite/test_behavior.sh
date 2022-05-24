@@ -33,6 +33,7 @@ do
 			--dashboard $DASHBOARD \
 			--viewport_range $VIEWPORT_RANGE \
 			--shift_step $SHIFT_STEP \
+			--explore_range $EXPLORE_RANGE \
 			--read_behavior $READ_BEHAVIOR \
 			--viewport_start $VIEWPORT_START \
 			--write_behavior $WRITE_BEHAVIOR \

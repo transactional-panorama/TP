@@ -1,7 +1,10 @@
 {
-    "test_ts": 1652310724171,
+    "test_ts": 1652532553550,
     "dash_title": "TPCH",
+    "viewport_range": 6,
+    "shift_step": 2,
     "read_behavior": "regular_change",
+    "viewport_start": 13,
     "write_behavior": "filter_change",
     "refresh_interval": 10,
     "num_refresh": 3,
@@ -10,10 +13,15 @@
     "opt_exec_time": true,
     "opt_skip_write": true
 }{
-    "log_time": 87732,
+    "log_time": 74890,
     "log_type": "read_views",
     "recent_refresh_id": 3,
     "snapshot": {
+        "135": {
+            "ts": 3,
+            "version_result": "response",
+            "title": "tpch_q4"
+        },
         "136": {
             "ts": 3,
             "version_result": "response",
@@ -33,16 +41,6 @@
             "ts": 3,
             "version_result": "response",
             "title": "tpch_q8"
-        },
-        "140": {
-            "ts": 3,
-            "version_result": "response",
-            "title": "tpch_q9"
-        },
-        "141": {
-            "ts": 3,
-            "version_result": "response",
-            "title": "tpch_q10"
         }
     }
 }

@@ -10,6 +10,7 @@ declare -a START_RUN=1
 declare -a END_RUN=3
 declare -a SHIFT_STEP_OPTIONS=(2 4 6 8 10)
 declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4)
+WRITE_BEHAVIOR="source_data_change"
 
 for RUN in `seq $START_RUN $END_RUN`
 do
@@ -28,6 +29,7 @@ do
 		--dashboard $DASHBOARD \
 		--viewport_range $VIEWPORT_RANGE \
 		--shift_step $SHIFT_STEP \
+		--explore_range $EXPLORE_RANGE \
 		--read_behavior $READ_BEHAVIOR \
 		--viewport_start $VIEWPORT_START \
 		--write_behavior $WRITE_BEHAVIOR \

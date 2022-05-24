@@ -6,15 +6,17 @@ TEST_HOME="$(dirname $ABS_PATH)"
 REPORT_HOME="$TEST_HOME/experiment_results/write_behavior/filter_change"
 source $TEST_HOME/config/default.conf
 
-declare -a START_RUN=2
-declare -a END_RUN=3
-declare -a REFRESH_INTERVAL_OPTIONS=(10 15 20 25 30)
+CHART_NUM=22
+declare -a START_RUN=1
+declare -a END_RUN=10
+declare -a REFRESH_INTERVAL_OPTIONS=(5 10 15 20 25 30)
 declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4)
 WRITE_BEHAVIOR="filter_change"
 NUM_REFRESH=3
 
 for RUN in `seq $START_RUN $END_RUN`
 do
+    VIEWPORT_START=$(( $RANDOM % ($CHART_NUM - $VIEWPORT_RANGE + 1) ))
     for REFRESH_INTERVAL in "${REFRESH_INTERVAL_OPTIONS[@]}"
     do
     	for MVC_PROPERTY in "${MVC_PROPERTY_OPTIONS[@]}"
@@ -30,6 +32,7 @@ do
 		--dashboard $DASHBOARD \
 		--viewport_range $VIEWPORT_RANGE \
 		--shift_step $SHIFT_STEP \
+		--explore_range $EXPLORE_RANGE \
 		--read_behavior $READ_BEHAVIOR \
 		--viewport_start $VIEWPORT_START \
 		--write_behavior $WRITE_BEHAVIOR \
@@ -47,7 +50,7 @@ do
 		--db_port $DB_PORT
 
 	    now="$(date)"
-            echo "$now: Finished, $REPORT_HOME/INTERVAL$REFRESH_INTERVAL/MVC$MVC_PROPERTY/RUN$RUN" >> $TEST_HOME/test.log
+            echo "$now: Finished, VIEWPORT_START: $VIEWPORT_START; $STAT_DIR" >> $TEST_HOME/test.log
     	done
     done
 done 
