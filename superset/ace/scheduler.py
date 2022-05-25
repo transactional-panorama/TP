@@ -47,6 +47,7 @@ class Scheduler(Thread):
         self.finish = False
         self.app = app
         self.chart_data_query_context_schema = ChartDataQueryContextSchema()
+        self.chart_id_to_cost = None
 
     def submit_one_txn(self, ts: int, node_groups: list,
                        input_charts_form_data: dict):
@@ -105,6 +106,9 @@ class Scheduler(Thread):
                               charts_form_data: dict) -> dict:
         if not self.ds_state_manager.opt_exec_time:
             return {}
+        if (self.chart_id_to_cost is not None) and \
+            self.ds_state_manager.enable_stats_cache:
+            return self.chart_id_to_cost
         chart_id_to_cost = {}
         conn = None
         try:
@@ -125,6 +129,7 @@ class Scheduler(Thread):
             chart_id_to_cost = {}
         if conn:
             conn.close()
+        self.chart_id_to_cost = chart_id_to_cost
         return chart_id_to_cost
 
     def estimate_one_refresh_cost(self, cur, form_data: dict) -> int:

@@ -41,6 +41,7 @@ class DashStateManager:
         self.opt_viewport = True
         self.opt_exec_time = True
         self.opt_skip_write = True
+        self.enable_stats_cache = True
         self.db_name = ""
         self.username = ""
         self.password = ""
@@ -92,7 +93,7 @@ class DashStateManager:
 
     def get_top_priority_node(self, ts: int, node_ids: set,
                               chart_id_to_cost: dict) -> int:
-        if not self.opt_viewport and self.opt_exec_time:
+        if not self.opt_viewport and not self.opt_exec_time:
             return random.choice(tuple(node_ids))
         self.meta_data_lock.acquire()
         max_priority = -1
@@ -102,7 +103,7 @@ class DashStateManager:
                 cur_view_time = 1
             else:
                 cur_view_time = self.view_port_time[ts][node_id]
-            if not self.opt_exec_time:
+            if node_id not in chart_id_to_cost:
                 cur_execute_cost = 1
             else:
                 cur_execute_cost = chart_id_to_cost[node_id]
@@ -118,6 +119,7 @@ class DashStateManager:
                              opt_viewport: bool,
                              opt_exec_time: bool,
                              opt_skip_write: bool,
+                             enable_stats_cache: bool,
                              db_name: str,
                              username: str,
                              password: str,
@@ -127,6 +129,7 @@ class DashStateManager:
         self.opt_viewport = opt_viewport
         self.opt_exec_time = opt_exec_time
         self.opt_skip_write = opt_skip_write
+        self.enable_stats_cache = enable_stats_cache
 
         if db_name == "":
             self.opt_exec_time = False

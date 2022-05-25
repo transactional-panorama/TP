@@ -35,6 +35,7 @@ class TestACE:
                  opt_viewport: bool,
                  opt_exec_time: bool,
                  opt_skip_write: bool,
+                 enable_stats_cache: bool,
                  enable_iv_sl_log: bool,
                  stat_dir: str,
                  db_name: str,
@@ -48,7 +49,8 @@ class TestACE:
                                               viewport_start, write_behavior,
                                               refresh_interval, num_refresh,
                                               mvc_property, opt_viewport, opt_exec_time,
-                                              opt_skip_write, enable_iv_sl_log, stat_dir, db_name,
+                                              opt_skip_write, enable_stats_cache,
+                                              enable_iv_sl_log, stat_dir, db_name,
                                               db_username, db_password, db_host, db_port)
         self.tpch_behavior.setup()
 

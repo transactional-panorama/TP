@@ -88,6 +88,9 @@ if __name__ == '__main__':
                              'skips refreshing a view that will be refreshed'
                              'by later writes',
                         default="True")
+    parser.add_argument('--enable_stats_cache',
+                        help="enable stats cache",
+                        default="True")
     parser.add_argument('--enable_iv_sl_log',
                         help="enable iv/sl log",
                         default="False")
@@ -128,6 +131,7 @@ if __name__ == '__main__':
                       opt_exec_time=is_true(args.opt_exec_time),
                       opt_skip_write=is_true(args.opt_skip_write),
                       enable_iv_sl_log=is_true(args.enable_iv_sl_log),
+                      enable_stats_cache=is_true(args.enable_stats_cache),
                       stat_dir=args.stat_dir,
                       db_name=args.db_name,
                       db_username=args.db_username,

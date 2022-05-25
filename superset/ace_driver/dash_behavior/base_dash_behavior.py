@@ -83,7 +83,8 @@ class BaseDashBehavior:
                  mvc_properties: int,
                  opt_viewport: bool,
                  opt_exec_time: bool,
-                 opt_skip_write: bool):
+                 opt_skip_write: bool,
+                 enable_stats_cache: bool):
         self.url_header = f"http://{server_addr}/api/v1"
         self.username = username
         self.password = password
@@ -98,6 +99,7 @@ class BaseDashBehavior:
         self.opt_viewport = opt_viewport
         self.opt_exec_time = opt_exec_time
         self.opt_skip_write = opt_skip_write
+        self.enable_stats_cache = enable_stats_cache
 
         self.pp = pprint.PrettyPrinter(indent=4)
 
@@ -156,6 +158,7 @@ class BaseDashBehavior:
                 "opt_viewport": self.opt_viewport,
                 "opt_exec_time": self.opt_exec_time,
                 "opt_skip_write": self.opt_skip_write,
+                "enable_stats_cache": self.enable_stats_cache,
                 "db_name": db_name,
                 "username": db_username,
                 "password": db_password,

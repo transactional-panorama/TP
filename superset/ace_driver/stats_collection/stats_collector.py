@@ -36,6 +36,7 @@ class StatsCollector:
                  opt_viewport: bool,
                  opt_exec_time: bool,
                  opt_skip_write: bool,
+                 enable_stats_cache: bool,
                  enable_iv_sl_log: bool):
         self.stat_dir = stat_dir
         self.behavior_logs = []
@@ -69,6 +70,7 @@ class StatsCollector:
              "opt_viewport": opt_viewport,
              "opt_exec_time": opt_exec_time,
              "opt_skip_write": opt_skip_write,
+             "enable_stats_cache": enable_stats_cache,
              "enable_iv_sl_log": enable_iv_sl_log}
 
     def collect_refresh(self, log_time: int,
@@ -151,7 +153,7 @@ class StatsCollector:
             for one_log in logs:
                 f.write(json.dumps(one_log, indent=4))
 
-    def write_stats(self, cur_time: int):
+    def write_stats(self, cur_time: int, end_to_end_time: int):
         self.flush_logs(self.behavior_logs, self.log_file)
         self.flush_logs(self.refresh_logs, self.refresh_log_file)
         self.flush_logs(self.viewport_change_logs, self.viewport_log_file)
@@ -161,7 +163,8 @@ class StatsCollector:
 
         stat_file_path = os.path.join(self.stat_dir, self.stat_file)
         stat_dict = self.configs.copy()
-        stat_dict["finish_time"] = cur_time
+        stat_dict["end_to_end_time"] = end_to_end_time
+        stat_dict["test_time"] = cur_time
         stat_dict["invisibility"] = self.invisibility
         stat_dict["staleness"] = self.staleness
         stat_dict["weighted_staleness"] = self.weighted_staleness

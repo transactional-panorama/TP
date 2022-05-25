@@ -5,11 +5,14 @@ TEST_HOME="$(dirname $ABS_PATH)"
 
 export STAT_DIR="$TEST_HOME/stat_dir"
 source $TEST_HOME/config/default.conf
-WRITE_BEHAVIOR="filter_change"
-NUM_REFRESH=3
+WRITE_BEHAVIOR="source_data_change"
+NUM_REFRESH=1
 REFRESH_INTERVAL=5
-VIEWPORT_START=13
-MVC_PROPERTY=3
+VIEWPORT_START=1
+MVC_PROPERTY=4
+ENABLE_IV_SL_LOG="False"
+OPT_EXEC_TIME="True"
+OPT_VIEWPORT="True"
 
 python3 $TEST_HOME/../test_driver.py \
 	--server_addr $SERVER_ADDR \
@@ -28,6 +31,7 @@ python3 $TEST_HOME/../test_driver.py \
 	--opt_viewport $OPT_VIEWPORT \
 	--opt_exec_time $OPT_EXEC_TIME \
 	--opt_skip_write $OPT_SKIP_WRITE \
+	--enable_iv_sl_log $ENABLE_IV_SL_LOG \
 	--stat_dir $STAT_DIR \
 	--db_name $DB_NAME \
 	--db_username $DB_USERNAME \

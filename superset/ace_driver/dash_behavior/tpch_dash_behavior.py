@@ -51,6 +51,7 @@ class TPCHDashBehavior(BaseDashBehavior):
                  opt_viewport: bool,
                  opt_exec_time: bool,
                  opt_skip_write: bool,
+                 enable_stats_cache: bool,
                  enable_iv_sl_log: bool,
                  stat_dir: str,
                  db_name: str,
@@ -59,7 +60,7 @@ class TPCHDashBehavior(BaseDashBehavior):
                  db_host: str,
                  db_port):
         super().__init__(server_addr, username, password, mvc_properties, opt_viewport,
-                         opt_exec_time, opt_skip_write)
+                         opt_exec_time, opt_skip_write, enable_stats_cache)
         self.read_behavior = read_behavior
         self.write_behavior = write_behavior
         self.refresh_interval_ms = refresh_interval * 1000
@@ -118,13 +119,14 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.chart_title_to_id = {}
         self.chart_id_to_title = {}
 
-        self.test_start_ts = get_cur_time()
+        self.test_start_ts = 0
+        self.test_init_ts = get_cur_time()
         self.stat_collector = StatsCollector(
-            stat_dir, self.test_start_ts, self.dash_title,
+            stat_dir, self.test_init_ts, self.dash_title,
             viewport_range, shift_step, explore_range,
             read_behavior, viewport_start, write_behavior, refresh_interval,
             num_refresh, mvc_properties, opt_viewport,
-            opt_exec_time, opt_skip_write, enable_iv_sl_log)
+            opt_exec_time, opt_skip_write, enable_stats_cache, enable_iv_sl_log)
 
         # Global states during the test
         self.refresh_counter = 0
@@ -239,10 +241,12 @@ class TPCHDashBehavior(BaseDashBehavior):
     def run_test(self) -> None:
         self.initial_loading()
 
+        self.cur_time = get_cur_time()
+        self.test_start_ts = self.cur_time
+        self.last_viewport_change = self.cur_time
         new_ids_in_viewport = get_ids_in_viewport(self.chart_ids, self.viewport)
         self.print("Init viewport: " + str(new_ids_in_viewport))
 
-        self.cur_time = get_cur_time()
         self.stat_collector.collect_viewport_change(
             self.cur_time - self.test_start_ts, new_ids_in_viewport)
         self.last_refresh_time = self.cur_time - self.refresh_interval_ms
@@ -287,8 +291,8 @@ class TPCHDashBehavior(BaseDashBehavior):
             self.viewport_up_to_date = self.is_up_to_date(read_snapshot)
             self.stat_collector.collect_read_views(
                 self.cur_time - self.test_start_ts,
-                self.submit_ts, self.chart_id_to_submit_ts, new_read,
-                read_snapshot, int(self.txn_interval * 1000))
+                self.submit_ts, self.chart_id_to_submit_ts, self.ts_to_real_ts,
+                new_read, read_snapshot, int(self.txn_interval * 1000))
 
             # simulate a viewport change when necessary
             viewport_change = self.simulate_viewport_change()
@@ -314,6 +318,7 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.submit_ts = super().post_refresh(
             self.dash_id, node_ids_to_refresh,
             node_ids_in_viewport, node_id_to_form_data, cur_filter)
+        self.ts_to_real_ts[self.submit_ts] = get_cur_time()
         for node_id in node_ids_to_refresh:
             self.chart_id_to_submit_ts[node_id] = self.submit_ts
 
@@ -444,7 +449,8 @@ class TPCHDashBehavior(BaseDashBehavior):
         return up_to_date
 
     def write_report_results(self) -> None:
-        self.stat_collector.write_stats(self.cur_time - self.test_start_ts)
+        self.stat_collector.write_stats(self.cur_time - self.test_start_ts,
+                                        self.cur_time - self.test_init_ts)
 
     def clean_up_dashboard(self) -> None:
         super().clean_up(self.dash_id)
