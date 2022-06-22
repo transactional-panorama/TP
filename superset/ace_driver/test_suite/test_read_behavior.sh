@@ -10,8 +10,8 @@ CHART_NUM=22
 declare -a START_RUN=1
 declare -a END_RUN=10
 declare -a READ_BEHAVIOR_OPTIONS=("regular_change" "see_change")
-declare -a EXPLORE_RANGE_OPTIONS=(6 10 14 18 22)
-declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4)
+declare -a EXPLORE_RANGE_OPTIONS=(4 10 16 22)
+declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4 5)
 
 for RUN in `seq $START_RUN $END_RUN`
 do
@@ -40,6 +40,7 @@ do
 			--refresh_interval $REFRESH_INTERVAL \
 			--num_refresh $NUM_REFRESH \
 			--mvc_property $MVC_PROPERTY \
+			--k_relaxed $K_RELAXED \
 			--opt_viewport $OPT_VIEWPORT \
 			--opt_exec_time $OPT_EXEC_TIME \
 			--opt_skip_write $OPT_SKIP_WRITE \

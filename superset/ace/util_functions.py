@@ -50,6 +50,7 @@ def remove_ds_state_manager(dash_id: int) -> None:
 
 def config_ace(dash_id: int,
                mvc_properties: int,
+               k_relaxed: int,
                opt_viewport: bool,
                opt_exec_time: bool,
                opt_skip_write: bool,
@@ -62,6 +63,7 @@ def config_ace(dash_id: int,
     if dash_id in ace_state_manager:
         ds_manager = ace_state_manager[dash_id]
         ds_manager.config_state_manager(mvc_properties,
+                                        k_relaxed,
                                         opt_viewport,
                                         opt_exec_time,
                                         opt_skip_write,

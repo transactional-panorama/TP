@@ -32,6 +32,7 @@ class TestACE:
                  refresh_interval: int,
                  num_refresh: int,
                  mvc_property: int,
+                 k_relaxed: int,
                  opt_viewport: bool,
                  opt_exec_time: bool,
                  opt_skip_write: bool,
@@ -48,9 +49,10 @@ class TestACE:
                                               shift_step, explore_range, read_behavior,
                                               viewport_start, write_behavior,
                                               refresh_interval, num_refresh,
-                                              mvc_property, opt_viewport, opt_exec_time,
-                                              opt_skip_write, enable_stats_cache,
-                                              enable_iv_sl_log, stat_dir, db_name,
+                                              mvc_property, k_relaxed, opt_viewport,
+                                              opt_exec_time, opt_skip_write,
+                                              enable_stats_cache, enable_iv_sl_log,
+                                              stat_dir, db_name,
                                               db_username, db_password, db_host, db_port)
         self.tpch_behavior.setup()
 

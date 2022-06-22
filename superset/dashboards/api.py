@@ -297,6 +297,7 @@ class DashboardRestApi(BaseSupersetModelRestApi):
         item = request.json
         config_ace(dash_id,
                    item.get("mvc_properties", 1),
+                   item.get("k_relaxed", 0),
                    item.get("opt_viewport", True),
                    item.get("opt_exec_time", True),
                    item.get("opt_skip_write", True),

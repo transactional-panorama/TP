@@ -81,6 +81,7 @@ class BaseDashBehavior:
                  username: str,
                  password: str,
                  mvc_properties: int,
+                 k_relaxed: int,
                  opt_viewport: bool,
                  opt_exec_time: bool,
                  opt_skip_write: bool,
@@ -96,6 +97,7 @@ class BaseDashBehavior:
         self.dash_title_to_id = {}
 
         self.mvc_properties = mvc_properties
+        self.k_relaxed = k_relaxed
         self.opt_viewport = opt_viewport
         self.opt_exec_time = opt_exec_time
         self.opt_skip_write = opt_skip_write
@@ -155,6 +157,7 @@ class BaseDashBehavior:
             config_url = f"{self.url_header}/dashboard/ace/{dash_id}/config"
             json_body = {
                 "mvc_properties": self.mvc_properties,
+                "k_relaxed": self.k_relaxed,
                 "opt_viewport": self.opt_viewport,
                 "opt_exec_time": self.opt_exec_time,
                 "opt_skip_write": self.opt_skip_write,

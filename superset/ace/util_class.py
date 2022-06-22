@@ -29,6 +29,7 @@ class PropertyCombination(Enum):
     MVCC = 2
     MCM = 3
     MCF = 4
+    CMV = 5
 
 
 class BaseVersion:

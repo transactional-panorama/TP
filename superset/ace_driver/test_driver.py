@@ -73,6 +73,10 @@ if __name__ == '__main__':
                         help='the mvc property we need to set',
                         type=int,
                         default=1)
+    parser.add_argument('--k_relaxed',
+                        help='k relaxed invisible views',
+                        type=int,
+                        default=0)
     parser.add_argument('--opt_viewport',
                         help='whether we turn on the optimization that the scheduling'
                              'considers the different amount of time a user spends on'
@@ -127,6 +131,7 @@ if __name__ == '__main__':
                       refresh_interval=args.refresh_interval,
                       num_refresh=args.num_refresh,
                       mvc_property=args.mvc_property,
+                      k_relaxed=args.k_relaxed,
                       opt_viewport=is_true(args.opt_viewport),
                       opt_exec_time=is_true(args.opt_exec_time),
                       opt_skip_write=is_true(args.opt_skip_write),

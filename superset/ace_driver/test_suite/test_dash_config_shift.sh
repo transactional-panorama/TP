@@ -9,7 +9,7 @@ source $TEST_HOME/config/default.conf
 declare -a START_RUN=1
 declare -a END_RUN=3
 declare -a SHIFT_STEP_OPTIONS=(2 4 6 8 10)
-declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4)
+declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4 5)
 WRITE_BEHAVIOR="source_data_change"
 
 for RUN in `seq $START_RUN $END_RUN`
@@ -36,6 +36,7 @@ do
 		--refresh_interval $REFRESH_INTERVAL \
 		--num_refresh $NUM_REFRESH \
 		--mvc_property $MVC_PROPERTY \
+		--k_relaxed $K_RELAXED \
 		--opt_viewport $OPT_VIEWPORT \
 		--opt_exec_time $OPT_EXEC_TIME \
 		--opt_skip_write $OPT_SKIP_WRITE \

@@ -7,9 +7,10 @@ export STAT_DIR="$TEST_HOME/stat_dir"
 source $TEST_HOME/config/default.conf
 WRITE_BEHAVIOR="source_data_change"
 NUM_REFRESH=1
-REFRESH_INTERVAL=5
+REFRESH_INTERVAL=2
 VIEWPORT_START=1
-MVC_PROPERTY=4
+MVC_PROPERTY=3
+K_RELAXED=0
 ENABLE_IV_SL_LOG="False"
 OPT_EXEC_TIME="True"
 OPT_VIEWPORT="True"
@@ -28,6 +29,7 @@ python3 $TEST_HOME/../test_driver.py \
 	--refresh_interval $REFRESH_INTERVAL \
 	--num_refresh $NUM_REFRESH \
 	--mvc_property $MVC_PROPERTY \
+	--k_relaxed $K_RELAXED \
 	--opt_viewport $OPT_VIEWPORT \
 	--opt_exec_time $OPT_EXEC_TIME \
 	--opt_skip_write $OPT_SKIP_WRITE \
