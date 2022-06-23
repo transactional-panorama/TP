@@ -45,7 +45,8 @@ do
 		--db_username $DB_USERNAME \
 		--db_password $DB_PASSWORD \
 		--db_host $DB_HOST \
-		--db_port $DB_PORT
+		--db_port $DB_PORT \
+		--sf $SF
 
 	    now="$(date)"
             echo "$now: Finished, $STAT_DIR" >> $TEST_HOME/test.log

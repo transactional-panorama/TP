@@ -116,6 +116,10 @@ if __name__ == '__main__':
     parser.add_argument('--db_port',
                         help='the database host port',
                         required=True)
+    parser.add_argument('--sf',
+                        help='scale factor',
+                        type=int,
+                        default=1)
 
     args = parser.parse_args()
     testACE = TestACE(server_addr=args.server_addr,
@@ -142,6 +146,7 @@ if __name__ == '__main__':
                       db_username=args.db_username,
                       db_password=args.db_password,
                       db_host=args.db_host,
-                      db_port=args.db_port)
+                      db_port=args.db_port,
+                      sf=args.sf)
     testACE.start_test()
     testACE.report_results()

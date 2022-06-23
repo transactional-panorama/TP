@@ -59,7 +59,8 @@ class TPCHDashBehavior(BaseDashBehavior):
                  db_username: str,
                  db_password: str,
                  db_host: str,
-                 db_port):
+                 db_port: str,
+                 sf: int):
         super().__init__(server_addr, username, password, mvc_properties, k_relaxed,
                          opt_viewport, opt_exec_time, opt_skip_write,
                          enable_stats_cache)
@@ -97,7 +98,7 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.viewport = {}
 
         self.is_up = False
-        self.sf = 1
+        self.sf = sf
         self.order_card = 1500000
         self.part_card = 200000
         self.new_data_percentage = 0.01
@@ -128,7 +129,7 @@ class TPCHDashBehavior(BaseDashBehavior):
             viewport_range, shift_step, explore_range,
             read_behavior, viewport_start, write_behavior, refresh_interval,
             num_refresh, mvc_properties, k_relaxed, opt_viewport,
-            opt_exec_time, opt_skip_write, enable_stats_cache, enable_iv_sl_log)
+            opt_exec_time, opt_skip_write, enable_stats_cache, enable_iv_sl_log, sf)
 
         # Global states during the test
         self.refresh_counter = 0

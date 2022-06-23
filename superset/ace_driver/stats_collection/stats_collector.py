@@ -38,7 +38,8 @@ class StatsCollector:
                  opt_exec_time: bool,
                  opt_skip_write: bool,
                  enable_stats_cache: bool,
-                 enable_iv_sl_log: bool):
+                 enable_iv_sl_log: bool,
+                 sf: int):
         self.stat_dir = stat_dir
         self.behavior_logs = []
         self.refresh_logs = []
@@ -73,7 +74,8 @@ class StatsCollector:
              "opt_exec_time": opt_exec_time,
              "opt_skip_write": opt_skip_write,
              "enable_stats_cache": enable_stats_cache,
-             "enable_iv_sl_log": enable_iv_sl_log}
+             "enable_iv_sl_log": enable_iv_sl_log,
+             "sf": sf}
 
     def collect_refresh(self, log_time: int,
                         node_ids_to_refresh: list,

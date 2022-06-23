@@ -39,4 +39,5 @@ python3 $TEST_HOME/../test_driver.py \
 	--db_username $DB_USERNAME \
 	--db_password $DB_PASSWORD \
 	--db_host $DB_HOST \
-	--db_port $DB_PORT
+	--db_port $DB_PORT \
+	--sf $SF

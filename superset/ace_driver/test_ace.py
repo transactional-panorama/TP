@@ -43,7 +43,8 @@ class TestACE:
                  db_username: str,
                  db_password: str,
                  db_host: str,
-                 db_port):
+                 db_port: str,
+                 sf: int):
         self.tpch_behavior = TPCHDashBehavior(server_addr, username,
                                               password, dashboard_title, viewport_range,
                                               shift_step, explore_range, read_behavior,
@@ -53,7 +54,7 @@ class TestACE:
                                               opt_exec_time, opt_skip_write,
                                               enable_stats_cache, enable_iv_sl_log,
                                               stat_dir, db_name,
-                                              db_username, db_password, db_host, db_port)
+                                              db_username, db_password, db_host, db_port, sf)
         self.tpch_behavior.setup()
 
     def start_test(self):
