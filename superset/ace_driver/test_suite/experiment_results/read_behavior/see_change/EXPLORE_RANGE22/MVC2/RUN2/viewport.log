@@ -1,37 +1,38 @@
 {
-    "test_ts": 1652512896664,
+    "test_ts": 1656454580343,
     "dash_title": "TPCH",
-    "viewport_range": 6,
+    "viewport_range": 4,
     "shift_step": 2,
+    "explore_range": 22,
     "read_behavior": "see_change",
-    "viewport_start": 14,
-    "write_behavior": "filter_change",
-    "refresh_interval": 10,
+    "viewport_start": 0,
+    "write_behavior": "source_data_change",
+    "refresh_interval": 60,
     "num_refresh": 1,
     "mvc_properties": 2,
+    "k_relaxed": 0,
     "opt_viewport": true,
     "opt_exec_time": true,
-    "opt_skip_write": true
+    "opt_skip_write": true,
+    "enable_stats_cache": true,
+    "enable_iv_sl_log": false,
+    "sf": 1
 }{
-    "log_time": 35106,
+    "log_time": 0,
     "log_type": "viewport_change",
     "node_ids": [
-        146,
-        147,
-        148,
-        149,
-        150,
-        151
+        132,
+        133,
+        134,
+        135
     ]
 }{
-    "log_time": 62014,
+    "log_time": 51241,
     "log_type": "viewport_change",
     "node_ids": [
-        148,
-        149,
-        150,
-        151,
-        152,
-        153
+        134,
+        135,
+        136,
+        137
     ]
 }

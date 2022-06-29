@@ -8,7 +8,7 @@ source $TEST_HOME/config/default.conf
 
 CHART_NUM=22
 declare -a START_RUN=1
-declare -a END_RUN=10
+declare -a END_RUN=3
 declare -a VIEWPORT_RANGE_OPTIONS=(4 10 16 22)
 declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4 5)
 
@@ -16,7 +16,7 @@ for RUN in `seq $START_RUN $END_RUN`
 do
     for VIEWPORT_RANGE in "${VIEWPORT_RANGE_OPTIONS[@]}"
     do
-        VIEWPORT_START=$(( $RANDOM % ($CHART_NUM - $VIEWPORT_RANGE + 1) ))
+        #VIEWPORT_START=$(( $RANDOM % ($CHART_NUM - $VIEWPORT_RANGE + 1) ))
     	for MVC_PROPERTY in "${MVC_PROPERTY_OPTIONS[@]}"
     	do
     	    STAT_DIR="$REPORT_HOME/VIEWPORT$VIEWPORT_RANGE/MVC$MVC_PROPERTY/RUN$RUN"
