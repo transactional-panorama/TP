@@ -5,6 +5,7 @@ TEST_HOME="$(dirname $ABS_PATH)"
 
 export STAT_DIR="$TEST_HOME/stat_dir"
 source $TEST_HOME/config/default.conf
+READ_BEHAVIOR="random_regular_change"
 WRITE_BEHAVIOR="source_data_change"
 NUM_REFRESH=1
 REFRESH_INTERVAL=2

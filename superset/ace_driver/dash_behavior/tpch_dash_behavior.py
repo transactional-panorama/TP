@@ -101,7 +101,7 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.sf = sf
         self.order_card = 1500000
         self.part_card = 200000
-        self.new_data_percentage = 0.01
+        self.new_data_percentage = 0.001
 
         self.predefined_filters = [[{'col': 'l_linestatus',
                                      'op': 'IN',
@@ -415,11 +415,12 @@ class TPCHDashBehavior(BaseDashBehavior):
                 >= self.viewport_interval_ms:
                 self.is_up = self.move_viewport(self.is_up)
                 return True
-        else:  # random_regular_change
+        else:  # random_change
             if self.cur_time - self.last_viewport_change >= self.viewport_interval_ms:
-                if random.randint(0, 1) == 0:
-                    self.is_up = not self.is_up
-                self.is_up = self.move_viewport(self.is_up)
+                # if random.randint(0, 1) == 0:
+                #    self.is_up = not self.is_up
+                # self.is_up = self.move_viewport(self.is_up)
+                self.move_viewport_random()
                 return True
         return False
 
@@ -440,6 +441,13 @@ class TPCHDashBehavior(BaseDashBehavior):
             return True
         else:
             return is_up
+
+    def move_viewport_random(self):
+        new_viewport_start = random.randint(self.explore_start,
+                                            self.explore_end - self.viewport_range)
+        new_viewport_end = new_viewport_start + self.viewport_range
+        self.viewport["start"] = new_viewport_start
+        self.viewport["end"] = new_viewport_end
 
     def is_up_to_date(self, snapshot: dict) -> bool:
         up_to_date = True
