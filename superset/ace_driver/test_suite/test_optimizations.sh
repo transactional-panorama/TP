@@ -9,9 +9,9 @@ source $TEST_HOME/config/default.conf
 CHART_NUM=22
 declare -a START_RUN=1
 declare -a END_RUN=3
-declare -a READ_BEHAVIOR_OPTIONS=("regular_change" "see_change")
-declare -a OPT_EXEC_TIME_OPTIONS=("False" "True" "True")
-declare -a OPT_VIEWPORT_OPTIONS=("False" "False" "True")
+declare -a READ_BEHAVIOR_OPTIONS=("random_regular_change" "regular_change" "see_change")
+declare -a OPT_EXEC_TIME_OPTIONS=("False" "True" "True" "False")
+declare -a OPT_VIEWPORT_OPTIONS=("False" "False" "True" "True")
 declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4 5)
 
 
@@ -25,7 +25,7 @@ do
    	     OPT_VIEWPORT=${OPT_VIEWPORT_OPTIONS[$i]}
    	     for MVC_PROPERTY in "${MVC_PROPERTY_OPTIONS[@]}"
    	     do
-   		    STAT_DIR="$REPORT_HOME/$READ_BEHAVIOR/$OPT_EXEC_TIME/$OPT_VIEWPORT/MVC$MVC_PROPERTY/RUN$RUN"
+   		    STAT_DIR="$REPORT_HOME/$READ_BEHAVIOR/OPT_${OPT_EXEC_TIME}_${OPT_VIEWPORT}/MVC$MVC_PROPERTY/RUN$RUN"
    		    mkdir -p $STAT_DIR
    		    rm -f $STAT_DIR/*
 

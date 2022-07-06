@@ -3,22 +3,22 @@
 ABS_PATH="$(readlink -f "${BASH_SOURCE}")"
 TEST_HOME="$(dirname $ABS_PATH)"
 
-REPORT_HOME="$TEST_HOME/experiment_results/read_behavior"
+REPORT_HOME="$TEST_HOME/experiment_results/explore_range"
 source $TEST_HOME/config/default.conf
 
-CHART_NUM=22
 declare -a START_RUN=1
 declare -a END_RUN=3
-declare -a READ_BEHAVIOR_OPTIONS=("regular_change" "see_change" "random_regular_change")
+declare -a EXPLORE_RANGE_OPTIONS=(4 10 16 22)
 declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4 5)
+WRITE_BEHAVIOR="source_data_change"
 
 for RUN in `seq $START_RUN $END_RUN`
 do
-    for READ_BEHAVIOR in "${READ_BEHAVIOR_OPTIONS[@]}"
+    for EXPLORE_RANGE in "${EXPLORE_RANGE_OPTIONS[@]}"
     do
     	for MVC_PROPERTY in "${MVC_PROPERTY_OPTIONS[@]}"
     	do
-    	    STAT_DIR="$REPORT_HOME/$READ_BEHAVIOR/MVC$MVC_PROPERTY/RUN$RUN"
+	    STAT_DIR="$REPORT_HOME/EXPLORE_RANGE${EXPLORE_RANGE}/MVC$MVC_PROPERTY/RUN$RUN"
     	    mkdir -p $STAT_DIR
     	    rm -f $STAT_DIR/*
 
@@ -49,7 +49,7 @@ do
 		--sf $SF
 
 	    now="$(date)"
-            echo "$now: Finished: $VIEWPORT_START; $STAT_DIR" >> $TEST_HOME/test.log
+            echo "$now: Finished, $STAT_DIR" >> $TEST_HOME/test.log
     	done
     done
 done 
