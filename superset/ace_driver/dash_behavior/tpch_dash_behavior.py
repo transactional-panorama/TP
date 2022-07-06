@@ -274,21 +274,21 @@ class TPCHDashBehavior(BaseDashBehavior):
             node_ids_in_viewport = get_ids_in_viewport(self.chart_ids,
                                                        self.viewport)
             new_read = None
-            if self.submit_ts != self.commit_ts:
-                read_result = self.enhance_read_result(
-                    super().read_refreshed_charts(self.dash_id,
-                                                  node_ids_in_viewport))
-                new_commit_ts = int(read_result["ts"])
-                if new_commit_ts != self.commit_ts:
-                    self.print(f"Refresh {new_commit_ts} committed;"
-                               f"Submitted ts is {self.submit_ts}")
-                    self.stat_collector.collect_commit(
-                        self.cur_time - self.test_start_ts, new_commit_ts)
-                self.commit_ts = new_commit_ts
-                new_read = read_result["snapshot"]
-                self.update_chart_results(new_read)
-                if new_read:
-                    self.print(json.dumps(read_result))
+            # if self.submit_ts != self.commit_ts:
+            read_result = self.enhance_read_result(
+                super().read_refreshed_charts(self.dash_id,
+                                              node_ids_in_viewport))
+            new_commit_ts = int(read_result["ts"])
+            if new_commit_ts != self.commit_ts:
+                self.print(f"Refresh {new_commit_ts} committed;"
+                           f"Submitted ts is {self.submit_ts}")
+                self.stat_collector.collect_commit(
+                    self.cur_time - self.test_start_ts, new_commit_ts)
+            self.commit_ts = new_commit_ts
+            new_read = read_result["snapshot"]
+            self.update_chart_results(new_read)
+            if new_read:
+                self.print(json.dumps(read_result))
             # Update stats about reading views
             read_snapshot = self.create_read_snapshot(node_ids_in_viewport)
             self.viewport_up_to_date = self.is_up_to_date(read_snapshot)
@@ -445,6 +445,8 @@ class TPCHDashBehavior(BaseDashBehavior):
     def move_viewport_random(self):
         new_viewport_start = random.randint(self.explore_start,
                                             self.explore_end - self.viewport_range)
+        if new_viewport_start % 2 == 1:
+            new_viewport_start -= 1
         new_viewport_end = new_viewport_start + self.viewport_range
         self.viewport["start"] = new_viewport_start
         self.viewport["end"] = new_viewport_end
