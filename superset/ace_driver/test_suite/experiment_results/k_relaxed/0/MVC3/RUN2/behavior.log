@@ -1,5 +1,5 @@
 {
-    "test_ts": 1656461823438,
+    "test_ts": 1657149210092,
     "dash_title": "TPCH",
     "viewport_range": 4,
     "shift_step": 2,
@@ -7,7 +7,7 @@
     "read_behavior": "regular_change",
     "viewport_start": 0,
     "write_behavior": "source_data_change",
-    "refresh_interval": 60,
+    "refresh_interval": 2,
     "num_refresh": 1,
     "mvc_properties": 3,
     "k_relaxed": 0,
@@ -55,7 +55,7 @@
     ],
     "txn_id": 1
 }{
-    "log_time": 2853,
+    "log_time": 2321,
     "log_type": "viewport_change",
     "node_ids": [
         134,
@@ -64,7 +64,7 @@
         137
     ]
 }{
-    "log_time": 3861,
+    "log_time": 3408,
     "log_type": "viewport_change",
     "node_ids": [
         136,
@@ -73,7 +73,7 @@
         139
     ]
 }{
-    "log_time": 4873,
+    "log_time": 4515,
     "log_type": "viewport_change",
     "node_ids": [
         138,
@@ -82,7 +82,7 @@
         141
     ]
 }{
-    "log_time": 5886,
+    "log_time": 5616,
     "log_type": "viewport_change",
     "node_ids": [
         140,
@@ -91,7 +91,7 @@
         143
     ]
 }{
-    "log_time": 6901,
+    "log_time": 6727,
     "log_type": "viewport_change",
     "node_ids": [
         142,
@@ -100,7 +100,7 @@
         145
     ]
 }{
-    "log_time": 7969,
+    "log_time": 7746,
     "log_type": "viewport_change",
     "node_ids": [
         144,
@@ -109,7 +109,7 @@
         147
     ]
 }{
-    "log_time": 8989,
+    "log_time": 8857,
     "log_type": "viewport_change",
     "node_ids": [
         146,
@@ -118,7 +118,7 @@
         149
     ]
 }{
-    "log_time": 10002,
+    "log_time": 9955,
     "log_type": "viewport_change",
     "node_ids": [
         148,
@@ -127,7 +127,7 @@
         151
     ]
 }{
-    "log_time": 11013,
+    "log_time": 11055,
     "log_type": "viewport_change",
     "node_ids": [
         150,
@@ -136,7 +136,7 @@
         153
     ]
 }{
-    "log_time": 12050,
+    "log_time": 12165,
     "log_type": "viewport_change",
     "node_ids": [
         148,
@@ -145,7 +145,7 @@
         151
     ]
 }{
-    "log_time": 13137,
+    "log_time": 13264,
     "log_type": "viewport_change",
     "node_ids": [
         146,
@@ -154,7 +154,7 @@
         149
     ]
 }{
-    "log_time": 14247,
+    "log_time": 14352,
     "log_type": "viewport_change",
     "node_ids": [
         144,
@@ -163,7 +163,7 @@
         147
     ]
 }{
-    "log_time": 15294,
+    "log_time": 15374,
     "log_type": "viewport_change",
     "node_ids": [
         142,
@@ -172,7 +172,7 @@
         145
     ]
 }{
-    "log_time": 16311,
+    "log_time": 16468,
     "log_type": "viewport_change",
     "node_ids": [
         140,
@@ -181,7 +181,33 @@
         143
     ]
 }{
-    "log_time": 17325,
+    "log_time": 16591,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "140": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q9"
+        },
+        "141": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q10"
+        },
+        "142": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q11"
+        },
+        "143": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q12"
+        }
+    }
+}{
+    "log_time": 17470,
     "log_type": "viewport_change",
     "node_ids": [
         138,
@@ -190,29 +216,10 @@
         141
     ]
 }{
-    "log_time": 18344,
-    "log_type": "viewport_change",
-    "node_ids": [
-        136,
-        137,
-        138,
-        139
-    ]
-}{
-    "log_time": 18470,
+    "log_time": 17589,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
-        "136": {
-            "ts": 1,
-            "version_result": "response",
-            "title": "tpch_q5"
-        },
-        "137": {
-            "ts": 1,
-            "version_result": "response",
-            "title": "tpch_q6"
-        },
         "138": {
             "ts": 1,
             "version_result": "response",
@@ -225,7 +232,32 @@
         }
     }
 }{
-    "log_time": 19355,
+    "log_time": 18553,
+    "log_type": "viewport_change",
+    "node_ids": [
+        136,
+        137,
+        138,
+        139
+    ]
+}{
+    "log_time": 18676,
+    "log_type": "read_views",
+    "recent_refresh_id": 1,
+    "snapshot": {
+        "136": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q5"
+        },
+        "137": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q6"
+        }
+    }
+}{
+    "log_time": 19578,
     "log_type": "viewport_change",
     "node_ids": [
         134,
@@ -234,7 +266,7 @@
         137
     ]
 }{
-    "log_time": 19482,
+    "log_time": 19700,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -245,12 +277,12 @@
         },
         "135": {
             "ts": 1,
-            "version_result": "IV",
+            "version_result": "response",
             "title": "tpch_q4"
         }
     }
 }{
-    "log_time": 20371,
+    "log_time": 20679,
     "log_type": "viewport_change",
     "node_ids": [
         132,
@@ -259,7 +291,7 @@
         135
     ]
 }{
-    "log_time": 20497,
+    "log_time": 20799,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -275,7 +307,7 @@
         }
     }
 }{
-    "log_time": 21390,
+    "log_time": 21777,
     "log_type": "viewport_change",
     "node_ids": [
         134,
@@ -284,7 +316,7 @@
         137
     ]
 }{
-    "log_time": 22410,
+    "log_time": 22858,
     "log_type": "viewport_change",
     "node_ids": [
         136,
@@ -293,7 +325,7 @@
         139
     ]
 }{
-    "log_time": 23427,
+    "log_time": 23929,
     "log_type": "viewport_change",
     "node_ids": [
         138,
@@ -302,34 +334,7 @@
         141
     ]
 }{
-    "log_time": 23554,
-    "log_type": "read_views",
-    "recent_refresh_id": 1,
-    "snapshot": {
-        "140": {
-            "ts": 1,
-            "version_result": "IV",
-            "title": "tpch_q9"
-        },
-        "141": {
-            "ts": 1,
-            "version_result": "response",
-            "title": "tpch_q10"
-        }
-    }
-}{
-    "log_time": 23938,
-    "log_type": "read_views",
-    "recent_refresh_id": 1,
-    "snapshot": {
-        "140": {
-            "ts": 1,
-            "version_result": "response",
-            "title": "tpch_q9"
-        }
-    }
-}{
-    "log_time": 24476,
+    "log_time": 25025,
     "log_type": "viewport_change",
     "node_ids": [
         140,
@@ -338,23 +343,7 @@
         143
     ]
 }{
-    "log_time": 24603,
-    "log_type": "read_views",
-    "recent_refresh_id": 1,
-    "snapshot": {
-        "142": {
-            "ts": 1,
-            "version_result": "response",
-            "title": "tpch_q11"
-        },
-        "143": {
-            "ts": 1,
-            "version_result": "response",
-            "title": "tpch_q12"
-        }
-    }
-}{
-    "log_time": 25507,
+    "log_time": 26117,
     "log_type": "viewport_change",
     "node_ids": [
         142,
@@ -363,7 +352,7 @@
         145
     ]
 }{
-    "log_time": 25635,
+    "log_time": 26240,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -379,7 +368,7 @@
         }
     }
 }{
-    "log_time": 26535,
+    "log_time": 27119,
     "log_type": "viewport_change",
     "node_ids": [
         144,
@@ -388,7 +377,7 @@
         147
     ]
 }{
-    "log_time": 26664,
+    "log_time": 27243,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -404,7 +393,7 @@
         }
     }
 }{
-    "log_time": 27555,
+    "log_time": 28185,
     "log_type": "viewport_change",
     "node_ids": [
         146,
@@ -413,7 +402,7 @@
         149
     ]
 }{
-    "log_time": 27682,
+    "log_time": 28311,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -429,7 +418,7 @@
         }
     }
 }{
-    "log_time": 28579,
+    "log_time": 29186,
     "log_type": "viewport_change",
     "node_ids": [
         148,
@@ -438,10 +427,15 @@
         151
     ]
 }{
-    "log_time": 28707,
+    "log_time": 29311,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
+        "149": {
+            "ts": 1,
+            "version_result": "response",
+            "title": "tpch_q18"
+        },
         "150": {
             "ts": 1,
             "version_result": "response",
@@ -449,12 +443,12 @@
         },
         "151": {
             "ts": 1,
-            "version_result": "IV",
+            "version_result": "response",
             "title": "tpch_q20"
         }
     }
 }{
-    "log_time": 29606,
+    "log_time": 30285,
     "log_type": "viewport_change",
     "node_ids": [
         150,
@@ -463,7 +457,7 @@
         153
     ]
 }{
-    "log_time": 29732,
+    "log_time": 30404,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -479,7 +473,7 @@
         }
     }
 }{
-    "log_time": 30626,
+    "log_time": 31359,
     "log_type": "viewport_change",
     "node_ids": [
         148,
@@ -488,18 +482,7 @@
         151
     ]
 }{
-    "log_time": 31010,
-    "log_type": "read_views",
-    "recent_refresh_id": 1,
-    "snapshot": {
-        "149": {
-            "ts": 1,
-            "version_result": "response",
-            "title": "tpch_q18"
-        }
-    }
-}{
-    "log_time": 31651,
+    "log_time": 32478,
     "log_type": "viewport_change",
     "node_ids": [
         146,
@@ -508,135 +491,7 @@
         149
     ]
 }{
-    "log_time": 32671,
-    "log_type": "viewport_change",
-    "node_ids": [
-        144,
-        145,
-        146,
-        147
-    ]
-}{
-    "log_time": 33691,
-    "log_type": "viewport_change",
-    "node_ids": [
-        142,
-        143,
-        144,
-        145
-    ]
-}{
-    "log_time": 34709,
-    "log_type": "viewport_change",
-    "node_ids": [
-        140,
-        141,
-        142,
-        143
-    ]
-}{
-    "log_time": 35787,
-    "log_type": "viewport_change",
-    "node_ids": [
-        138,
-        139,
-        140,
-        141
-    ]
-}{
-    "log_time": 36805,
-    "log_type": "viewport_change",
-    "node_ids": [
-        136,
-        137,
-        138,
-        139
-    ]
-}{
-    "log_time": 37821,
-    "log_type": "viewport_change",
-    "node_ids": [
-        134,
-        135,
-        136,
-        137
-    ]
-}{
-    "log_time": 37947,
-    "log_type": "read_views",
-    "recent_refresh_id": 1,
-    "snapshot": {
-        "135": {
-            "ts": 1,
-            "version_result": "response",
-            "title": "tpch_q4"
-        }
-    }
-}{
-    "log_time": 38838,
-    "log_type": "viewport_change",
-    "node_ids": [
-        132,
-        133,
-        134,
-        135
-    ]
-}{
-    "log_time": 39850,
-    "log_type": "viewport_change",
-    "node_ids": [
-        134,
-        135,
-        136,
-        137
-    ]
-}{
-    "log_time": 40851,
-    "log_type": "viewport_change",
-    "node_ids": [
-        136,
-        137,
-        138,
-        139
-    ]
-}{
-    "log_time": 41973,
-    "log_type": "viewport_change",
-    "node_ids": [
-        138,
-        139,
-        140,
-        141
-    ]
-}{
-    "log_time": 43004,
-    "log_type": "viewport_change",
-    "node_ids": [
-        140,
-        141,
-        142,
-        143
-    ]
-}{
-    "log_time": 44030,
-    "log_type": "viewport_change",
-    "node_ids": [
-        142,
-        143,
-        144,
-        145
-    ]
-}{
-    "log_time": 45038,
-    "log_type": "viewport_change",
-    "node_ids": [
-        144,
-        145,
-        146,
-        147
-    ]
-}{
-    "log_time": 45164,
+    "log_time": 32605,
     "log_type": "read_views",
     "recent_refresh_id": 1,
     "snapshot": {
@@ -647,63 +502,7 @@
         }
     }
 }{
-    "log_time": 46052,
-    "log_type": "viewport_change",
-    "node_ids": [
-        146,
-        147,
-        148,
-        149
-    ]
-}{
-    "log_time": 47061,
-    "log_type": "viewport_change",
-    "node_ids": [
-        148,
-        149,
-        150,
-        151
-    ]
-}{
-    "log_time": 47189,
-    "log_type": "read_views",
-    "recent_refresh_id": 1,
-    "snapshot": {
-        "151": {
-            "ts": 1,
-            "version_result": "response",
-            "title": "tpch_q20"
-        }
-    }
-}{
-    "log_time": 48083,
-    "log_type": "viewport_change",
-    "node_ids": [
-        150,
-        151,
-        152,
-        153
-    ]
-}{
-    "log_time": 49102,
-    "log_type": "viewport_change",
-    "node_ids": [
-        148,
-        149,
-        150,
-        151
-    ]
-}{
-    "log_time": 50115,
-    "log_type": "viewport_change",
-    "node_ids": [
-        146,
-        147,
-        148,
-        149
-    ]
-}{
-    "log_time": 51129,
+    "log_time": 33594,
     "log_type": "viewport_change",
     "node_ids": [
         144,
@@ -712,11 +511,7 @@
         147
     ]
 }{
-    "log_time": 51510,
-    "log_type": "commit",
-    "txn_id": 1
-}{
-    "log_time": 52138,
+    "log_time": 34699,
     "log_type": "viewport_change",
     "node_ids": [
         142,
@@ -725,7 +520,7 @@
         145
     ]
 }{
-    "log_time": 53140,
+    "log_time": 35791,
     "log_type": "viewport_change",
     "node_ids": [
         140,
@@ -734,7 +529,7 @@
         143
     ]
 }{
-    "log_time": 54142,
+    "log_time": 36884,
     "log_type": "viewport_change",
     "node_ids": [
         138,
@@ -743,48 +538,7 @@
         141
     ]
 }{
-    "log_time": 55144,
-    "log_type": "viewport_change",
-    "node_ids": [
-        136,
-        137,
-        138,
-        139
-    ]
-}{
-    "log_time": 56146,
-    "log_type": "viewport_change",
-    "node_ids": [
-        134,
-        135,
-        136,
-        137
-    ]
-}{
-    "log_time": 57149,
-    "log_type": "viewport_change",
-    "node_ids": [
-        132,
-        133,
-        134,
-        135
-    ]
-}{
-    "log_time": 58151,
-    "log_type": "viewport_change",
-    "node_ids": [
-        134,
-        135,
-        136,
-        137
-    ]
-}{
-    "log_time": 59153,
-    "log_type": "viewport_change",
-    "node_ids": [
-        136,
-        137,
-        138,
-        139
-    ]
+    "log_time": 37006,
+    "log_type": "commit",
+    "txn_id": 1
 }
