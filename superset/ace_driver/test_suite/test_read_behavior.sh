@@ -7,12 +7,9 @@ REPORT_HOME="$TEST_HOME/experiment_results/read_behavior"
 source $TEST_HOME/config/default.conf
 
 CHART_NUM=22
-#declare -a START_RUN=1
-#declare -a END_RUN=3
-declare -a START_RUN=4
+declare -a START_RUN=1
 declare -a END_RUN=10
-#declare -a READ_BEHAVIOR_OPTIONS=("regular_change" "see_change" "random_regular_change")
-declare -a READ_BEHAVIOR_OPTIONS=("random_regular_change")
+declare -a READ_BEHAVIOR_OPTIONS=("regular_change" "see_change" "random_regular_change")
 declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4 5)
 
 for RUN in `seq $START_RUN $END_RUN`
