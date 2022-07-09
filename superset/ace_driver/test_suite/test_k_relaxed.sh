@@ -9,8 +9,10 @@ source $TEST_HOME/config/default.conf
 CHART_NUM=22
 declare -a START_RUN=1
 declare -a END_RUN=3
-declare -a K_RELAXED_OPTIONS=(0 2 4)
-declare -a MVC_PROPERTY_OPTIONS=(2 3 5)
+#declare -a K_RELAXED_OPTIONS=(0 2 4)
+declare -a K_RELAXED_OPTIONS=(6 10 14 18 22)
+#declare -a MVC_PROPERTY_OPTIONS=(2 3 5)
+declare -a MVC_PROPERTY_OPTIONS=(3 5)
 
 for RUN in `seq $START_RUN $END_RUN`
 do
