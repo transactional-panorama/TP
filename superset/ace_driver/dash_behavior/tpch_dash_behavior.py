@@ -90,6 +90,7 @@ class TPCHDashBehavior(BaseDashBehavior):
         self.chart_id_to_vis_result = {}
 
         self.txn_interval = 0.1
+        self.last_log_time = 0.0
         self.viewport_interval_ms = 1000
         if viewport_start % 2 == 1:
             self.viewport_start = viewport_start - 1
@@ -292,10 +293,14 @@ class TPCHDashBehavior(BaseDashBehavior):
             # Update stats about reading views
             read_snapshot = self.create_read_snapshot(node_ids_in_viewport)
             self.viewport_up_to_date = self.is_up_to_date(read_snapshot)
+
+            self.cur_time = get_cur_time()
+            log_time = self.cur_time - self.test_start_ts
             self.stat_collector.collect_read_views(
-                self.cur_time - self.test_start_ts,
+                log_time,
                 self.submit_ts, self.chart_id_to_submit_ts, self.ts_to_real_ts,
-                new_read, read_snapshot, int(self.txn_interval * 1000))
+                new_read, read_snapshot, int(log_time - self.last_log_time))
+            self.last_log_time = log_time
 
             # simulate a viewport change when necessary
             viewport_change = self.simulate_viewport_change()
@@ -307,7 +312,6 @@ class TPCHDashBehavior(BaseDashBehavior):
                 self.print("New viewport: " + str(new_ids_in_viewport))
 
             time.sleep(self.txn_interval)
-            self.cur_time = get_cur_time()
 
     def initial_loading(self):
         self.print("Loading visualizations")
