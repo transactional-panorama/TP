@@ -3,13 +3,14 @@
 ABS_PATH="$(readlink -f "${BASH_SOURCE}")"
 TEST_HOME="$(dirname $ABS_PATH)"
 
-REPORT_HOME="$TEST_HOME/experiment_results/optimization"
+REPORT_HOME="$TEST_HOME/experiment_results/optimization_explore_range"
 source $TEST_HOME/config/default.conf
 
 CHART_NUM=22
 declare -a START_RUN=1
-declare -a END_RUN=10
-declare -a READ_BEHAVIOR_OPTIONS=("random_regular_change" "regular_change" "see_change")
+declare -a END_RUN=3
+#declare -a READ_BEHAVIOR_OPTIONS=("random_regular_change" "regular_change" "see_change")
+declare -a EXPLORE_RANGE_OPTIONS=(4 10 16 22)
 declare -a OPT_EXEC_TIME_OPTIONS=("False" "True" "True" "False")
 declare -a OPT_VIEWPORT_OPTIONS=("False" "False" "True" "True")
 declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4 5)
@@ -17,7 +18,7 @@ declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4 5)
 
 for RUN in `seq $START_RUN $END_RUN`
 do
-    for READ_BEHAVIOR in "${READ_BEHAVIOR_OPTIONS[@]}"
+    for EXPLORE_RANGE in "${EXPLORE_RANGE_OPTIONS[@]}"
     do
    	for i in "${!OPT_EXEC_TIME_OPTIONS[@]}"
    	do
@@ -25,7 +26,7 @@ do
    	     OPT_VIEWPORT=${OPT_VIEWPORT_OPTIONS[$i]}
    	     for MVC_PROPERTY in "${MVC_PROPERTY_OPTIONS[@]}"
    	     do
-   		    STAT_DIR="$REPORT_HOME/$READ_BEHAVIOR/OPT_${OPT_EXEC_TIME}_${OPT_VIEWPORT}/MVC$MVC_PROPERTY/RUN$RUN"
+   		    STAT_DIR="$REPORT_HOME/$EXPLORE_RANGE/OPT_${OPT_EXEC_TIME}_${OPT_VIEWPORT}/MVC$MVC_PROPERTY/RUN$RUN"
    		    mkdir -p $STAT_DIR
    		    rm -f $STAT_DIR/*
 
