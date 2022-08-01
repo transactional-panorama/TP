@@ -17,6 +17,10 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+# ACE
+
+ACE is the system that implements transactional panorama in Superset. The code for the test driver can be found [here](https://github.com/totemtang/ACE/tree/main/superset/ace_driver). The code for implementing transactional panorama is [here](https://github.com/totemtang/ACE/tree/main/superset/ace) and the new endpoints for processing web requests can be found [here](https://github.com/totemtang/ACE/blob/main/superset/dashboards/api.py)
+
 # Superset
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
