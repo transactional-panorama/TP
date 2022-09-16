@@ -432,7 +432,8 @@ const config = {
 let proxyConfig = getProxyConfig();
 
 if (isDevMode) {
-  config.devtool = 'eval-cheap-module-source-map';
+  // config.devtool = 'eval-cheap-module-source-map';
+  config.devtool = 'source-map';
   config.devServer = {
     onBeforeSetupMiddleware(devServer) {
       // load proxy config when manifest updates
