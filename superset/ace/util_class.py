@@ -25,11 +25,11 @@ RESPONSE = "response"
 
 
 class PropertyCombination(Enum):
-    MV = 1
-    MVCC = 2
-    MCM = 3
-    MCF = 4
-    CMV = 5
+    ICNB = 1
+    GCNB = 2
+    LCMB = 3
+    GCPB = 4
+    LCNB = 5
 
 
 class BaseVersion:

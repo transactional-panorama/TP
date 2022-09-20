@@ -152,7 +152,7 @@ class DashStateManager:
         last_committed = self.last_committed
         last_submitted = self.last_submitted
         ts_to_read = last_committed
-        if self.prop == PropertyCombination.MVCC:
+        if self.prop == PropertyCombination.GCNB:
             for ts_to_read in reversed(range(last_committed, last_submitted + 1)):
                 if self.num_ivs[ts_to_read] <= self.k_relaxed:
                     break
@@ -166,11 +166,11 @@ class DashStateManager:
                     self.view_port_time[ts_active][node_id] += duration
         self.meta_data_lock.release()
 
-        if self.prop == PropertyCombination.MV:
+        if self.prop == PropertyCombination.ICNB:
             snapshot = self.view_graph.read_visible_versions(node_id_set)
-        elif self.prop == PropertyCombination.MVCC:
+        elif self.prop == PropertyCombination.GCNB:
             snapshot = self.view_graph.read_snapshot(ts_to_read, node_id_set)
-        elif self.prop == PropertyCombination.MCM:
+        elif self.prop == PropertyCombination.LCMB:
             ts_lower_bound = self._ts_from_last_read(node_id_set)
             ts_list = [ts for ts in range(ts_lower_bound, last_submitted + 1)]
             ss_list = [self.view_graph.read_snapshot(ts, node_id_set) for ts in ts_list]
@@ -184,7 +184,7 @@ class DashStateManager:
                     ret_ts = cur_ts
                     ret_ss = cur_ss
             snapshot = ret_ss
-        elif self.prop == PropertyCombination.MCF:
+        elif self.prop == PropertyCombination.GCPB:
             snapshot = self.view_graph.read_snapshot(last_submitted, node_id_set)
         else:  # C-M_A
             ts_list = range(last_committed, last_submitted + 1)
