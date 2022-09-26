@@ -19,10 +19,12 @@ import re
 from typing import Any, Dict, Union
 
 from marshmallow import fields, post_load, Schema
-from marshmallow.validate import Length, ValidationError
+from marshmallow.validate import Length, ValidationError, OneOf
 
 from superset.exceptions import SupersetException
 from superset.utils import core as utils
+
+from superset.ace.util_class import PropertyCombination
 
 get_delete_ids_schema = {"type": "array", "items": {"type": "integer"}}
 get_export_ids_schema = {"type": "array", "items": {"type": "integer"}}
@@ -32,6 +34,8 @@ thumbnail_query_schema = {
     "properties": {"force": {"type": "boolean"}},
 }
 
+mvc_description = "An integer value to decide the mvc properties"
+node_id_list_description = "A list of node ids"
 dashboard_title_description = "A title for the dashboard."
 slug_description = "Unique identifying part for the web address of the dashboard."
 owners_description = (
@@ -72,14 +76,14 @@ openapi_spec_methods_override = {
     "get_list": {
         "get": {
             "description": "Get a list of dashboards, use Rison or JSON query "
-            "parameters for filtering, sorting, pagination and "
-            " for selecting specific columns and metadata.",
+                           "parameters for filtering, sorting, pagination and "
+                           " for selecting specific columns and metadata.",
         }
     },
     "info": {
         "get": {
             "description": "Several metadata information about dashboard API "
-            "endpoints.",
+                           "endpoints.",
         }
     },
     "related": {
@@ -128,8 +132,6 @@ class DashboardJSONMetadataSchema(Schema):
     color_namespace = fields.Str(allow_none=True)
     positions = fields.Dict(allow_none=True)
     label_colors = fields.Dict()
-    shared_label_colors = fields.Dict()
-    color_scheme_domain = fields.List(fields.Str())
     # used for v0 import/export
     import_time = fields.Integer()
     remote_id = fields.Integer()
@@ -167,7 +169,6 @@ class DashboardGetResponseSchema(Schema):
     owners = fields.List(fields.Nested(UserSchema))
     roles = fields.List(fields.Nested(RolesSchema))
     changed_on_humanized = fields.String(data_key="changed_on_delta_humanized")
-    is_managed_externally = fields.Boolean(allow_none=True, default=False)
 
 
 class DatabaseSchema(Schema):
@@ -178,7 +179,6 @@ class DatabaseSchema(Schema):
     allows_subquery = fields.Bool()
     allows_cost_estimate = fields.Bool()
     allows_virtual_table_explore = fields.Bool()
-    disable_data_preview = fields.Bool()
     explore_database_id = fields.Int()
 
 
@@ -207,7 +207,7 @@ class DashboardDatasetSchema(Schema):
     health_check_message = fields.Str()
     fetch_values_predicate = fields.Str()
     template_params = fields.Str()
-    owners = fields.List(fields.Dict())
+    owners = fields.List(fields.Int())
     columns = fields.List(fields.Dict())
     column_types = fields.List(fields.Int())
     metrics = fields.List(fields.Dict())
@@ -228,6 +228,17 @@ class BaseDashboardSchema(Schema):
         return data
 
 
+class DashboardPostMVCSchema(BaseDashboardSchema):
+    mvc_properties = fields.Integer(description=mvc_description,
+                                    allow_none=False,
+                                    validate=OneOf([pc.value
+                                                    for pc in PropertyCombination]))
+
+
+class DashboardPostChartsSchema(BaseDashboardSchema):
+    node_ids_to_read = fields.List(fields.Integer(description=node_id_list_description))
+
+
 class DashboardPostSchema(BaseDashboardSchema):
     dashboard_title = fields.String(
         description=dashboard_title_description,
@@ -244,16 +255,13 @@ class DashboardPostSchema(BaseDashboardSchema):
     )
     css = fields.String()
     json_metadata = fields.String(
-        description=json_metadata_description,
-        validate=validate_json_metadata,
+        description=json_metadata_description, validate=validate_json_metadata,
     )
     published = fields.Boolean(description=published_description)
     certified_by = fields.String(description=certified_by_description, allow_none=True)
     certification_details = fields.String(
         description=certification_details_description, allow_none=True
     )
-    is_managed_externally = fields.Boolean(allow_none=True, default=False)
-    external_url = fields.String(allow_none=True)
 
 
 class DashboardPutSchema(BaseDashboardSchema):
@@ -283,8 +291,6 @@ class DashboardPutSchema(BaseDashboardSchema):
     certification_details = fields.String(
         description=certification_details_description, allow_none=True
     )
-    is_managed_externally = fields.Boolean(allow_none=True, default=False)
-    external_url = fields.String(allow_none=True)
 
 
 class ChartFavStarResponseResult(Schema):
@@ -308,9 +314,6 @@ class ImportV1DashboardSchema(Schema):
     position = fields.Dict()
     metadata = fields.Dict()
     version = fields.String(required=True)
-    is_managed_externally = fields.Boolean(allow_none=True, default=False)
-    external_url = fields.String(allow_none=True)
-
 
 class EmbeddedDashboardConfigSchema(Schema):
     allowed_domains = fields.List(fields.String(), required=True)

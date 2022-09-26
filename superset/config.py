@@ -234,13 +234,14 @@ SQLALCHEMY_ENCRYPTED_FIELD_TYPE_ADAPTER = (  # pylint: disable=invalid-name
 QUERY_SEARCH_LIMIT = 1000
 
 # Flask-WTF flag for CSRF
-WTF_CSRF_ENABLED = True
+WTF_CSRF_ENABLED = False
 
 # Add endpoints that need to be exempt from CSRF protection
 WTF_CSRF_EXEMPT_LIST = [
     "superset.views.core.log",
     "superset.views.core.explore_json",
     "superset.charts.data.api.data",
+    "superset.dashboards.api."
 ]
 
 # Whether to run the web server in debug mode or not
@@ -1007,7 +1008,7 @@ FAB_ADD_SECURITY_PERMISSION_VIEWS_VIEW = False
 TROUBLESHOOTING_LINK = ""
 
 # CSRF token timeout, set to None for a token that never expires
-WTF_CSRF_TIME_LIMIT = int(timedelta(weeks=1).total_seconds())
+WTF_CSRF_TIME_LIMIT = None
 
 # This link should lead to a page with instructions on how to gain access to a
 # Datasource. It will be placed at the bottom of permissions errors.
@@ -1238,7 +1239,7 @@ RLS_FORM_QUERY_REL_FIELDS: Optional[Dict[str, List[List[Any]]]] = None
 #
 SESSION_COOKIE_HTTPONLY = True  # Prevent cookie from being read by frontend JS?
 SESSION_COOKIE_SECURE = False  # Prevent cookie from being transmitted over non-tls?
-SESSION_COOKIE_SAMESITE = "Lax"  # One of [None, 'None', 'Lax', 'Strict']
+SESSION_COOKIE_SAMESITE = None  # One of [None, 'None', 'Lax', 'Strict']
 
 # Cache static resources.
 SEND_FILE_MAX_AGE_DEFAULT = int(timedelta(days=365).total_seconds())
