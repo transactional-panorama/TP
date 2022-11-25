@@ -51,6 +51,7 @@ class TPCHDashBehavior(BaseDashBehavior):
                  k_relaxed: int,
                  opt_viewport: bool,
                  opt_exec_time: bool,
+                 opt_metrics: bool,
                  opt_skip_write: bool,
                  enable_stats_cache: bool,
                  enable_iv_sl_log: bool,
@@ -62,7 +63,7 @@ class TPCHDashBehavior(BaseDashBehavior):
                  db_port: str,
                  sf: int):
         super().__init__(server_addr, username, password, mvc_properties, k_relaxed,
-                         opt_viewport, opt_exec_time, opt_skip_write,
+                         opt_viewport, opt_exec_time, opt_metrics, opt_skip_write,
                          enable_stats_cache)
         self.read_behavior = read_behavior
         self.write_behavior = write_behavior
@@ -130,7 +131,7 @@ class TPCHDashBehavior(BaseDashBehavior):
             viewport_range, shift_step, explore_range,
             read_behavior, viewport_start, write_behavior, refresh_interval,
             num_refresh, mvc_properties, k_relaxed, opt_viewport,
-            opt_exec_time, opt_skip_write, enable_stats_cache, enable_iv_sl_log, sf)
+            opt_exec_time, opt_metrics, opt_skip_write, enable_stats_cache, enable_iv_sl_log, sf)
 
         # Global states during the test
         self.refresh_counter = 0

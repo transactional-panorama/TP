@@ -300,6 +300,7 @@ class DashboardRestApi(BaseSupersetModelRestApi):
                    item.get("k_relaxed", 0),
                    item.get("opt_viewport", True),
                    item.get("opt_exec_time", True),
+                   item.get("opt_metrics", False),
                    item.get("opt_skip_write", True),
                    item.get("enable_stats_cache", True),
                    item.get("db_name", ""),

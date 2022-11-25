@@ -42,7 +42,7 @@ if __name__ == '__main__':
                         type=int,
                         required=True)
     parser.add_argument('--shift_step',
-                        help='the number of viz when we shift a viewport',
+                        help='the number of vis when we shift a viewport',
                         type=int,
                         required=True)
     parser.add_argument('--explore_range',
@@ -86,6 +86,11 @@ if __name__ == '__main__':
                         help='whether we turn on the optimization that the scheduling'
                              'considers the different amount of execution time for'
                              'refreshing a view',
+                        default="True")
+    parser.add_argument('--opt_metrics',
+                        help='whether we turn on the optimization that '
+                             'the scheduling prioritizes the views '
+                             'with higher staleness and invisibility',
                         default="True")
     parser.add_argument('--opt_skip_write',
                         help='whether we turn on the optimization that the scheduling'
@@ -138,6 +143,7 @@ if __name__ == '__main__':
                       k_relaxed=args.k_relaxed,
                       opt_viewport=is_true(args.opt_viewport),
                       opt_exec_time=is_true(args.opt_exec_time),
+                      opt_metrics=is_true(args.opt_metrics),
                       opt_skip_write=is_true(args.opt_skip_write),
                       enable_iv_sl_log=is_true(args.enable_iv_sl_log),
                       enable_stats_cache=is_true(args.enable_stats_cache),

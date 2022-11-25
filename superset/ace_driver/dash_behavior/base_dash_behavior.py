@@ -84,6 +84,7 @@ class BaseDashBehavior:
                  k_relaxed: int,
                  opt_viewport: bool,
                  opt_exec_time: bool,
+                 opt_metrics: bool,
                  opt_skip_write: bool,
                  enable_stats_cache: bool):
         self.url_header = f"http://{server_addr}/api/v1"
@@ -100,6 +101,7 @@ class BaseDashBehavior:
         self.k_relaxed = k_relaxed
         self.opt_viewport = opt_viewport
         self.opt_exec_time = opt_exec_time
+        self.opt_metrics = opt_metrics
         self.opt_skip_write = opt_skip_write
         self.enable_stats_cache = enable_stats_cache
 
@@ -160,6 +162,7 @@ class BaseDashBehavior:
                 "k_relaxed": self.k_relaxed,
                 "opt_viewport": self.opt_viewport,
                 "opt_exec_time": self.opt_exec_time,
+                "opt_metrics": self.opt_metrics,
                 "opt_skip_write": self.opt_skip_write,
                 "enable_stats_cache": self.enable_stats_cache,
                 "db_name": db_name,

@@ -41,6 +41,7 @@ class DashStateManager:
         self.k_relaxed = 0
         self.opt_viewport = True
         self.opt_exec_time = True
+        self.opt_metrics = True
         self.opt_skip_write = True
         self.enable_stats_cache = True
         self.db_name = ""
@@ -62,6 +63,7 @@ class DashStateManager:
         self.global_lock = Lock()
         self.meta_data_lock = Lock()
         self.cur_ts = START_TS
+        self.node_metrics = {}
 
     # The following functions are used by WTXnManager
     def submit_one_txn(self, node_id_set: set,
@@ -99,6 +101,20 @@ class DashStateManager:
 
     def get_top_priority_node(self, ts: int, node_ids: set,
                               chart_id_to_cost: dict) -> int:
+        if self.opt_metrics:
+            ret_node_ids = set()
+            ret_node_metric = 0
+            for node_id in node_ids:
+                if node_id in self.node_metrics:
+                    if self.node_metrics[node_id] > ret_node_metric:
+                        ret_node_ids = set()
+                    if self.node_metrics[node_id] >= ret_node_metric:
+                        ret_node_ids.add(node_id)
+                        ret_node_metric = self.node_metrics[node_id]
+            if len(ret_node_ids) == 0:
+                ret_node_ids = node_ids
+            return random.choice(tuple(ret_node_ids))
+
         if not self.opt_viewport and not self.opt_exec_time:
             return random.choice(tuple(node_ids))
         self.meta_data_lock.acquire()
@@ -125,6 +141,7 @@ class DashStateManager:
                              k_relaxed: int,
                              opt_viewport: bool,
                              opt_exec_time: bool,
+                             opt_metrics: bool,
                              opt_skip_write: bool,
                              enable_stats_cache: bool,
                              db_name: str,
@@ -136,6 +153,7 @@ class DashStateManager:
         self.k_relaxed = k_relaxed
         self.opt_viewport = opt_viewport
         self.opt_exec_time = opt_exec_time
+        self.opt_metrics = opt_metrics
         self.opt_skip_write = opt_skip_write
         self.enable_stats_cache = enable_stats_cache
 
@@ -164,6 +182,11 @@ class DashStateManager:
             for node_id in node_id_set:
                 if node_id in self.view_port_time[ts_active]:
                     self.view_port_time[ts_active][node_id] += duration
+        for node_id in node_id_set:
+            if node_id in self.node_metrics:
+                self.node_metrics[node_id] += duration
+            else:
+                self.node_metrics[node_id] = duration
         self.meta_data_lock.release()
 
         if self.prop == PropertyCombination.ICNB:
