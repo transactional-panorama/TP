@@ -11,8 +11,10 @@ declare -a START_RUN=1
 declare -a END_RUN=3
 #declare -a READ_BEHAVIOR_OPTIONS=("random_regular_change" "regular_change" "see_change")
 declare -a EXPLORE_RANGE_OPTIONS=(4 10 16 22)
-declare -a OPT_EXEC_TIME_OPTIONS=("False" "True" "True" "False")
-declare -a OPT_VIEWPORT_OPTIONS=("False" "False" "True" "True")
+#declare -a OPT_EXEC_TIME_OPTIONS=("False" "True" "True" "False")
+declare -a OPT_EXEC_TIME_OPTIONS=("False" "True" "True")
+#declare -a OPT_VIEWPORT_OPTIONS=("False" "False" "True" "True")
+declare -a OPT_VIEWPORT_OPTIONS=("False" "False" "True")
 declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4 5)
 
 
