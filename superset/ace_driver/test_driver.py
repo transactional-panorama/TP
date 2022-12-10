@@ -91,7 +91,7 @@ if __name__ == '__main__':
                         help='whether we turn on the optimization that '
                              'the scheduling prioritizes the views '
                              'with higher staleness and invisibility',
-                        default="True")
+                        default="False")
     parser.add_argument('--opt_skip_write',
                         help='whether we turn on the optimization that the scheduling'
                              'skips refreshing a view that will be refreshed'
