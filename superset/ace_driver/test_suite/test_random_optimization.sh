@@ -6,8 +6,8 @@ TEST_HOME="$(dirname $ABS_PATH)"
 REPORT_HOME="$TEST_HOME/experiment_results/optimization_random"
 source $TEST_HOME/config/default.conf
 
-declare -a START_RUN=1
-declare -a END_RUN=3
+declare -a START_RUN=4
+declare -a END_RUN=6
 declare -a READ_BEHAVIOR="random_regular_change"
 declare -a OPT_EXEC_TIME_OPTIONS=("False" "True" "True" "False")
 declare -a OPT_VIEWPORT_OPTIONS=("False" "False" "True" "True")
