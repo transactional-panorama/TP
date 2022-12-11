@@ -1,5 +1,5 @@
 {
-    "test_ts": 1670656144742,
+    "test_ts": 1670705194237,
     "dash_title": "TPCH",
     "viewport_range": 4,
     "shift_step": 2,
@@ -13,7 +13,7 @@
     "k_relaxed": 0,
     "opt_viewport": true,
     "opt_exec_time": true,
-    "opt_metrics": true,
+    "opt_metrics": false,
     "opt_skip_write": false,
     "enable_stats_cache": true,
     "enable_iv_sl_log": false,
@@ -47,7 +47,11 @@
     ],
     "txn_id": 1
 }{
-    "log_time": 40073,
+    "log_time": 38907,
+    "log_type": "commit",
+    "txn_id": 1
+}{
+    "log_time": 40000,
     "log_type": "refresh",
     "node_ids": [
         132,
@@ -75,15 +79,11 @@
     ],
     "txn_id": 2
 }{
-    "log_time": 40073,
-    "log_type": "commit",
-    "txn_id": 1
-}{
-    "log_time": 79992,
+    "log_time": 79110,
     "log_type": "commit",
     "txn_id": 2
 }{
-    "log_time": 80112,
+    "log_time": 80078,
     "log_type": "refresh",
     "node_ids": [
         132,
@@ -111,7 +111,7 @@
     ],
     "txn_id": 3
 }{
-    "log_time": 119560,
+    "log_time": 119188,
     "log_type": "commit",
     "txn_id": 3
 }

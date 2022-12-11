@@ -12,6 +12,7 @@ declare -a READ_BEHAVIOR="random_regular_change"
 declare -a OPT_EXEC_TIME_OPTIONS=("False" "True" "True" "False")
 declare -a OPT_VIEWPORT_OPTIONS=("False" "False" "True" "True")
 declare -a MVC_PROPERTY_OPTIONS=(1 2 3 4 5)
+OPT_METRICS="False"
 
 
 for RUN in `seq $START_RUN $END_RUN`
@@ -43,6 +44,7 @@ do
    			--k_relaxed $K_RELAXED \
    			--opt_viewport $OPT_VIEWPORT \
    			--opt_exec_time $OPT_EXEC_TIME \
+			--opt_metrics $OPT_METRICS \
    			--opt_skip_write $OPT_SKIP_WRITE \
    			--stat_dir $STAT_DIR \
    			--db_name $DB_NAME \
