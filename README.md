@@ -19,4 +19,4 @@ under the License.
 
 # Transactional Panorama
 
-We implement transactional panorama in Superset. The code for the test driver can be found [here](https://github.com/totemtang/TP/tree/main/superset/ace_driver). The code for implementing transactional panorama is [here](https://github.com/totemtang/TP/tree/main/superset/ace) and the new endpoints for processing web requests can be found [here](https://github.com/totemtang/TP/blob/main/superset/dashboards/api.py)
+We implement transactional panorama in Superset. The code for the test driver can be found [here](https://github.com/transactional-panorama/TP/tree/main/superset/ace_driver). The code for implementing transactional panorama is [here](https://github.com/transactional-panorama/TP/tree/main/superset/ace) and the new endpoints for processing web requests can be found [here](https://github.com/transactional-panorama/TP/main/superset/dashboards/api.py)
